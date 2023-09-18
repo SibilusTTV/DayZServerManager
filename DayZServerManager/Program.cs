@@ -3,7 +3,8 @@ using DayZServerManager;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-string steamLogin = "";
+Console.WriteLine("Enter login credentials");
+string steamLogin = Console.ReadLine();
 string serverPath = "\\Server";
 string steamCMD = "\\SteamCMD\\steamcmd.exe";
 string becPath = "\\BEC";
