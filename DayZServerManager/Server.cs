@@ -195,7 +195,7 @@ namespace DayZServerManager
 
         public void UpdateAndMoveMods(bool hasToUpdate, bool hasToMove)
         {
-            Console.WriteLine("Updating Mods");
+            Console.WriteLine("\n Updating Mods");
 
             foreach (long key in clientMods.Keys)
             {
@@ -221,14 +221,14 @@ namespace DayZServerManager
                 }
             }
 
-            Console.WriteLine("Mods updated");
+            Console.WriteLine("\n Mods updated");
         }
 
         public void UpdateServer()
         {
             try
             {
-                string serverUpdateArguments = $"+force_install_dir {dayZServerPath} +login {steamLogin} +\"app_update {dayZBranch}\" +quit";
+                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..",dayZServerPath)} +login {steamLogin} +\"app_update {dayZBranch}\" +quit";
                 Console.WriteLine("\n Updating the DayZ Server");
                 Process p = Process.Start(steamCMDPath, serverUpdateArguments);
                 p.WaitForExit();
@@ -300,7 +300,7 @@ namespace DayZServerManager
                     string serverKeyPath = Path.Combine(dayZServerPath, "keys");
 
                     FileSystem.CopyDirectory(modKeyPath, serverKeyPath, true);
-                    Console.WriteLine("\n Mod was moved");
+                    Console.WriteLine($"\n Mod was moved to {clientMods[key]}");
                 }
             }
             catch (Exception ex)

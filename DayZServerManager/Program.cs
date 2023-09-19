@@ -90,8 +90,8 @@ while (!kill)
 {
     if (!s.CheckServer())
     {
-        s.UpdateAndMoveMods(false, true);
         s.UpdateServer();
+        s.UpdateAndMoveMods(false, true);
         s.StartServer();
     }
     else
