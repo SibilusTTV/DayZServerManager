@@ -16,9 +16,9 @@ namespace DayZServerManager
 
         // Other Variables
         private bool updatedMods;
-        private Dictionary<int, string> clientMods;
-        private Dictionary<int, string> serverMods;
-        private Dictionary<int, DateTime> modUpdateTimes;
+        private Dictionary<long, string> clientMods;
+        private Dictionary<long, string> serverMods;
+        private Dictionary<long, DateTime> modUpdateTimes;
 
         Process serverProcess;
         Process becProcess;
@@ -35,9 +35,9 @@ namespace DayZServerManager
             dayZModList = modlist;
             steamCMDWorkshopPath = workshopPath;
 
-            clientMods = new Dictionary<int, string>();
-            serverMods = new Dictionary<int, string>();
-            modUpdateTimes = new Dictionary<int, DateTime>();
+            clientMods = new Dictionary<long, string>();
+            serverMods = new Dictionary<long, string>();
+            modUpdateTimes = new Dictionary<long, DateTime>();
 
             string currentModsAdded = "";
             try
@@ -60,12 +60,12 @@ namespace DayZServerManager
                             if (currentModsAdded == "Client Mods")
                             {
                                 string[] l = line.Trim().Split(',');
-                                clientMods.Add(Int32.Parse(l[0].Trim()), l[1].Trim());
+                                clientMods.Add(Int64.Parse(l[0].Trim()), l[1].Trim());
                             }
                             else if (currentModsAdded == "Server Mods")
                             {
                                 string[] l = line.Trim().Split(',');
-                                serverMods.Add(Int32.Parse(l[0].Trim()), l[1].Trim());
+                                serverMods.Add(Int64.Parse(l[0].Trim()), l[1].Trim());
                             }
                         }
                     }
@@ -197,7 +197,7 @@ namespace DayZServerManager
         {
             Console.WriteLine("Updating Mods");
 
-            foreach (int key in clientMods.Keys)
+            foreach (long key in clientMods.Keys)
             {
                 if (hasToUpdate)
                 {
@@ -209,7 +209,7 @@ namespace DayZServerManager
                 }
             }
 
-            foreach (int key in serverMods.Keys)
+            foreach (long key in serverMods.Keys)
             {
                 if (hasToUpdate)
                 {
@@ -240,7 +240,7 @@ namespace DayZServerManager
             }
         }
 
-        private void UpdateMod(int key)
+        private void UpdateMod(long key)
         {
             try
             {
@@ -281,7 +281,7 @@ namespace DayZServerManager
             }
         }
 
-        private void MoveMod(int key)
+        private void MoveMod(long key)
         {
             string steamModPath = Path.Combine(steamCMDWorkshopPath, key.ToString());
             string serverModPath = Path.Combine(dayZServerPath, clientMods[key]);

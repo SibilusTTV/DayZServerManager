@@ -82,6 +82,7 @@ s.UpdateServer();
 s.UpdateAndMoveMods(true, true);
 s.StartServer();
 s.StartBEC();
+Thread.Sleep(30000);
 
 int i = 1;
 bool kill = false;
