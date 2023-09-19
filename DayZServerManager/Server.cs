@@ -13,7 +13,6 @@ namespace DayZServerManager
         private string becPath;
         private string dayZModList;
         private string steamCMDWorkshopPath;
-        private int steamCMDDelay;
 
         // Other Variables
         private bool updatedMods;
@@ -110,7 +109,7 @@ namespace DayZServerManager
                 try
                 {
                     string becStartParameters = $"-f ConfigUpdate.cfg --dsc";
-                    becUpdateProcess = Process.Start(Path.Combine(becPath, "BEC.exe"), becStartParameters);
+                    becUpdateProcess = Process.Start(Path.Combine(becPath, "Bec.exe"), becStartParameters);
                     return true;
                 }
                 catch (Exception ex)
@@ -179,12 +178,11 @@ namespace DayZServerManager
             {
                 string becStartParameters = $"-f Config.cfg --dsc";
                 becProcess = new Process();
-                becProcess.StartInfo.FileName = Path.Combine(becPath, "BEC.exe");
+                becProcess.StartInfo.FileName = Path.Combine(becPath,"Bec.exe");
+                becProcess.StartInfo.WorkingDirectory = becPath;
                 becProcess.StartInfo.Arguments = becStartParameters;
                 becProcess.StartInfo.UseShellExecute = false;
                 becProcess.StartInfo.CreateNoWindow = true;
-                becProcess.StartInfo.RedirectStandardInput = true;
-                becProcess.StartInfo.RedirectStandardOutput = false;
                 Console.WriteLine("\n Starting BEC");
                 becProcess.Start();
                 Console.WriteLine("\n BEC started");
