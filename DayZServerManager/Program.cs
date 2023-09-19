@@ -45,12 +45,12 @@ try
 }
 catch (Exception ex)
 {
-    Console.WriteLine(ex.ToString());
+    Console.WriteLine( DateTime.Now.ToString() + ex.ToString());
 }
 
 if (string.IsNullOrEmpty(steamLogin))
 {
-    Console.WriteLine("Enter steam username and password seperated by a space");
+    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Enter steam username and password seperated by a space");
     steamLogin = Console.ReadLine();
 }
 if (string.IsNullOrEmpty(serverPath))
@@ -96,7 +96,7 @@ while (!kill)
     }
     else
     {
-        Console.WriteLine("\n The Server is still running");
+        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} The Server is still running");
     }
     if (!s.CheckBEC())
     {
@@ -104,7 +104,7 @@ while (!kill)
     }
     else
     {
-        Console.WriteLine("\n BEC is still running");
+        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} BEC is still running");
     }
     if (i%40 == 0)
     {

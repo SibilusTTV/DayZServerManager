@@ -73,7 +73,7 @@ namespace DayZServerManager
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("hh:mm:ss tt") + ex.ToString());
             }
         }
 
@@ -114,7 +114,7 @@ namespace DayZServerManager
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("hh:mm:ss tt") + ex.ToString());
                     return false;
                 }
             }
@@ -123,17 +123,24 @@ namespace DayZServerManager
 
         public void KillServers()
         {
-            if (serverProcess != null)
+            try
             {
-                serverProcess.Kill();
+                if (serverProcess != null)
+                {
+                    serverProcess.Kill();
+                }
+                if (becProcess != null)
+                {
+                    becProcess.Kill();
+                }
+                if (becUpdateProcess != null)
+                {
+                    becUpdateProcess.Kill();
+                }
             }
-            if (becProcess != null)
+            catch (Exception ex)
             {
-                becProcess.Kill();
-            }
-            if (becUpdateProcess != null)
-            {
-                becUpdateProcess.Kill();
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("hh:mm:ss tt") + ex.ToString());
             }
         }
 
@@ -162,13 +169,13 @@ namespace DayZServerManager
             try
             {
                 string startParameters = $"-instanceId=1 -config=serverDZ.cfg -profiles=Profiles -port=2302 \"-mod={clientModsToLoad}\" \"-serverMod={serverModsToLoad}\" -cpuCount=8 -noFilePatching -dologs -adminlog -freezecheck";
-                Console.WriteLine("\n Starting Server");
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Starting Server");
                 serverProcess = Process.Start(Path.Combine(dayZServerPath, "DayZServer_x64.exe"), startParameters);
-                Console.WriteLine("\n Server starting up");
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Server starting up");
             }
             catch (Exception ex)
             { 
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("hh:mm:ss tt") + ex.ToString());
             }
 }
 
@@ -183,19 +190,19 @@ namespace DayZServerManager
                 becProcess.StartInfo.Arguments = becStartParameters;
                 becProcess.StartInfo.UseShellExecute = false;
                 becProcess.StartInfo.CreateNoWindow = true;
-                Console.WriteLine("\n Starting BEC");
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Starting BEC");
                 becProcess.Start();
-                Console.WriteLine("\n BEC started");
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} BEC started");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("hh:mm:ss tt") + ex.ToString());
             }
         }
 
         public void UpdateAndMoveMods(bool hasToUpdate, bool hasToMove)
         {
-            Console.WriteLine("\n Updating Mods");
+            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Updating Mods");
 
             foreach (long key in clientMods.Keys)
             {
@@ -221,7 +228,7 @@ namespace DayZServerManager
                 }
             }
 
-            Console.WriteLine("\n Mods updated");
+            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Mods updated");
         }
 
         public void UpdateServer()
@@ -229,14 +236,14 @@ namespace DayZServerManager
             try
             {
                 string serverUpdateArguments = $"+force_install_dir {Path.Combine("..",dayZServerPath)} +login {steamLogin} +\"app_update {dayZBranch}\" +quit";
-                Console.WriteLine("\n Updating the DayZ Server");
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Updating the DayZ Server");
                 Process p = Process.Start(steamCMDPath, serverUpdateArguments);
                 p.WaitForExit();
-                Console.WriteLine("\n DayZ Server updated");
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} DayZ Server updated");
             }
             catch (System.Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("hh:mm:ss tt") + ex.ToString());
             }
         }
 
@@ -245,10 +252,10 @@ namespace DayZServerManager
             try
             {
                 string modUpdateArguements = $"+login {steamLogin} +workshop_download_item 221100 {key.ToString()} +quit";
-                Console.WriteLine($"\n{steamCMDPath} {modUpdateArguements}");
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} {steamCMDPath} {modUpdateArguements}");
                 Process p = Process.Start(steamCMDPath, modUpdateArguements);
                 p.WaitForExit();
-                Console.WriteLine($"\n Mod {key.ToString()} was downloaded");
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Mod {key.ToString()} was downloaded");
                 string modKeysPath = Path.Combine(steamCMDWorkshopPath, key.ToString(), "Keys");
                 if (FileSystem.DirectoryExists(modKeysPath))
                 {
@@ -277,7 +284,7 @@ namespace DayZServerManager
             }
             catch(System.Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("hh:mm:ss tt") + ex.ToString());
             }
         }
 
@@ -285,7 +292,7 @@ namespace DayZServerManager
         {
             string steamModPath = Path.Combine(steamCMDWorkshopPath, key.ToString());
             string serverModPath = Path.Combine(dayZServerPath, clientMods[key]);
-            Console.WriteLine($"\n Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
+            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
             try
             {
                 if (FileSystem.DirectoryExists(steamModPath))
@@ -300,12 +307,12 @@ namespace DayZServerManager
                     string serverKeyPath = Path.Combine(dayZServerPath, "keys");
 
                     FileSystem.CopyDirectory(modKeyPath, serverKeyPath, true);
-                    Console.WriteLine($"\n Mod was moved to {clientMods[key]}");
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("hh:mm:ss tt")} Mod was moved to {clientMods[key]}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine( Environment.NewLine + DateTime.Now.ToString("hh:mm:ss tt") + ex.ToString());
             }
         }
     }
