@@ -3,13 +3,12 @@ using DayZServerManager;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-Console.WriteLine("Enter steam username and password seperated by a space");
-string steamLogin = Console.ReadLine();
-string serverPath = "Server";
-string steamCMD = "SteamCMD\\steamcmd.exe";
-string becPath = "BEC";
-string modlistPath = "modlist.txt";
-string workshopPath = "SteamCMD\\steamapps\\workshop\\content\\221100";
+string steamLogin = "";
+string serverPath = "";
+string steamCMD = "";
+string becPath = "";
+string modlistPath = "";
+string workshopPath = "";
 try
 {
     using (var reader = new StreamReader("GlobalVariables.txt"))
@@ -47,6 +46,32 @@ try
 catch (Exception ex)
 {
     Console.WriteLine(ex.ToString());
+}
+
+if (string.IsNullOrEmpty(steamLogin))
+{
+    Console.WriteLine("Enter steam username and password seperated by a space");
+    steamLogin = Console.ReadLine();
+}
+if (string.IsNullOrEmpty(serverPath))
+{
+    serverPath = "Server";
+}
+if (string.IsNullOrEmpty(steamCMD))
+{
+    steamCMD = "SteamCMD\\steamcmd.exe";
+}
+if (string.IsNullOrEmpty(becPath))
+{
+    becPath = "BEC";
+}
+if (string.IsNullOrEmpty(modlistPath))
+{
+    modlistPath = "modlist.txt";
+}
+if (string.IsNullOrEmpty(workshopPath))
+{
+    workshopPath = "SteamCMD\\steamapps\\workshop\\content\\221100";
 }
 
 Server s = new Server(steamLogin, serverPath, steamCMD, becPath, modlistPath, workshopPath);
