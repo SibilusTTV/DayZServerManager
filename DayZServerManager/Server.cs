@@ -256,7 +256,30 @@ namespace DayZServerManager
                 Process p = Process.Start(steamCMDPath, modUpdateArguements);
                 p.WaitForExit();
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mod {key.ToString()} was downloaded");
-                string modKeysPath = Path.Combine(steamCMDWorkshopPath, key.ToString(), "Keys");
+            }
+            catch(System.Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
+        private void MoveMod(long key)
+        {
+            try
+            {
+                string modKeysPath = "";
+                string modKeysPath1 = Path.Combine(steamCMDWorkshopPath, key.ToString(), "Keys");
+                string modKeysPath2 = Path.Combine(steamCMDWorkshopPath, key.ToString(), "Key");
+
+                if (FileSystem.DirectoryExists(modKeysPath1))
+                {
+                    modKeysPath = modKeysPath1;
+                }
+                else if (File.Exists(modKeysPath2))
+                {
+                    modKeysPath = modKeysPath2;
+                }
+
                 if (FileSystem.DirectoryExists(modKeysPath))
                 {
                     List<string> fileNames = FileSystem.GetFiles(modKeysPath).ToList<string>();
@@ -281,20 +304,10 @@ namespace DayZServerManager
                         }
                     }
                 }
-            }
-            catch(System.Exception ex)
-            {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
-            }
-        }
 
-        private void MoveMod(long key)
-        {
-            string steamModPath = Path.Combine(steamCMDWorkshopPath, key.ToString());
-            string serverModPath = Path.Combine(dayZServerPath, clientMods[key]);
-            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
-            try
-            {
+                string steamModPath = Path.Combine(steamCMDWorkshopPath, key.ToString());
+                string serverModPath = Path.Combine(dayZServerPath, clientMods[key]);
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
                 if (FileSystem.DirectoryExists(steamModPath))
                 {
                     if (FileSystem.DirectoryExists(serverModPath))
