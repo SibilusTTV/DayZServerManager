@@ -200,6 +200,22 @@ namespace DayZServerManager
             }
         }
 
+        public void UpdateServer()
+        {
+            try
+            {
+                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", dayZServerPath)} +login {steamLogin} +\"app_update {dayZBranch}\" +quit";
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating the DayZ Server");
+                Process p = Process.Start(steamCMDPath, serverUpdateArguments);
+                p.WaitForExit();
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} DayZ Server updated");
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
         public void UpdateAndMoveMods(bool hasToUpdate, bool hasToMove)
         {
             Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating Mods");
@@ -231,22 +247,6 @@ namespace DayZServerManager
             Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mods updated");
         }
 
-        public void UpdateServer()
-        {
-            try
-            {
-                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..",dayZServerPath)} +login {steamLogin} +\"app_update {dayZBranch}\" +quit";
-                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating the DayZ Server");
-                Process p = Process.Start(steamCMDPath, serverUpdateArguments);
-                p.WaitForExit();
-                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} DayZ Server updated");
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
-            }
-        }
-
         private void UpdateMod(long key)
         {
             try
@@ -275,7 +275,7 @@ namespace DayZServerManager
                 {
                     modKeysPath = modKeysPath1;
                 }
-                else if (File.Exists(modKeysPath2))
+                else if (FileSystem.DirectoryExists(modKeysPath2))
                 {
                     modKeysPath = modKeysPath2;
                 }
