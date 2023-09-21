@@ -9,6 +9,7 @@ string steamCMD = "";
 string becPath = "";
 string modlistPath = "";
 string workshopPath = "";
+string backupPath = "";
 try
 {
     using (var reader = new StreamReader("GlobalVariables.txt"))
@@ -39,6 +40,10 @@ try
             else if (line.StartsWith("workshopPath"))
             {
                 workshopPath = line.Substring(line.IndexOf('=') + 1).Trim();
+            }
+            else if (line.StartsWith("backupPath"))
+            {
+                backupPath = line.Substring(line.IndexOf("=") + 1).Trim();
             }
         }
     }
@@ -74,10 +79,11 @@ if (string.IsNullOrEmpty(workshopPath))
     workshopPath = "SteamCMD\\steamapps\\workshop\\content\\221100";
 }
 
-Server s = new Server(steamLogin, serverPath, steamCMD, becPath, modlistPath, workshopPath);
+Server s = new Server(steamLogin, serverPath, steamCMD, becPath, modlistPath, workshopPath, backupPath);
 
 AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
 
+s.BackupServerData();
 s.UpdateServer();
 s.UpdateAndMoveMods(true, true);
 s.StartServer();
@@ -90,6 +96,7 @@ while (!kill)
 {
     if (!s.CheckServer())
     {
+        s.BackupServerData();
         s.UpdateServer();
         s.UpdateAndMoveMods(false, true);
         s.StartServer();
