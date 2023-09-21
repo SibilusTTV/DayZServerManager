@@ -1,0 +1,11 @@
+{
+  "steamUsername": "",
+  "steamPassword":  "",
+  "serverPath": "Server",
+  "steamCMDPath": "SteamCMD\\steamcmd.exe",
+  "becPath": "BEC",
+  "workshopPath": "SteamCMD\\steamapps\\workshop\\content\\221100",
+  "backupPath": "C:\\Users\\julia\\Downloads\\Test\\Backup",
+  "clientMods": [],
+  "serverMods": []
+}

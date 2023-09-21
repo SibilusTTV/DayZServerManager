@@ -1,51 +1,19 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DayZServerManager;
+using DayZServerManager.ConfigClasses;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
-string steamLogin = "";
-string serverPath = "";
-string steamCMD = "";
-string becPath = "";
-string modlistPath = "";
-string workshopPath = "";
-string backupPath = "";
+Config config = null;
+
 try
 {
-    using (var reader = new StreamReader("GlobalVariables.txt"))
+    using (StreamReader reader = new StreamReader("Config.json"))
     {
-        string line;
-        while ((line = reader.ReadLine()) != null)
-        {
-            if (line.StartsWith("steamLogin"))
-            {
-                steamLogin = line.Substring(line.IndexOf('=') + 1).Trim();
-            }
-            else if (line.StartsWith("serverPath"))
-            {
-                serverPath = line.Substring(line.IndexOf('=') + 1).Trim();
-            }
-            else if (line.StartsWith("steamCMD"))
-            {
-                steamCMD = line.Substring(line.IndexOf('=') + 1).Trim();
-            }
-            else if (line.StartsWith("becPath"))
-            {
-                becPath = line.Substring(line.IndexOf('=') + 1).Trim();
-            }
-            else if (line.StartsWith("modlistPath"))
-            {
-                modlistPath = line.Substring(line.IndexOf('=') + 1).Trim();
-            }
-            else if (line.StartsWith("workshopPath"))
-            {
-                workshopPath = line.Substring(line.IndexOf('=') + 1).Trim();
-            }
-            else if (line.StartsWith("backupPath"))
-            {
-                backupPath = line.Substring(line.IndexOf("=") + 1).Trim();
-            }
-        }
+        string json = reader.ReadToEnd();
+        config = JsonSerializer.Deserialize<Config>(json);
+        reader.Close();
     }
 }
 catch (Exception ex)
@@ -53,77 +21,67 @@ catch (Exception ex)
     Console.WriteLine( DateTime.Now.ToString() + ex.ToString());
 }
 
-if (string.IsNullOrEmpty(steamLogin))
+if (config != null)
 {
-    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Enter steam username and password seperated by a space");
-    steamLogin = Console.ReadLine();
-}
-if (string.IsNullOrEmpty(serverPath))
-{
-    serverPath = "Server";
-}
-if (string.IsNullOrEmpty(steamCMD))
-{
-    steamCMD = "SteamCMD\\steamcmd.exe";
-}
-if (string.IsNullOrEmpty(becPath))
-{
-    becPath = "BEC";
-}
-if (string.IsNullOrEmpty(modlistPath))
-{
-    modlistPath = "modlist.txt";
-}
-if (string.IsNullOrEmpty(workshopPath))
-{
-    workshopPath = "SteamCMD\\steamapps\\workshop\\content\\221100";
-}
 
-Server s = new Server(steamLogin, serverPath, steamCMD, becPath, modlistPath, workshopPath, backupPath);
+    if (string.IsNullOrEmpty(config.steamUsername))
+    {
+        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Enter steam username");
+        config.steamUsername = Console.ReadLine();
+    }
 
-AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+    if (string.IsNullOrEmpty(config.steamPassword))
+    {
+        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Enter steam password");
+        config.steamPassword = Console.ReadLine();
+    }
 
-s.BackupServerData();
-s.UpdateServer();
-s.UpdateAndMoveMods(true, true);
-s.StartServer();
-s.StartBEC();
-Thread.Sleep(30000);
+    Server s = new Server(config);
 
-int i = 1;
-bool kill = false;
-while (!kill)
-{
-    if (!s.CheckServer())
-    {
-        s.BackupServerData();
-        s.UpdateServer();
-        s.UpdateAndMoveMods(false, true);
-        s.StartServer();
-    }
-    else
-    {
-        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} The Server is still running");
-    }
-    if (!s.CheckBEC())
-    {
-        s.StartBEC();
-    }
-    else
-    {
-        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} BEC is still running");
-    }
-    if (i%40 == 0)
-    {
-        s.UpdateAndMoveMods(true, false);
-        s.CheckForUpdatedMods();
-    }
-    i++;
+    AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+
+    s.BackupServerData();
+    s.UpdateServer();
+    s.UpdateAndMoveMods(true, true);
+    s.StartServer();
+    s.StartBEC();
     Thread.Sleep(30000);
-}
-s.KillServers();
 
-void OnProcessExit(object sender, EventArgs e)
-{
+    int i = 1;
+    bool kill = false;
+    while (!kill)
+    {
+        if (!s.CheckServer())
+        {
+            s.BackupServerData();
+            s.UpdateServer();
+            s.UpdateAndMoveMods(false, true);
+            s.StartServer();
+        }
+        else
+        {
+            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} The Server is still running");
+        }
+        if (!s.CheckBEC())
+        {
+            s.StartBEC();
+        }
+        else
+        {
+            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} BEC is still running");
+        }
+        if (i % 40 == 0)
+        {
+            s.UpdateAndMoveMods(true, false);
+            s.CheckForUpdatedMods();
+        }
+        i++;
+        Thread.Sleep(30000);
+    }
     s.KillServers();
+
+    void OnProcessExit(object sender, EventArgs e)
+    {
+        s.KillServers();
+    }
 }

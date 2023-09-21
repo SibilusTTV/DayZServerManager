@@ -1,5 +1,0 @@
-﻿serverPath = Server
-steamCMD = SteamCMD\steamcmd.exe
-becPath = BEC
-modlistPath = modlist.txt
-workshopPath = SteamCMD\steamapps\workshop\content\221100
