@@ -170,90 +170,80 @@ namespace DayZServerManager
 
         public void UpdateAndMoveMods(bool hasToUpdate, bool hasToMove)
         {
-            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating Mods");
-
-            foreach (Mod mod in config.clientMods)
+            List<Mod> mods = new List<Mod>();
+            mods.AddRange(config.clientMods);
+            mods.AddRange(config.serverMods);
+            if ( hasToUpdate )
             {
-                if (mod != null)
-                {
-                    if (hasToUpdate)
-                    {
-                        UpdateMod(mod);
-                    }
-                    if (hasToMove)
-                    {
-                        MoveMod(mod);
-                    }
-                }
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating Mods");
+                UpdateMods(mods);
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mods updated");
             }
-
-            foreach (Mod mod in config.serverMods)
+            if ( hasToMove )
             {
-                if (mod != null)
-                {
-                    if (hasToUpdate)
-                    {
-                        UpdateMod(mod);
-                    }
-                    if (hasToMove)
-                    {
-                        MoveMod(mod);
-                    }
-                }
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Moving Mods");
+                MoveMods(mods);
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mods moved");
             }
-
-            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mods updated");
         }
 
-        private void UpdateMod(Mod mod)
+        public void UpdateMods(List<Mod> mods)
         {
             try
             {
-                if (mod != null)
+                string modUpdateArguments = "";
+                if (mods.Count > 0)
                 {
-                    string modUpdateArguements = $"+login {config.steamUsername} {config.steamPassword} +workshop_download_item 221100 {mod.workshopID.ToString()} +quit";
-                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} {config.steamCMDPath} {modUpdateArguements}");
-                    Process p = Process.Start(config.steamCMDPath, modUpdateArguements);
-                    p.WaitForExit();
-                    string modKeysPath = Path.Combine(config.workshopPath, mod.workshopID.ToString());
-                    if (FileSystem.DirectoryExists(modKeysPath))
+                    foreach (Mod mod in mods)
                     {
-                        List<string> fileNames = FileSystem.GetFiles(modKeysPath).ToList<string>();
-                        if (fileNames.Count > 0)
+                        modUpdateArguments += $" +workshop_download_item 221100 {mod.workshopID.ToString()}";
+                    }
+                    string arguments = $"+login {config.steamUsername} {config.steamPassword}{modUpdateArguments} +quit"; 
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} {config.steamCMDPath} {modUpdateArguments}");
+                    Process p = Process.Start(config.steamCMDPath, arguments);
+                    p.WaitForExit();
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} All mods were downloaded");
+                    foreach (Mod mod in mods)
+                    {
+                        string modKeysPath = Path.Combine(config.workshopPath, mod.workshopID.ToString());
+                        if (FileSystem.DirectoryExists(modKeysPath))
                         {
-                            string modKeyPath = Path.Combine(modKeysPath, fileNames[0]);
-                            if (File.Exists(modKeyPath))
+                            List<string> fileNames = FileSystem.GetFiles(modKeysPath).ToList<string>();
+                            if (fileNames.Count > 0)
                             {
-                                DateTime changingDate = File.GetLastWriteTimeUtc(modKeyPath);
-                                if (mod.lastUpdated != null)
+                                string modKeyPath = Path.Combine(modKeysPath, fileNames[0]);
+                                if (File.Exists(modKeyPath))
                                 {
-                                    if (mod.lastUpdated != changingDate)
+                                    DateTime changingDate = File.GetLastWriteTimeUtc(modKeyPath);
+                                    if (mod.lastUpdated != null)
+                                    {
+                                        if (mod.lastUpdated != changingDate)
+                                        {
+                                            mod.lastUpdated = changingDate;
+                                            updatedMods = true;
+                                        }
+                                    }
+                                    else
                                     {
                                         mod.lastUpdated = changingDate;
-                                        updatedMods = true;
                                     }
-                                }
-                                else
-                                {
-                                    mod.lastUpdated = changingDate;
                                 }
                             }
                         }
-                        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mod {mod.workshopID.ToString()} was downloaded");
                     }
                 }
             }
-            catch(System.Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
             }
         }
 
-        private void MoveMod(Mod mod)
+        public void MoveMods(List<Mod> mods)
         {
             try
             {
-                if (mod != null)
+                foreach (Mod mod in mods)
                 {
                     string steamModPath = Path.Combine(config.workshopPath, mod.workshopID.ToString());
                     string serverModPath = "";
@@ -289,7 +279,7 @@ namespace DayZServerManager
             }
             catch (Exception ex)
             {
-                Console.WriteLine( Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
             }
         }
 
