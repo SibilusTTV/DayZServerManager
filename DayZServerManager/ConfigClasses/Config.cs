@@ -16,6 +16,17 @@ namespace DayZServerManager.ConfigClasses
         public string workshopPath { get; set; }
         public string backupPath { get; set; }
         public string missionName { get; set; }
+        public int instanceId { get; set; }
+        public string serverConfigName { get; set; }
+        public string profileName { get; set; }
+        public int port { get; set; }
+        public int cpuCount { get; set; }
+        public bool noFilePatching { get; set; }
+        public bool doLogs { get; set; }
+        public bool adminLog { get; set; }
+        public bool freezeCheck { get; set; }
+        public bool netLog { get; set; }
+        public int limitFPS { get; set; }
         public List<Mod> clientMods { get; set; }
         public List<Mod> serverMods { get; set; }
     }

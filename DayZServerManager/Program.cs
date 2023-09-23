@@ -78,10 +78,10 @@ if (config != null)
         i++;
         Thread.Sleep(30000);
     }
-    s.KillServers();
+    s.KillServerProcesses();
 
     void OnProcessExit(object sender, EventArgs e)
     {
-        s.KillServers();
+        s.KillServerProcesses();
     }
 }

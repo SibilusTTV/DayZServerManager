@@ -47,52 +47,9 @@ namespace DayZServerManager
             }
         }
 
-        public bool CheckForUpdatedMods()
-        {
-            if (updatedMods && !(becUpdateProcess != null && becUpdateProcess.HasExited))
-            {
-                updatedMods = false;
-                try
-                {
-                    string becStartParameters = $"-f ConfigUpdate.cfg --dsc";
-                    becUpdateProcess = Process.Start(Path.Combine(config.becPath, "Bec.exe"), becStartParameters);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
-                    return false;
-                }
-            }
-            return false;
-        }
-
-        public void KillServers()
-        {
-            try
-            {
-                if (serverProcess != null)
-                {
-                    serverProcess.Kill();
-                }
-                if (becProcess != null)
-                {
-                    becProcess.Kill();
-                }
-                if (becUpdateProcess != null)
-                {
-                    becUpdateProcess.Kill();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
-            }
-        }
-
         public void StartServer()
         {
-            string clientModsToLoad = "";
+            string clientModsToLoad = string.Empty;
             foreach (Mod clientMod in config.clientMods)
             {
                 if (clientMod != null)
@@ -105,7 +62,7 @@ namespace DayZServerManager
                 clientModsToLoad = $"\"-mod={clientModsToLoad.Remove(clientModsToLoad.Length - 1)}\"";
             }
 
-            string serverModsToLoad = "";
+            string serverModsToLoad = string.Empty;
             foreach (Mod serverMod in config.serverMods)
             {
                 if (serverMod != null)
@@ -120,7 +77,8 @@ namespace DayZServerManager
 
             try
             {
-                string startParameters = $"-instanceId=1 -config=serverDZ.cfg -profiles=Profiles -port=2302 {clientModsToLoad} {serverModsToLoad} -cpuCount=8 -noFilePatching -dologs -adminlog -freezecheck";
+
+                string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Starting Server");
                 serverProcess = Process.Start(Path.Combine(config.serverPath, "DayZServer_x64.exe"), startParameters);
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Server starting up");
@@ -130,6 +88,38 @@ namespace DayZServerManager
                 Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
             }
 }
+
+        private string GetServerStartParameters(string clientModsToLoad, string serverModsToLoad)
+        {
+            string parameters = $"-instanceId={config.instanceId} -config={config.serverConfigName} -profiles={config.profileName} -port={config.port} {clientModsToLoad} {serverModsToLoad} -cpuCount={config.cpuCount}";
+
+            if (config.noFilePatching)
+            {
+                parameters += " -noFilePatching";
+            }
+            if (config.doLogs)
+            {
+                parameters += " -doLogs";
+            }
+            if (config.adminLog)
+            {
+                parameters += " -adminLog";
+            }
+            if (config.freezeCheck)
+            {
+                parameters += " -freezeCheck";
+            }
+            if (config.netLog)
+            {
+                parameters += " -netLog";
+            }
+            if (config.limitFPS > 0)
+            {
+                parameters += $" -limitFPS={config.limitFPS}";
+            }
+
+            return parameters;
+        }
 
         public void StartBEC()
         {
@@ -145,6 +135,29 @@ namespace DayZServerManager
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Starting BEC");
                 becProcess.Start();
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} BEC started");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
+        public void KillServerProcesses()
+        {
+            try
+            {
+                if (serverProcess != null)
+                {
+                    serverProcess.Kill();
+                }
+                if (becProcess != null)
+                {
+                    becProcess.Kill();
+                }
+                if (becUpdateProcess != null)
+                {
+                    becUpdateProcess.Kill();
+                }
             }
             catch (Exception ex)
             {
@@ -191,7 +204,7 @@ namespace DayZServerManager
         {
             try
             {
-                string modUpdateArguments = "";
+                string modUpdateArguments = string.Empty;
                 if (mods.Count > 0)
                 {
                     foreach (Mod mod in mods)
@@ -246,7 +259,7 @@ namespace DayZServerManager
                 foreach (Mod mod in mods)
                 {
                     string steamModPath = Path.Combine(config.workshopPath, mod.workshopID.ToString());
-                    string serverModPath = "";
+                    string serverModPath = string.Empty;
                     serverModPath = Path.Combine(config.serverPath, mod.name);
 
                     Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
@@ -259,7 +272,7 @@ namespace DayZServerManager
                         FileSystem.CopyDirectory(steamModPath, serverModPath);
 
                         string serverKeysPath = Path.Combine(config.serverPath, "keys");
-                        string modKeysPath = "";
+                        string modKeysPath = string.Empty;
                         if (FileSystem.DirectoryExists(Path.Combine(serverModPath, "Keys")))
                         {
                             modKeysPath = Path.Combine(serverModPath, "Keys");
@@ -283,6 +296,26 @@ namespace DayZServerManager
             }
         }
 
+        public bool CheckForUpdatedMods()
+        {
+            if (updatedMods && !(becUpdateProcess != null && becUpdateProcess.HasExited))
+            {
+                updatedMods = false;
+                try
+                {
+                    string becStartParameters = $"-f ConfigUpdate.cfg --dsc";
+                    becUpdateProcess = Process.Start(Path.Combine(config.becPath, "Bec.exe"), becStartParameters);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                    return false;
+                }
+            }
+            return false;
+        }
+
         public void BackupServerData()
         {
             try
@@ -292,7 +325,7 @@ namespace DayZServerManager
                     Console.WriteLine($"{Environment.NewLine} Backing up the server data and moving all the logs!");
                     string newestBackupPath = Path.Combine(config.backupPath, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
                     string dataPath = Path.Combine(config.serverPath, "mpmissions", config.missionName, "storage_1");
-                    string profilePath = Path.Combine(config.serverPath, "Profiles");
+                    string profilePath = Path.Combine(config.serverPath, config.profileName);
                     if (FileSystem.DirectoryExists(dataPath))
                     {
                         FileSystem.CopyDirectory(dataPath, Path.Combine(newestBackupPath, "data"));
