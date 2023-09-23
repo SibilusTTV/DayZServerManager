@@ -15,6 +15,7 @@ namespace DayZServerManager.ConfigClasses
         public string becPath { get; set; }
         public string workshopPath { get; set; }
         public string backupPath { get; set; }
+        public string missionName { get; set; }
         public List<Mod> clientMods { get; set; }
         public List<Mod> serverMods { get; set; }
     }

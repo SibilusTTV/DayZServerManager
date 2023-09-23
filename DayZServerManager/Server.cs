@@ -199,7 +199,7 @@ namespace DayZServerManager
                         modUpdateArguments += $" +workshop_download_item 221100 {mod.workshopID.ToString()}";
                     }
                     string arguments = $"+login {config.steamUsername} {config.steamPassword}{modUpdateArguments} +quit"; 
-                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} {config.steamCMDPath} {modUpdateArguments}");
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} {config.steamCMDPath} {arguments}");
                     Process p = Process.Start(config.steamCMDPath, arguments);
                     p.WaitForExit();
                     Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} All mods were downloaded");
@@ -289,8 +289,9 @@ namespace DayZServerManager
             {
                 if (FileSystem.DirectoryExists(config.backupPath))
                 {
+                    Console.WriteLine($"{Environment.NewLine} Backing up the server data and moving all the logs!");
                     string newestBackupPath = Path.Combine(config.backupPath, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-                    string dataPath = Path.Combine(config.serverPath, "mpmissions", "dayzOffline.chernarusplus", "storage_1");
+                    string dataPath = Path.Combine(config.serverPath, "mpmissions", config.missionName, "storage_1");
                     string profilePath = Path.Combine(config.serverPath, "Profiles");
                     if (FileSystem.DirectoryExists(dataPath))
                     {
@@ -307,6 +308,7 @@ namespace DayZServerManager
                             }
                         }
                     }
+                    Console.WriteLine($"{Environment.NewLine} Server backup and moving of the logs done");
                 }
             }
             catch (Exception ex)

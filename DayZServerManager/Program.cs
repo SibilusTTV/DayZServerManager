@@ -18,7 +18,7 @@ try
 }
 catch (Exception ex)
 {
-    Console.WriteLine( DateTime.Now.ToString() + ex.ToString());
+    Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
 }
 
 if (config != null)
