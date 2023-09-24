@@ -8,7 +8,8 @@ namespace DayZServerManager
     {
         // Server Variables
         private Config config;
-        int dayZBranch;
+        int dayZServerBranch;
+        int dayZGameBranch;
 
         // Other Variables
         private bool updatedMods;
@@ -20,7 +21,8 @@ namespace DayZServerManager
         public Server(Config config)
         {
             this.config = config;
-            dayZBranch = 223350;
+            dayZServerBranch = 223350;
+            dayZGameBranch = 221100;
             serverProcess = null;
             becProcess = null;
             becUpdateProcess = null;
@@ -171,7 +173,7 @@ namespace DayZServerManager
         {
             try
             {
-                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", config.serverPath)} +login {config.steamUsername} {config.steamPassword} +\"app_update {dayZBranch}\" +quit";
+                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", config.serverPath)} +login {config.steamUsername} {config.steamPassword} +\"app_update {dayZServerBranch}\" +quit";
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating the DayZ Server");
                 Process p = Process.Start(config.steamCMDPath, serverUpdateArguments);
                 p.WaitForExit();
@@ -211,7 +213,7 @@ namespace DayZServerManager
                 {
                     foreach (Mod mod in mods)
                     {
-                        modUpdateArguments += $" +workshop_download_item 221100 {mod.workshopID.ToString()}";
+                        modUpdateArguments += $" +workshop_download_item {dayZGameBranch} {mod.workshopID.ToString()}";
                     }
                     string arguments = $"+login {config.steamUsername} {config.steamPassword}{modUpdateArguments} +quit"; 
                     Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} {config.steamCMDPath} {arguments}");
