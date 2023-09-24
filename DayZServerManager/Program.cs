@@ -1,29 +1,79 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DayZServerManager;
 using DayZServerManager.ConfigClasses;
+using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Xml;
 
-Config config = null;
-
-try
+if (FileSystem.FileExists("Config.json"))
 {
-    using (StreamReader reader = new StreamReader("Config.json"))
+    Config? config = null;
+    try
     {
-        string json = reader.ReadToEnd();
-        config = JsonSerializer.Deserialize<Config>(json);
-        reader.Close();
+        using (StreamReader reader = new StreamReader("Config.json"))
+        {
+            string json = reader.ReadToEnd();
+            config = JsonSerializer.Deserialize<Config>(json);
+            reader.Close();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+    }
+
+    if (config != null)
+    {
+        StartServer(config);
     }
 }
-catch (Exception ex)
+else
 {
-    Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+    Config config = new Config();
+    config.steamUsername = "";
+    config.steamPassword = "";
+    config.serverPath = "Server";
+    config.steamCMDPath = "SteamCMD\\steamcmd.exe";
+    config.becPath = "BEC";
+    config.workshopPath = "SteamCMD\\steamapps\\workshop\\content\\221100";
+    config.backupPath = "C:\\Users\\julia\\Downloads\\Test\\Backup";
+    config.missionName = "Expansion.ChernarusPlus";
+    config.instanceId = 1;
+    config.serverConfigName = "serverDZ.cfg";
+    config.profileName = "Profiles";
+    config.port = 2302;
+    config.cpuCount = 8;
+    config.noFilePatching = true;
+    config.doLogs = true;
+    config.adminLog = true;
+    config.netLog = true;
+    config.freezeCheck = true;
+    config.limitFPS = -1;
+    config.clientMods = new List<Mod>();
+    config.serverMods = new List<Mod>();
+
+    try
+    {
+        JsonSerializerOptions options = new JsonSerializerOptions();
+        options.WriteIndented = true;
+        string json = JsonSerializer.Serialize(config, options);
+        File.WriteAllText("Config.json", json);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+    }
+
+    if (config != null)
+    {
+        StartServer(config);
+    }
 }
 
-if (config != null)
+void StartServer(Config config)
 {
-
     if (string.IsNullOrEmpty(config.steamUsername))
     {
         Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Enter steam username");
@@ -80,7 +130,7 @@ if (config != null)
     }
     s.KillServerProcesses();
 
-    void OnProcessExit(object sender, EventArgs e)
+    void OnProcessExit(object? sender, EventArgs? e)
     {
         s.KillServerProcesses();
     }

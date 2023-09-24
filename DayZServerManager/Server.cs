@@ -13,14 +13,17 @@ namespace DayZServerManager
         // Other Variables
         private bool updatedMods;
 
-        Process serverProcess;
-        Process becProcess;
-        Process becUpdateProcess;
+        Process? serverProcess;
+        Process? becProcess;
+        Process? becUpdateProcess;
 
         public Server(Config config)
         {
             this.config = config;
-            int dayZBranch = 223350;
+            dayZBranch = 223350;
+            serverProcess = null;
+            becProcess = null;
+            becUpdateProcess = null;
         }
 
         public bool CheckServer()
@@ -77,7 +80,6 @@ namespace DayZServerManager
 
             try
             {
-
                 string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Starting Server");
                 serverProcess = Process.Start(Path.Combine(config.serverPath, "DayZServer_x64.exe"), startParameters);
@@ -127,7 +129,7 @@ namespace DayZServerManager
             {
                 string becStartParameters = $"-f Config.cfg --dsc";
                 becProcess = new Process();
-                becProcess.StartInfo.FileName = Path.Combine(config.becPath,"Bec.exe");
+                becProcess.StartInfo.FileName = Path.Combine(config.becPath, "Bec.exe");
                 becProcess.StartInfo.WorkingDirectory = config.becPath;
                 becProcess.StartInfo.Arguments = becStartParameters;
                 becProcess.StartInfo.UseShellExecute = false;
