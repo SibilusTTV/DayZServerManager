@@ -42,6 +42,12 @@ namespace DayZServerManager.Helpers
                         case "enableWhitelist":
                             cfg.enableWhitelist = Int32.Parse(match.Groups[2].Value);
                             break;
+                        case "disableBanlist":
+                            cfg.disableBanlist = bool.Parse(match.Groups[2].Value);
+                            break;
+                        case "disablePrioritylist":
+                            cfg.disablePrioritylist = bool.Parse(match.Groups[2].Value);
+                            break;
                         case "maxPlayers":
                             cfg.maxPlayers = Int32.Parse(match.Groups[2].Value);
                             break;
@@ -235,6 +241,8 @@ namespace DayZServerManager.Helpers
                 returnString += $"{Environment.NewLine}password = \"{cfg.password}\";";
                 returnString += $"{Environment.NewLine}passwordAdmin = \"{cfg.passwordAdmin}\";";
                 returnString += $"{Environment.NewLine}enableWhitelist = {cfg.enableWhitelist.ToString()};";
+                returnString += $"{Environment.NewLine}disableBanlist = {cfg.disableBanlist.ToString()};";
+                returnString += $"{Environment.NewLine}disablePrioritylist = {cfg.disablePrioritylist.ToString()};";
                 returnString += $"{Environment.NewLine}maxPlayers = {cfg.maxPlayers.ToString()};";
                 returnString += $"{Environment.NewLine}verifySignatures = {cfg.verifySignatures.ToString()};";
                 returnString += $"{Environment.NewLine}forceSameBuild = {cfg.forceSameBuild.ToString()};";
