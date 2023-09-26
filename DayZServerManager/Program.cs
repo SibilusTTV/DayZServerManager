@@ -1,8 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DayZServerManager;
-using DayZServerManager.ConfigClasses;
+using DayZServerManager.Helpers;
+using DayZServerManager.ManagerConfigClasses;
+using DayZServerManager.ServerConfigClasses;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Xml;
@@ -87,12 +90,51 @@ void StartServer(Config config)
     }
 
     Server s = new Server(config);
-
-    AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
-
     s.BackupServerData();
     s.UpdateServer();
     s.UpdateAndMoveMods(true, true);
+
+    ServerConfig serverConfig;
+    if (FileSystem.FileExists(Path.Combine(config.serverPath, config.serverConfigName)))
+    {
+        try
+        {
+            using (StreamReader reader = new StreamReader(Path.Combine(config.serverPath, config.serverConfigName)))
+            {
+                string serverConfigText = reader.ReadToEnd();
+                serverConfig = ConfigSerializer.Deserialize(serverConfigText);
+            }
+            serverConfig.template = config.missionName;
+            serverConfig.instanceId = config.instanceId;
+            using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.serverConfigName)))
+            {
+                string serverConfigText = ConfigSerializer.Serialize(serverConfig);
+                writer.Write(serverConfigText);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+        }
+    }
+    else
+    {
+        try
+        {
+            serverConfig = new ServerConfig();
+            serverConfig.template = config.missionName;
+            serverConfig.instanceId = config.instanceId;
+            string serverConfigText = ConfigSerializer.Serialize(serverConfig);
+            File.WriteAllText(Path.Combine(config.serverPath, config.serverConfigName),serverConfigText);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+        }
+    }
+
+    AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+
     s.StartServer();
     s.StartBEC();
     Thread.Sleep(30000);

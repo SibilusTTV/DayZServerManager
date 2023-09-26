@@ -1,4 +1,4 @@
-﻿using DayZServerManager.ConfigClasses;
+﻿using DayZServerManager.ManagerConfigClasses;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
 
