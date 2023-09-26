@@ -13,6 +13,7 @@ namespace DayZServerManager
 
         // Other Variables
         private bool updatedMods;
+        private bool restartingForUpdates;
 
         Process? serverProcess;
         Process? becProcess;
@@ -42,7 +43,7 @@ namespace DayZServerManager
 
         public bool CheckBEC()
         {
-            if (becProcess != null)
+            if (becProcess != null && !restartingForUpdates)
             {
                 return !becProcess.HasExited;
             }
@@ -54,6 +55,8 @@ namespace DayZServerManager
 
         public void StartServer()
         {
+            updatedMods = false;
+            restartingForUpdates = false;
             string clientModsToLoad = string.Empty;
             foreach (Mod clientMod in config.clientMods)
             {
@@ -305,8 +308,13 @@ namespace DayZServerManager
             if (updatedMods && !(becUpdateProcess != null && becUpdateProcess.HasExited))
             {
                 updatedMods = false;
+                restartingForUpdates = true;
                 try
                 {
+                    if (becProcess != null && !becProcess.HasExited)
+                    {
+                        becProcess.Kill();
+                    }
                     string becStartParameters = $"-f ConfigUpdate.cfg --dsc";
                     becUpdateProcess = Process.Start(Path.Combine(config.becPath, "Bec.exe"), becStartParameters);
                     return true;
