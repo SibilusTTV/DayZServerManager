@@ -22,7 +22,7 @@ namespace DayZServerManager.Helpers
         {
             if (cfg != null)
             {
-                string pattern = "[^\\n\\w]*([a-zA-Z\\[\\]]+)\\s*=\\s*(\"([^\\n\"]*)\"|([-0-9]*)|true|false);";
+                string pattern = "[^\\n\\w]*([a-zA-Z\\[\\]]+)\\s*=\\s*(\"([^\\n\"]*)\"|([-0-9]*)|(true|false));";
                 Regex reg = new Regex(pattern);
                 MatchCollection matches = reg.Matches(config);
 
@@ -31,178 +31,178 @@ namespace DayZServerManager.Helpers
                     switch (match.Groups[1].Value)
                     {
                         case "hostname":
-                            cfg.hostname = match.Groups[2].Value;
+                            cfg.hostname = match.Groups[3].Value;
                             break;
                         case "password":
-                            cfg.password = match.Groups[2].Value;
+                            cfg.password = match.Groups[3].Value;
                             break;
                         case "passwordAdmin":
-                            cfg.passwordAdmin = match.Groups[2].Value;
+                            cfg.passwordAdmin = match.Groups[3].Value;
                             break;
                         case "enableWhitelist":
-                            cfg.enableWhitelist = Int32.Parse(match.Groups[2].Value);
+                            cfg.enableWhitelist = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disableBanlist":
-                            cfg.disableBanlist = bool.Parse(match.Groups[2].Value);
+                            cfg.disableBanlist = bool.Parse(match.Groups[5].Value);
                             break;
                         case "disablePrioritylist":
-                            cfg.disablePrioritylist = bool.Parse(match.Groups[2].Value);
+                            cfg.disablePrioritylist = bool.Parse(match.Groups[5].Value);
                             break;
                         case "maxPlayers":
-                            cfg.maxPlayers = Int32.Parse(match.Groups[2].Value);
+                            cfg.maxPlayers = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "verifySignatures":
-                            cfg.verifySignatures = Int32.Parse(match.Groups[2].Value);
+                            cfg.verifySignatures = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "forceSameBuild":
-                            cfg.forceSameBuild = Int32.Parse(match.Groups[2].Value);
+                            cfg.forceSameBuild = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disableVoN":
-                            cfg.disableVoN = Int32.Parse(match.Groups[2].Value);
+                            cfg.disableVoN = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "vonCodecQuality":
-                            cfg.vonCodecQuality = Int32.Parse(match.Groups[2].Value);
+                            cfg.vonCodecQuality = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disable3rdPerson":
-                            cfg.disable3rdPerson = Int32.Parse(match.Groups[2].Value);
+                            cfg.disable3rdPerson = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disableCrosshair":
-                            cfg.disableCrosshair = Int32.Parse(match.Groups[2].Value);
+                            cfg.disableCrosshair = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disablePersonalLight":
-                            cfg.disablePersonalLight = Int32.Parse(match.Groups[2].Value);
+                            cfg.disablePersonalLight = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "lightingConfig":
-                            cfg.lightingConfig = Int32.Parse(match.Groups[2].Value);
+                            cfg.lightingConfig = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "serverTime":
-                            cfg.serverTime = match.Groups[2].Value;
+                            cfg.serverTime = match.Groups[3].Value;
                             break;
                         case "serverTimeAcceleration":
-                            cfg.serverTimeAcceleration = Int32.Parse(match.Groups[2].Value);
+                            cfg.serverTimeAcceleration = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "serverNightTimeAcceleration":
-                            cfg.serverNightTimeAcceleration = Int32.Parse(match.Groups[2].Value);
+                            cfg.serverNightTimeAcceleration = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "serverTimePersistent":
-                            cfg.serverTimePersistent = Int32.Parse(match.Groups[2].Value);
+                            cfg.serverTimePersistent = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "guaranteedUpdates":
-                            cfg.guaranteedUpdates = Int32.Parse(match.Groups[2].Value);
+                            cfg.guaranteedUpdates = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "loginQueueConcurrentPlayers":
-                            cfg.loginQueueConcurrentPlayers = Int32.Parse(match.Groups[2].Value);
+                            cfg.loginQueueConcurrentPlayers = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "loginQueueMaxPlayers":
-                            cfg.loginQueueMaxPlayers = Int32.Parse(match.Groups[2].Value);
+                            cfg.loginQueueMaxPlayers = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "instanceId":
-                            cfg.instanceId = Int32.Parse(match.Groups[2].Value);
+                            cfg.instanceId = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "storageAutoFix":
-                            cfg.storageAutoFix = Int32.Parse(match.Groups[2].Value);
+                            cfg.storageAutoFix = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "steamQueryPort":
-                            cfg.steamQueryPort = Int32.Parse(match.Groups[2].Value);
+                            cfg.steamQueryPort = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "respawnTime":
-                            cfg.respawnTime = Int32.Parse(match.Groups[2].Value);
+                            cfg.respawnTime = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "timeStampFormat":
-                            cfg.timeStampFormat = match.Groups[2].Value;
+                            cfg.timeStampFormat = match.Groups[3].Value;
                             break;
                         case "logAverageFps":
-                            cfg.logAverageFps = Int32.Parse(match.Groups[2].Value);
+                            cfg.logAverageFps = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "logMemory":
-                            cfg.logMemory = Int32.Parse(match.Groups[2].Value);
+                            cfg.logMemory = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "logPlayers":
-                            cfg.logPlayers = Int32.Parse(match.Groups[2].Value);
+                            cfg.logPlayers = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "logFile":
-                            cfg.logFile = match.Groups[2].Value;
+                            cfg.logFile = match.Groups[3].Value;
                             break;
                         case "adminLogPlayerHitsOnly":
-                            cfg.adminLogPlayerHitsOnly = Int32.Parse(match.Groups[2].Value);
+                            cfg.adminLogPlayerHitsOnly = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "adminLogPlacement":
-                            cfg.adminLogPlacement = Int32.Parse(match.Groups[2].Value);
+                            cfg.adminLogPlacement = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "adminLogBuildActions":
-                            cfg.adminLogBuildActions = Int32.Parse(match.Groups[2].Value);
+                            cfg.adminLogBuildActions = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "adminLogPlayerList":
-                            cfg.adminLogPlayerList = Int32.Parse(match.Groups[2].Value);
+                            cfg.adminLogPlayerList = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disableMultiAccountMitigation":
-                            cfg.disableMultiAccountMitigation = bool.Parse(match.Groups[2].Value);
+                            cfg.disableMultiAccountMitigation = bool.Parse(match.Groups[5].Value);
                             break;
                         case "enableDebugMonitor":
-                            cfg.enableDebugMonitor = Int32.Parse(match.Groups[2].Value);
+                            cfg.enableDebugMonitor = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "allowFilePatching":
-                            cfg.allowFilePatching = Int32.Parse(match.Groups[2].Value);
+                            cfg.allowFilePatching = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "simulatedPlayersBatch":
-                            cfg.simulatedPlayersBatch = Int32.Parse(match.Groups[2].Value);
+                            cfg.simulatedPlayersBatch = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "multithreadedReplication":
-                            cfg.multithreadedReplication = Int32.Parse(match.Groups[2].Value);
+                            cfg.multithreadedReplication = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "speedhackDetection":
-                            cfg.speedhackDetection = Int32.Parse(match.Groups[2].Value);
+                            cfg.speedhackDetection = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "networkRangeClose":
-                            cfg.networkRangeClose = Int32.Parse(match.Groups[2].Value);
+                            cfg.networkRangeClose = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "networkRangeNear":
-                            cfg.networkRangeNear = Int32.Parse(match.Groups[2].Value);
+                            cfg.networkRangeNear = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "networkRangeFar":
-                            cfg.networkRangeFar = Int32.Parse(match.Groups[2].Value);
+                            cfg.networkRangeFar = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "networkRangeDistantEffect":
-                            cfg.networkRangeDistantEffect = Int32.Parse(match.Groups[2].Value);
+                            cfg.networkRangeDistantEffect = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "networkObjectBatchSend":
-                            cfg.networkObjectBatchSend = Int32.Parse(match.Groups[2].Value);
+                            cfg.networkObjectBatchSend = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "networkObjectBatchCompute":
-                            cfg.networkObjectBatchCompute = Int32.Parse(match.Groups[2].Value);
+                            cfg.networkObjectBatchCompute = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "defaultVisibility":
-                            cfg.defaultVisibility = Int32.Parse(match.Groups[2].Value);
+                            cfg.defaultVisibility = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "defaultObjectViewDistance":
-                            cfg.defaultObjectViewDistance = Int32.Parse(match.Groups[2].Value);
+                            cfg.defaultObjectViewDistance = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disableBaseDamage":
-                            cfg.disableBaseDamage = Int32.Parse(match.Groups[2].Value);
+                            cfg.disableBaseDamage = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disableContainerDamage":
-                            cfg.disableContainerDamage = Int32.Parse(match.Groups[2].Value);
+                            cfg.disableContainerDamage = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "disableRespawnDialog":
-                            cfg.disableRespawnDialog = Int32.Parse(match.Groups[2].Value);
+                            cfg.disableRespawnDialog = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "pingWarning":
-                            cfg.pingWarning = Int32.Parse(match.Groups[2].Value);
+                            cfg.pingWarning = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "pingCritical":
-                            cfg.pingCritical = Int32.Parse(match.Groups[2].Value);
+                            cfg.pingCritical = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "MaxPing":
-                            cfg.MaxPing = Int32.Parse(match.Groups[2].Value);
+                            cfg.MaxPing = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "serverFpsWarning":
-                            cfg.serverFpsWarning = Int32.Parse(match.Groups[2].Value);
+                            cfg.serverFpsWarning = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "motdInterval":
-                            cfg.motdInterval = Int32.Parse(match.Groups[2].Value);
+                            cfg.motdInterval = Int32.Parse(match.Groups[4].Value);
                             break;
                         case "template":
-                            cfg.template = match.Groups[2].Value;
+                            cfg.template = match.Groups[3].Value;
                             break;
                     }
                 }
