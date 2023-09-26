@@ -22,7 +22,7 @@ namespace DayZServerManager.Helpers
         {
             if (cfg != null)
             {
-                string pattern = "[^\\n\\w]*([a-zA-Z\\[\\]]+)\\s*=\\s*(\\\"([^\\n]*)\\\"|([-0-9]*)|true|false);";
+                string pattern = "[^\\n\\w]*([a-zA-Z\\[\\]]+)\\s*=\\s*(\"([^\\n\"]*)\"|([-0-9]*)|true|false);";
                 Regex reg = new Regex(pattern);
                 MatchCollection matches = reg.Matches(config);
 
