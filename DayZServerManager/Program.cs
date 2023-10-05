@@ -54,6 +54,11 @@ else
     config.netLog = true;
     config.freezeCheck = true;
     config.limitFPS = -1;
+    config.vanillaMissionName = "dayzOffline.chernarusplus";
+    config.missionTemplateName = "ChernarusTemplate";
+    config.expansionTemplateName = "DayZ - Expansion-Missions";
+    config.gitInstallationPath = "C:\\Program Files\\Git";
+    config.mapName = "Chernarus";
     config.clientMods = new List<Mod>();
     config.serverMods = new List<Mod>();
 

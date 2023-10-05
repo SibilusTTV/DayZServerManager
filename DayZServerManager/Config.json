@@ -18,6 +18,11 @@
   "netLog": true,
   "freezeCheck": true,
   "limitFPS": -1,
+  "vanillaMissionName": "dayzOffline.chernarusplus",
+  "missionTemplateName": "ChernarusTemplate",
+  "expansionTemplateName": "DayZ-Expansion-Missions",
+  "gitInstallationPath": "C:\\Program Files\\Git",
+  "mapName": "Chernarus",
   "clientMods": [],
   "serverMods": []
 }

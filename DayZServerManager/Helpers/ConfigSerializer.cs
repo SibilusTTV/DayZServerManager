@@ -317,7 +317,9 @@ namespace DayZServerManager.Helpers
 
                 returnString += "};";
 
-                returnString += $"{Environment.NewLine}class Mission";
+                returnString += Environment.NewLine;
+                returnString += Environment.NewLine;
+                returnString += $"{Environment.NewLine}class Missions";
                 returnString += $"{Environment.NewLine}{{";
                 returnString += $"{Environment.NewLine}    class DayZ";
                 returnString += $"{Environment.NewLine}    {{";

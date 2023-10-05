@@ -1,4 +1,5 @@
-﻿using DayZServerManager.ManagerConfigClasses;
+﻿using DayZServerManager.Helpers;
+using DayZServerManager.ManagerConfigClasses;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
 
@@ -13,6 +14,7 @@ namespace DayZServerManager
 
         // Other Variables
         private bool updatedMods;
+        private List<long> updatedModsIDs;
         private bool restartingForUpdates;
 
         Process? serverProcess;
@@ -22,6 +24,7 @@ namespace DayZServerManager
         public Server(Config config)
         {
             this.config = config;
+            updatedModsIDs = new List<long>();
             dayZServerBranch = 223350;
             dayZGameBranch = 221100;
             serverProcess = null;
@@ -85,10 +88,16 @@ namespace DayZServerManager
 
             try
             {
+                serverProcess = new Process();
+                ProcessStartInfo procInf= new ProcessStartInfo();
                 string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
+                procInf.WorkingDirectory = config.serverPath;
+                procInf.Arguments = startParameters;
+                procInf.FileName = Path.Combine(config.serverPath, "DayZServer_x64.exe");
+                serverProcess.StartInfo = procInf;
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Starting Server");
-                serverProcess = Process.Start(Path.Combine(config.serverPath, "DayZServer_x64.exe"), startParameters);
-                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Server starting up");
+                serverProcess.Start();
+                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Server starting at {Path.Combine(config.serverPath, "DayZServer_x64.exe")} with the parameters {startParameters}");
             }
             catch (Exception ex)
             { 
@@ -225,30 +234,65 @@ namespace DayZServerManager
                     Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} All mods were downloaded");
                     foreach (Mod mod in mods)
                     {
-                        string modKeysPath = Path.Combine(config.workshopPath, mod.workshopID.ToString());
-                        if (FileSystem.DirectoryExists(modKeysPath))
+                        string serverModKeysPath = string.Empty;
+                        if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, mod.name, "Keys")))
                         {
-                            List<string> fileNames = FileSystem.GetFiles(modKeysPath).ToList<string>();
-                            if (fileNames.Count > 0)
+                            serverModKeysPath = Path.Combine(config.serverPath, mod.name, "Keys");
+                        }
+                        else if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, mod.name, "Key")))
+                        {
+                            serverModKeysPath = Path.Combine(config.serverPath, mod.name, "Key");
+                        }
+
+                        string steamModKeysPath = string.Empty;
+                        if (FileSystem.DirectoryExists(Path.Combine(config.workshopPath, mod.workshopID.ToString(), "Keys")))
+                        {
+                            steamModKeysPath = Path.Combine(config.workshopPath, mod.workshopID.ToString(), "Keys");
+                        }
+                        else if (FileSystem.DirectoryExists(Path.Combine(config.workshopPath, mod.workshopID.ToString(), "Key")))
+                        {
+                            steamModKeysPath = Path.Combine(config.workshopPath, mod.workshopID.ToString(), "Key");
+                        }
+
+                        if (steamModKeysPath != string.Empty)
+                        {
+                            List<string> steamModKeysFileNames = FileSystem.GetFiles(steamModKeysPath).ToList<string>();
+                            if (steamModKeysFileNames.Count > 0)
                             {
-                                string modKeyPath = Path.Combine(modKeysPath, fileNames[0]);
-                                if (File.Exists(modKeyPath))
+                                if (serverModKeysPath != string.Empty)
                                 {
-                                    DateTime changingDate = File.GetLastWriteTimeUtc(modKeyPath);
-                                    if (mod.lastUpdated != null)
+                                    List<string> serverModKeysFileNames = FileSystem.GetFiles(steamModKeysPath).ToList<string>();
+                                    if (steamModKeysFileNames.Count > 0)
                                     {
-                                        if (mod.lastUpdated != changingDate)
+                                        DateTime serverModChangingDate = File.GetLastWriteTimeUtc(Path.Combine(serverModKeysPath, serverModKeysFileNames[0]));
+                                        DateTime steamModChangingDate = File.GetLastWriteTimeUtc(Path.Combine(steamModKeysPath, steamModKeysFileNames[0]));
+                                        if (serverModChangingDate != steamModChangingDate)
                                         {
-                                            mod.lastUpdated = changingDate;
+                                            updatedModsIDs.Add(mod.workshopID);
                                             updatedMods = true;
                                         }
                                     }
                                     else
                                     {
-                                        mod.lastUpdated = changingDate;
+                                        updatedModsIDs.Add(mod.workshopID);
+                                        updatedMods = true;
                                     }
                                 }
+                                else
+                                {
+                                    updatedModsIDs.Add(mod.workshopID);
+                                    updatedMods = true;
+                                }
                             }
+                        }
+                    }
+
+                    foreach (long key in updatedModsIDs)
+                    {
+                        Mod? mod = SearchForMod(key, mods);
+                        if (mod != null)
+                        {
+                            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} {mod.name} was updated");
                         }
                     }
                 }
@@ -263,39 +307,50 @@ namespace DayZServerManager
         {
             try
             {
-                foreach (Mod mod in mods)
+                foreach (long key in updatedModsIDs)
                 {
-                    string steamModPath = Path.Combine(config.workshopPath, mod.workshopID.ToString());
-                    string serverModPath = string.Empty;
-                    serverModPath = Path.Combine(config.serverPath, mod.name);
-
-                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
-                    if (FileSystem.DirectoryExists(steamModPath))
+                    Mod? mod = SearchForMod(key, mods);
+                    if (mod != null)
                     {
-                        if (FileSystem.DirectoryExists(serverModPath))
-                        {
-                            FileSystem.DeleteDirectory(serverModPath, DeleteDirectoryOption.DeleteAllContents);
-                        }
-                        FileSystem.CopyDirectory(steamModPath, serverModPath);
+                        string steamModPath = Path.Combine(config.workshopPath, mod.workshopID.ToString());
+                        string serverModPath = string.Empty;
+                        serverModPath = Path.Combine(config.serverPath, mod.name);
 
-                        string serverKeysPath = Path.Combine(config.serverPath, "keys");
-                        string modKeysPath = string.Empty;
-                        if (FileSystem.DirectoryExists(Path.Combine(serverModPath, "Keys")))
+                        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
+                        if (FileSystem.DirectoryExists(steamModPath))
                         {
-                            modKeysPath = Path.Combine(serverModPath, "Keys");
-                        }
-                        else if (FileSystem.DirectoryExists(Path.Combine(serverModPath, "Key")))
-                        {
-                            modKeysPath = Path.Combine(serverModPath, "Key");
-                        }
+                            FileSystem.CopyDirectory(steamModPath, serverModPath, true);
 
-                        if (FileSystem.DirectoryExists(modKeysPath))
-                        {
-                            FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
+                            string serverKeysPath = Path.Combine(config.serverPath, "keys");
+                            string modKeysPath = string.Empty;
+                            if (FileSystem.DirectoryExists(Path.Combine(serverModPath, "Keys")))
+                            {
+                                modKeysPath = Path.Combine(serverModPath, "Keys");
+                            }
+                            else if (FileSystem.DirectoryExists(Path.Combine(serverModPath, "Key")))
+                            {
+                                modKeysPath = Path.Combine(serverModPath, "Key");
+                            }
+
+                            if (FileSystem.DirectoryExists(modKeysPath))
+                            {
+                                FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
+                            }
+                            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mod was moved to {mod.name}");
                         }
-                        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mod was moved to {mod.name}");
+                    }
+
+                    if (key == 2116157322 || key == 2572331007)
+                    {
+                        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating Mission folder");
+                        MissionUpdater upd = new MissionUpdater(config);
+                        upd.Update();
+                        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Finished updating Mission folder");
                     }
                 }
+
+                updatedModsIDs = new List<long>();
+
             }
             catch (Exception ex)
             {
@@ -305,7 +360,7 @@ namespace DayZServerManager
 
         public bool CheckForUpdatedMods()
         {
-            if (updatedMods && !(becUpdateProcess != null && becUpdateProcess.HasExited))
+            if (updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0 && !(becUpdateProcess != null && becUpdateProcess.HasExited))
             {
                 updatedMods = false;
                 restartingForUpdates = true;
@@ -360,6 +415,19 @@ namespace DayZServerManager
             {
                 Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
             }
+        }
+
+        private Mod? SearchForMod(long key, List<Mod> mods)
+        {
+            foreach (Mod mod in mods)
+            {
+                if (mod.workshopID == key)
+                {
+                    return mod;
+                }
+            }
+
+            return null;
         }
     }
 }

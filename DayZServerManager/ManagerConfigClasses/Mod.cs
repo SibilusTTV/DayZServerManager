@@ -10,6 +10,5 @@ namespace DayZServerManager.ManagerConfigClasses
     {
         public string name {  get; set; }
         public long workshopID { get; set; }
-        public DateTime? lastUpdated { get; set; }
     }
 }

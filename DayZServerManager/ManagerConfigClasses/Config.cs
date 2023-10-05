@@ -27,6 +27,11 @@ namespace DayZServerManager.ManagerConfigClasses
         public bool freezeCheck { get; set; }
         public bool netLog { get; set; }
         public int limitFPS { get; set; }
+        public string vanillaMissionName { get; set; }
+        public string missionTemplateName { get; set; }
+        public string expansionTemplateName { get; set; }
+        public string gitInstallationPath { get; set; }
+        public string mapName { get; set; }
         public List<Mod> clientMods { get; set; }
         public List<Mod> serverMods { get; set; }
     }
