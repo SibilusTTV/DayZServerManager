@@ -28,8 +28,8 @@ namespace DayZServerManager.ManagerConfigClasses
         public bool netLog { get; set; }
         public int limitFPS { get; set; }
         public string vanillaMissionName { get; set; }
-        public string missionTemplateName { get; set; }
-        public string expansionTemplateName { get; set; }
+        public string missionTemplatePath { get; set; }
+        public string expansionDownloadPath { get; set; }
         public string gitInstallationPath { get; set; }
         public string mapName { get; set; }
         public List<Mod> clientMods { get; set; }

@@ -8,7 +8,7 @@ namespace DayZServerManager.MissionClasses.TypesChangesClasses
 {
     public class TypesChangesItem
     {
-        public string Name { get; set; }
-        public long Lifetime { get; set; }
+        public string name { get; set; }
+        public long lifetime { get; set; }
     }
 }

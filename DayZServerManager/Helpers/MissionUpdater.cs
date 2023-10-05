@@ -17,6 +17,8 @@ using System.Xml;
 using DayZServerManager.MissionClasses.EventSpawnClasses;
 using System.ComponentModel;
 using DayZServerManager.MissionClasses.TypesChangesClasses;
+using System.Reflection.Metadata;
+using System.IO;
 
 namespace DayZServerManager.Helpers
 {
@@ -33,612 +35,146 @@ namespace DayZServerManager.Helpers
             try
             {
                 string missionPath = Path.Combine(config.serverPath, "mpmissions", config.missionName);
-                string missionTemplatePath = Path.Combine(config.serverPath, "mpmissions", config.missionTemplateName);
-                string expansionTemplatePath = Path.Combine(config.serverPath, "mpmissions", config.expansionTemplateName, "Template", config.mapName);
-
-                // Rename the old mission folder and copy the contents of the vanilla folder
-                if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName)))
-                {
-                    if (FileSystem.DirectoryExists(missionPath))
-                    {
-                        if (FileSystem.DirectoryExists(missionPath + "Old"))
-                        {
-                            FileSystem.DeleteDirectory(missionPath + "Old", DeleteDirectoryOption.DeleteAllContents);
-                        }
-                        FileSystem.MoveDirectory(missionPath, missionPath + "Old");
-                    }
-                    FileSystem.CopyDirectory(Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName), missionPath);
-                }
-
-                // Change the variables in the globals.xml of TimeLogin to 5 and ZombieMaxCount to 500
-                if (FileSystem.FileExists(Path.Combine(missionPath, "db", "globals.xml")))
-                {
-                    GlobalsFile? globals;
-                    using (StreamReader reader = new StreamReader(Path.Combine(missionPath, "db", "globals.xml")))
-                    {
-                        XmlSerializer serializer = new XmlSerializer(typeof(GlobalsFile));
-                        globals = (GlobalsFile?)serializer.Deserialize(reader);
-                        reader.Close();
-                    }
-                    if (globals != null)
-                    {
-                        foreach (VarItem item in globals.varItems)
-                        {
-                            if (item != null && item.name == "TimeLogin") 
-                            {
-                                item.value = "5";
-                            }
-                            else if (item != null && item.name == "ZombieMaxCount")
-                            {
-                                item.value = "500";
-                            }
-                        }
-                        using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "db", "globals.xml")))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(GlobalsFile));
-                            serializer.Serialize(writer, globals);
-                            writer.Close();
-                        }
-                    }
-                }
+                string missionTemplatePath = Path.Combine(config.missionTemplatePath);
 
                 // Get the new expansion mission template from git
-                if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions", config.expansionTemplateName)) && FileSystem.FileExists(Path.Combine(config.gitInstallationPath, "bin", "git.exe")))
+                string expansionTemplatePath = DownloadExpansionTemplates(config);
+
+                // Rename the old mission folder and copy the contents of the vanilla folder
+                CopyMissionFolder(missionPath, Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName));
+
+                if (FileSystem.DirectoryExists(missionPath))
                 {
-                    ProcessStartInfo gitInfo = new ProcessStartInfo();
-                    gitInfo.CreateNoWindow = false;
-                    gitInfo.FileName = Path.Combine(config.gitInstallationPath, "bin", "git.exe");
-                    gitInfo.Arguments = "pull";
-                    gitInfo.WorkingDirectory = Path.Combine(config.serverPath, "mpmissions", config.expansionTemplateName);
-                    Process gitProcess = new Process();
-                    gitProcess.StartInfo = gitInfo;
-                    gitProcess.Start();
-                    gitProcess.WaitForExit();
-                    gitProcess.Close();
-                }
-
-                // Add the other parts of the cfgeconomycore.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
-                if (FileSystem.FileExists(Path.Combine(missionPath, "cfgeconomycore.xml")))
-                {
-                    EconomyCoreFile? missionEconomyCore;
-                    using (StreamReader reader = new StreamReader(Path.Combine(missionPath, "cfgeconomycore.xml")))
+                    // Change the variables in the globals.xml of TimeLogin to 5 and ZombieMaxCount to 500
+                    GlobalsFile? globals = DeserializeGlobalsFile(Path.Combine(missionPath, "db", "globals.xml"));
+                    if (globals != null)
                     {
-                        XmlSerializer serializer = new XmlSerializer(typeof(EconomyCoreFile));
-                        missionEconomyCore = (EconomyCoreFile?)serializer.Deserialize(reader);
-                        reader.Close();
+                        UpdateGlobals(globals);
+                        SerializeGlobalsFile(Path.Combine(missionPath, "db", "globals.xml"), globals);
                     }
 
-                    if (FileSystem.FileExists(Path.Combine(expansionTemplatePath, "cfgeconomycore.xml")))
-                    {
-                        EconomyCoreFile? expansionTemplateEconomyCore;
-                        using (StreamReader reader = new StreamReader(Path.Combine(expansionTemplatePath, "cfgeconomycore.xml")))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(EconomyCoreFile));
-                            expansionTemplateEconomyCore = (EconomyCoreFile?)serializer.Deserialize(reader);
-                            reader.Close();
-                        }
-
-                        if (expansionTemplateEconomyCore != null)
-                        {
-                            if (missionEconomyCore != null)
-                            {
-                                foreach (CeItem ceItem in expansionTemplateEconomyCore.ceItems)
-                                {
-                                    CeItem? ceItemInMission = SearchForCeItem(ceItem, missionEconomyCore);
-                                    if (ceItemInMission != null)
-                                    {
-                                        foreach (FileItem fileItem in ceItem.fileItems)
-                                        {
-                                            if (!SearchForFileItem(fileItem, ceItemInMission))
-                                            {
-                                                ceItemInMission.fileItems.Add(fileItem);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        missionEconomyCore.ceItems.Add(ceItem);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                missionEconomyCore = expansionTemplateEconomyCore;
-                            }
-                        }
-                    }
-
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgeconomycore.xml")))
-                    {
-                        EconomyCoreFile? missionTemplateEconomyCore;
-                        using (StreamReader reader = new StreamReader(Path.Combine(missionTemplatePath, "cfgeconomycore.xml")))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(EconomyCoreFile));
-                            missionTemplateEconomyCore = (EconomyCoreFile?)serializer.Deserialize(reader);
-                            reader.Close();
-                        }
-
-                        if (missionTemplateEconomyCore != null)
-                        {
-                            if (missionEconomyCore != null)
-                            {
-                                foreach (CeItem ceItem in missionTemplateEconomyCore.ceItems)
-                                {
-                                    CeItem? ceItemInMission = SearchForCeItem(ceItem, missionEconomyCore);
-                                    if (ceItemInMission != null)
-                                    {
-                                        foreach (FileItem fileItem in ceItem.fileItems)
-                                        {
-                                            if (!SearchForFileItem(fileItem, ceItemInMission))
-                                            {
-                                                ceItemInMission.fileItems.Add(fileItem);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        missionEconomyCore.ceItems.Add(ceItem);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                missionEconomyCore = missionTemplateEconomyCore;
-                            }
-                        }
-                    }
+                    // Add the other parts of the cfgeconomycore.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
+                    EconomyCoreFile? missionEconomyCore = DeserializeEconomyCoreFile(Path.Combine(missionPath, "cfgeconomycore.xml"));
 
                     if (missionEconomyCore != null)
                     {
-                        using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "cfgeconomycore.xml")))
+                        EconomyCoreFile? expansionTemplateEconomyCore = DeserializeEconomyCoreFile(Path.Combine(expansionTemplatePath, "cfgeconomycore.xml"));
+                        EconomyCoreFile? missionTemplateEconomyCore = DeserializeEconomyCoreFile(Path.Combine(missionTemplatePath, "cfgeconomycore.xml"));
+                        if (expansionTemplateEconomyCore != null)
                         {
-                            XmlSerializer serializer = new XmlSerializer(typeof(EconomyCoreFile));
-                            serializer.Serialize(writer, missionEconomyCore);
-                            writer.Close();
+                            UpdateEconomyCore(missionEconomyCore, expansionTemplateEconomyCore);
                         }
-                    }
-                }
-
-                // Add the other parts of the cfgeventspawns.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
-                if (FileSystem.FileExists(Path.Combine(missionPath, "cfgeventspawns.xml")))
-                {
-                    EventSpawnsFile? missionEventSpawns;
-                    using (StreamReader reader = new StreamReader(Path.Combine(missionPath, "cfgeventspawns.xml")))
-                    {
-                        XmlSerializer serializer = new XmlSerializer(typeof(EventSpawnsFile));
-                        missionEventSpawns = (EventSpawnsFile?)serializer.Deserialize(reader);
-                        reader.Close();
+                        if (missionTemplateEconomyCore != null)
+                        {
+                            UpdateEconomyCore(missionEconomyCore, missionTemplateEconomyCore);
+                        }
+                        SerializeEconomyCoreFile(Path.Combine(missionPath, "cfgeconomycore.xml"), missionEconomyCore);
                     }
 
-                    if (FileSystem.FileExists(Path.Combine(expansionTemplatePath, "cfgeventspawns.xml")))
-                    {
-                        EventSpawnsFile? expansionTemplateEventSpawns;
-                        using (StreamReader reader = new StreamReader(Path.Combine(expansionTemplatePath, "cfgeventspawns.xml")))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(EventSpawnsFile));
-                            expansionTemplateEventSpawns = (EventSpawnsFile?)serializer.Deserialize(reader);
-                            reader.Close();
-                        }
-
-                        if (expansionTemplateEventSpawns != null)
-                        {
-                            if (missionEventSpawns != null)
-                            {
-                                foreach (EventItem eventItem in expansionTemplateEventSpawns.eventItems)
-                                {
-                                    EventItem? eventItemInMission = SearchForEventItem(eventItem, missionEventSpawns);
-                                    if (eventItemInMission != null)
-                                    {
-                                        foreach (PosItem posItem in eventItem.positions)
-                                        {
-                                            if (!SearchForPosItem(posItem, eventItemInMission))
-                                            {
-                                                eventItemInMission.positions.Add(posItem);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        missionEventSpawns.eventItems.Add(eventItem);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                missionEventSpawns = expansionTemplateEventSpawns;
-                            }
-                        }
-                    }
-
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgeventspawns.xml")))
-                    {
-                        EventSpawnsFile? missionTemplateEventSpawns;
-                        using (StreamReader reader = new StreamReader(Path.Combine(missionTemplatePath, "cfgeventspawns.xml")))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(EventSpawnsFile));
-                            missionTemplateEventSpawns = (EventSpawnsFile?)serializer.Deserialize(reader);
-                            reader.Close();
-                        }
-
-                        if (missionTemplateEventSpawns != null)
-                        {
-                            if (missionEventSpawns != null)
-                            {
-                                foreach (EventItem eventItem in missionTemplateEventSpawns.eventItems)
-                                {
-                                    EventItem? eventItemInMission = SearchForEventItem(eventItem, missionEventSpawns);
-                                    if (eventItemInMission != null)
-                                    {
-                                        foreach (PosItem posItem in eventItem.positions)
-                                        {
-                                            if (!SearchForPosItem(posItem, eventItemInMission))
-                                            {
-                                                eventItemInMission.positions.Add(posItem);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        missionEventSpawns.eventItems.Add(eventItem);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                missionEventSpawns = missionTemplateEventSpawns;
-                            }
-                        }
-                    }
+                    // Add the other parts of the cfgeventspawns.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
+                    EventSpawnsFile? missionEventSpawns = DesererializeEventSpawns(Path.Combine(missionPath, "cfgeventspawns.xml"));
 
                     if (missionEventSpawns != null)
                     {
-                        using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "cfgeventspawns.xml")))
+                        EventSpawnsFile? expansionTemplateEventSpawns = DesererializeEventSpawns(Path.Combine(expansionTemplatePath, "cfgeventspawns.xml"));
+                        EventSpawnsFile? missionTemplateEventSpawns = DesererializeEventSpawns(Path.Combine(missionTemplatePath, "cfgeventspawns.xml"));
+                        if (expansionTemplateEventSpawns != null)
                         {
-                            XmlSerializer serializer = new XmlSerializer(typeof(EventSpawnsFile));
-                            serializer.Serialize(writer, missionEventSpawns);
-                            writer.Close();
+                            UpdateEventSpawns(missionEventSpawns, expansionTemplateEventSpawns);
                         }
-                    }
-                }
-
-                // Add the part of the main method of the init.c of the missionTemplate to the one from the new mission folder
-                if (FileSystem.FileExists(Path.Combine(missionPath, "init.c")) && FileSystem.FileExists(Path.Combine(missionTemplatePath, "init.c")))
-                {
-                    string missionInit;
-                    string templateInit;
-                    using (StreamReader reader = new StreamReader(Path.Combine(missionPath, "init.c")))
-                    {
-                        missionInit = reader.ReadToEnd();
-                        reader.Close();
-                    }
-                    using (StreamReader reader = new StreamReader(Path.Combine(missionTemplatePath, "init.c")))
-                    {
-                        templateInit = reader.ReadToEnd();
-                        reader.Close();
-                    }
-
-                    missionInit = missionInit.Insert(missionInit.IndexOf("{") + 1, templateInit.Substring(templateInit.IndexOf("{") + 1, templateInit.IndexOf("}") - templateInit.IndexOf("{") - 2));
-
-                    using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "init.c")))
-                    {
-                        writer.Write(missionInit);
-                        writer.Close();
-                    }
-                }
-
-                // Copy the folder expansion_ce from the expansionTemplate to the new mission folder
-                if (FileSystem.DirectoryExists(expansionTemplatePath))
-                {
-                    FileSystem.CopyDirectory(Path.Combine(expansionTemplatePath, "expansion_ce"), Path.Combine(missionPath, "expansion_ce"), true);
-                }
-                else if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions", config.expansionTemplateName, "Template", "0_INCOMPLETE", config.mapName)))
-                {
-                    expansionTemplatePath = Path.Combine(config.serverPath, "mpmissions", config.expansionTemplateName, "Template", "0_INCOMPLETE", config.mapName);
-                    FileSystem.CopyDirectory(Path.Combine(expansionTemplatePath, "expansion_ce"), Path.Combine(missionPath, "expansion_ce"), true);
-                }
-
-                // Copy the folders CustomFiles and expansion and also the files mapgrouppos.xml, cfgweather.xml and cfgplayerspawnpoints.xml from the missionTemplate to the new mission folder
-                if (FileSystem.DirectoryExists(missionTemplatePath) && FileSystem.DirectoryExists(missionPath))
-                {
-                    if (FileSystem.DirectoryExists(Path.Combine(missionTemplatePath, "CustomFiles")))
-                    {
-                        FileSystem.CopyDirectory(Path.Combine(missionTemplatePath, "CustomFiles"), Path.Combine(missionPath, "CustomFiles"), true);
-                    }
-                    if (FileSystem.DirectoryExists(Path.Combine(missionTemplatePath, "expansion")))
-                    {
-                        FileSystem.CopyDirectory(Path.Combine(missionTemplatePath, "expansion"), Path.Combine(missionPath, "expansion"), true);
-                    }
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "mapgrouppos.xml")))
-                    {
-                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "mapgrouppos.xml"), Path.Combine(missionPath, "mapgrouppos.xml"), true);
-                    }
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgweather.xml")))
-                    {
-                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfgweather.xml"), Path.Combine(missionPath, "cfgweather.xml"), true);
-                    }
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgplayerspawnpoints.xml")))
-                    {
-                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfgplayerspawnpoints.xml"), Path.Combine(missionPath, "cfgplayerspawnpoints.xml"), true);
-                    }
-                }
-
-                // Changing the types files to reflect the rarities
-                if (FileSystem.DirectoryExists(Path.Combine(missionTemplatePath)))
-                {
-                    RarityFile? hardlineRarity = null;
-                    if (FileSystem.FileExists(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json")))
-                    {
-                        using (StreamReader reader = new StreamReader(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json")))
+                        if (missionTemplateEventSpawns != null)
                         {
-                            string json = reader.ReadToEnd();
-                            hardlineRarity = JsonSerializer.Deserialize<RarityFile>(json);
-                            reader.Close();
+                            UpdateEventSpawns(missionEventSpawns, missionTemplateEventSpawns);
                         }
+                        SerializeEventSpawns(Path.Combine(missionPath, "cfgeventspawns.xml"), missionEventSpawns);
                     }
 
-                    TypesFile? vanillaTypes = null;
-                    if (FileSystem.FileExists(Path.Combine(missionPath, "db", "types.xml")))
+                    // Add the part of the main method of the init.c of the missionTemplate to the one from the new mission folder
+                    if (FileSystem.FileExists(Path.Combine(missionPath, "init.c")) && FileSystem.FileExists(Path.Combine(missionTemplatePath, "init.c")))
                     {
-                        using (StreamReader reader = new StreamReader(Path.Combine(missionPath, "db", "types.xml")))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
-                            vanillaTypes = (TypesFile?)serializer.Deserialize(reader);
-                            reader.Close();
-                        }
+                        string missionInit = DeserializeInitFile(Path.Combine(missionPath, "init.c"));
+                        string templateInit = DeserializeInitFile(Path.Combine(missionTemplatePath, "init.c"));
+
+                        missionInit = UpdateInit(missionInit, templateInit);
+                        
+                        SerializeInitFile(Path.Combine(missionPath, "init.c"), missionInit);
                     }
 
-                    TypesFile? expansionTypes = null;
-                    if (FileSystem.FileExists(Path.Combine(missionPath, "expansion_ce", "expansion_types.xml")))
-                    {
-                        using (StreamReader reader = new StreamReader(Path.Combine(missionPath, "expansion_ce", "expansion_types.xml")))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
-                            expansionTypes = (TypesFile?)serializer.Deserialize(reader);
-                            reader.Close();
-                        }
-                    }
+                    // Copy the folder expansion_ce from the expansionTemplate to the new mission folder
+                    CopyExpansionFiles(expansionTemplatePath, missionPath);
 
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "vanillaRarities.json")))
-                    {
-                        RarityFile? vanillaRarity = null;
-                        using (StreamReader reader = new StreamReader(Path.Combine(missionTemplatePath, "vanillaRarities.json")))
-                        {
-                            string json = reader.ReadToEnd();
-                            vanillaRarity = JsonSerializer.Deserialize<RarityFile>(json);
-                            reader.Close();
-                        }
+                    // Copy the folders CustomFiles and expansion and also the files mapgrouppos.xml, cfgweather.xml and cfgplayerspawnpoints.xml from the missionTemplate to the new mission folder
+                    CopyMissionTemplateFiles(missionTemplatePath, missionPath);
 
+                    // Changing the types files to reflect the rarities
+                    RarityFile? hardlineRarity = DeserializeRarityFile(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json"));
+                    RarityFile? vanillaRarity = DeserializeRarityFile(Path.Combine(missionTemplatePath, "vanillaRarities.json"));
+                    RarityFile? expansionRarity = DeserializeRarityFile(Path.Combine(missionTemplatePath, "expansionRarities.json"));
+
+                    TypesFile? vanillaTypes = DeserializeTypesFile(Path.Combine(missionPath, "db", "types.xml"));
+                    TypesFile? expansionTypes = DeserializeTypesFile(Path.Combine(missionPath, "expansion_ce", "expansion_types.xml"));
+
+                    if (hardlineRarity != null)
+                    {
                         if (vanillaRarity != null)
                         {
-                            List<string> vanillaRarityKeys = vanillaRarity.ItemRarity.Keys.ToList();
-
-                            if (hardlineRarity != null)
-                            {
-                                foreach (string key in vanillaRarityKeys)
-                                {
-                                    if (hardlineRarity.ItemRarity.ContainsKey(key.ToLower()))
-                                    {
-                                        hardlineRarity.ItemRarity[key.ToLower()] = vanillaRarity.ItemRarity[key];
-                                    }
-                                    else if (hardlineRarity.ItemRarity.ContainsKey(key))
-                                    {
-                                        hardlineRarity.ItemRarity[key] = vanillaRarity.ItemRarity[key];
-                                    }
-                                    else
-                                    {
-                                        hardlineRarity.ItemRarity.Add(key, vanillaRarity.ItemRarity[key]);
-                                    }
-                                }
-                            }
-
-                            if (vanillaTypes != null)
-                            {
-                                foreach (string key in vanillaRarityKeys)
-                                {
-                                    TypesItem? item = SearchForTypesItem(key, vanillaTypes);
-                                    if (item != null)
-                                    {
-                                        switch (vanillaRarity.ItemRarity[key])
-                                        {
-                                            case 0:
-                                                item.nominal = 0;
-                                                item.min = 0;
-                                                break;
-                                            case 1:
-                                                item.nominal = 320;
-                                                item.min = 160;
-                                                break;
-                                            case 2:
-                                                item.nominal = 160;
-                                                item.min = 80;
-                                                break;
-                                            case 3:
-                                                item.nominal = 80;
-                                                item.min = 40;
-                                                break;
-                                            case 4:
-                                                item.nominal = 40;
-                                                item.min = 20;
-                                                break;
-                                            case 5:
-                                                item.nominal = 20;
-                                                item.min = 10;
-                                                break;
-                                            case 6:
-                                                item.nominal = 10;
-                                                item.min = 5;
-                                                break;
-                                            case 7:
-                                                item.nominal = 5;
-                                                item.min = 2;
-                                                break;
-                                            case 8:
-                                                item.nominal = 2;
-                                                item.min = 1;
-                                                break;
-                                        }
-                                    }
-                                }
-                            }
+                            UpdateHardlineRarity(hardlineRarity, vanillaRarity);
                         }
-                    }
-
-                    // Change the Lifetimes of items in the types.xml
-                    if (vanillaTypes != null)
-                    {
-                        if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "TypesChanges.json")))
-                        {
-                            TypesChangesFile? changes = null;
-                            using (StreamReader reader = new StreamReader(Path.Combine(missionTemplatePath, "TypesChanges.json")))
-                            {
-                                string json = reader.ReadToEnd();
-                                changes = JsonSerializer.Deserialize<TypesChangesFile>(json);
-                                reader.Close();
-                            }
-
-                            if (changes != null)
-                            {
-                                foreach (TypesChangesItem change in changes.types) 
-                                {
-                                    TypesItem? item = SearchForTypesItem(change.Name, vanillaTypes);
-                                    if (item != null)
-                                    {
-                                        item.lifetime = change.Lifetime;
-                                    }
-                                }
-                            }
-                        }
-
-                        using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "db", "types.xml")))
-                        {
-                            XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
-                            serializer.Serialize(writer, vanillaTypes);
-                            writer.Close();
-                        }
-                    }
-
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "expansionRarities.json")))
-                    {
-                        RarityFile? expansionRarity = null;
-                        using (StreamReader reader = new StreamReader(Path.Combine(missionTemplatePath, "expansionRarities.json")))
-                        {
-                            string json = reader.ReadToEnd();
-                            expansionRarity = JsonSerializer.Deserialize<RarityFile>(json);
-                            reader.Close();
-                        }
-
                         if (expansionRarity != null)
                         {
-                            List<string> expansionRarityKeys = expansionRarity.ItemRarity.Keys.ToList();
-
-                            if (hardlineRarity != null)
-                            {
-                                foreach (string key in expansionRarityKeys)
-                                {
-                                    if (hardlineRarity.ItemRarity.ContainsKey(key.ToLower()))
-                                    {
-                                        hardlineRarity.ItemRarity[key.ToLower()] = expansionRarity.ItemRarity[key];
-                                    }
-                                    else if (hardlineRarity.ItemRarity.ContainsKey(key))
-                                    {
-                                        hardlineRarity.ItemRarity[key] = expansionRarity.ItemRarity[key];
-                                    }
-                                    else
-                                    {
-                                        hardlineRarity.ItemRarity.Add(key, expansionRarity.ItemRarity[key]);
-                                    }
-                                }
-
-                                hardlineRarity.ShowHardlineHUD = expansionRarity.ShowHardlineHUD;
-                                hardlineRarity.UseHumanity = expansionRarity.UseHumanity;
-                                hardlineRarity.EnableItemRarity = expansionRarity.EnableItemRarity;
-                            }
-
-                            if (expansionTypes != null)
-                            {
-                                foreach (string key in expansionRarityKeys)
-                                {
-                                    TypesItem? item = SearchForTypesItem(key, expansionTypes);
-                                    if (item != null)
-                                    {
-                                        switch (expansionRarity.ItemRarity[key])
-                                        {
-                                            case 0:
-                                                item.nominal = 0;
-                                                item.min = 0;
-                                                break;
-                                            case 1:
-                                                item.nominal = 320;
-                                                item.min = 160;
-                                                break;
-                                            case 2:
-                                                item.nominal = 160;
-                                                item.min = 80;
-                                                break;
-                                            case 3:
-                                                item.nominal = 80;
-                                                item.min = 40;
-                                                break;
-                                            case 4:
-                                                item.nominal = 40;
-                                                item.min = 20;
-                                                break;
-                                            case 5:
-                                                item.nominal = 20;
-                                                item.min = 10;
-                                                break;
-                                            case 6:
-                                                item.nominal = 10;
-                                                item.min = 5;
-                                                break;
-                                            case 7:
-                                                item.nominal = 5;
-                                                item.min = 2;
-                                                break;
-                                            case 8:
-                                                item.nominal = 2;
-                                                item.min = 1;
-                                                break;
-                                        }
-                                    }
-                                }
-                            }
+                            UpdateHardlineRarity(hardlineRarity, expansionRarity);
+                            hardlineRarity.ShowHardlineHUD = expansionRarity.ShowHardlineHUD;
+                            hardlineRarity.UseHumanity = expansionRarity.UseHumanity;
+                            hardlineRarity.EnableItemRarity = expansionRarity.EnableItemRarity;
                         }
+                        SerializeRarityFile(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json"), hardlineRarity);
+                    }
+
+                    if (vanillaTypes != null)
+                    {
+                        if (vanillaRarity != null)
+                        {
+                            UpdateTypesWithRarity(vanillaTypes, vanillaRarity);
+                        }
+
+                        // Change the Lifetimes of items in the types.xml
+                        TypesChangesFile? changes = DeserializeTypesChangesFile(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json"));
+                        if (changes != null)
+                        {
+                            UpdateLifetime(vanillaTypes, changes);
+                        }
+
+                        SerializeTypesFile(Path.Combine(missionPath, "db", "types.xml"), vanillaTypes);
                     }
 
                     if (expansionTypes != null)
                     {
-                        using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "expansion_ce", "expansion_types.xml")))
+                        if (expansionRarity != null)
                         {
-                            XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
-                            serializer.Serialize(writer, expansionTypes);
-                            writer.Close();
+                            UpdateTypesWithRarity(expansionTypes, expansionRarity);
                         }
-                    }
 
-                    if (hardlineRarity != null)
-                    {
-                        using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json")))
+                        // Change the Lifetimes of items in the expansionTypes.xml
+                        TypesChangesFile? changes = DeserializeTypesChangesFile(Path.Combine(missionTemplatePath, "expansionTypesChanges.json"));
+                        if (changes != null)
                         {
-                            JsonSerializerOptions options = new JsonSerializerOptions();
-                            options.WriteIndented = true;
-                            string json = JsonSerializer.Serialize(hardlineRarity, options);
-                            writer.Write(json);
-                            writer.Close();
+                            UpdateLifetime(expansionTypes, changes);
                         }
+
+                        SerializeTypesFile(Path.Combine(missionPath, "expansion_ce", "expansion_types.xml"), expansionTypes);
                     }
                 }
 
                 // Copy over the data and map from the old mission into the new one
-                if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions", config.missionName + "Old", "storage_1")))
+                if (FileSystem.DirectoryExists(Path.Combine(missionPath + "Old", "storage_1")))
                 {
-                    FileSystem.CopyDirectory(Path.Combine(config.serverPath, "mpmissions", config.missionName + "Old", "storage_1"), Path.Combine(missionPath, "storage_1"));
+                    CopyPersistenceData(missionPath);
                 }
 
                 // Delete the old mission
-                if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions", config.missionName + "Old")))
+                if (FileSystem.DirectoryExists(Path.Combine(missionPath + "Old")))
                 {
-                    FileSystem.DeleteDirectory(Path.Combine(config.serverPath, "mpmissions", config.missionName + "Old"), DeleteDirectoryOption.DeleteAllContents);
+                    DeleteOldMission(missionPath);
                 }
             }
             catch (Exception ex)
@@ -647,6 +183,7 @@ namespace DayZServerManager.Helpers
             }
         }
 
+        #region Searches
         // Searches for the matching CeItem and returns it
         public CeItem? SearchForCeItem(CeItem ceItem, EconomyCoreFile cfg)
         {
@@ -699,6 +236,7 @@ namespace DayZServerManager.Helpers
             return false;
         }
 
+        // Searches for the matching TypesItem and returns it
         public TypesItem? SearchForTypesItem(string name, TypesFile typesFile)
         {
             foreach (TypesItem item in typesFile.typesItem)
@@ -710,5 +248,612 @@ namespace DayZServerManager.Helpers
             }
             return null;
         }
+        #endregion Searches
+
+        #region UpdateFunctions
+        public string UpdateInit(string init, string templateInit)
+        {
+            int startIndex = init.IndexOf("{") + 1;
+            int endIndex = init.IndexOf("}") + 1;
+            string insertionString = templateInit.Substring(startIndex, startIndex - endIndex);
+            return init.Insert(startIndex, insertionString);
+        }
+
+        public void UpdateGlobals(GlobalsFile globals)
+        {
+            foreach (VarItem item in globals.varItems)
+            {
+                if (item != null && item.name == "TimeLogin")
+                {
+                    item.value = "5";
+                }
+                else if (item != null && item.name == "ZombieMaxCount")
+                {
+                    item.value = "500";
+                }
+            }
+        }
+
+        // Updates the Rarity in the given RarityFile with the rarities of another RarityFile
+        public void UpdateHardlineRarity(RarityFile hardlineRarity, RarityFile newRarities)
+        {
+            foreach (string key in newRarities.ItemRarity.Keys)
+            {
+                if (hardlineRarity.ItemRarity.ContainsKey(key.ToLower()))
+                {
+                    hardlineRarity.ItemRarity[key.ToLower()] = newRarities.ItemRarity[key];
+                }
+                else if (hardlineRarity.ItemRarity.ContainsKey(key))
+                {
+                    hardlineRarity.ItemRarity[key] = newRarities.ItemRarity[key];
+                }
+                else
+                {
+                    hardlineRarity.ItemRarity.Add(key, newRarities.ItemRarity[key]);
+                }
+            }
+        }
+
+        // Updates the spawning of items in the given TypesFile with the new spawns of another TypesFile
+        public void UpdateTypesWithRarity(TypesFile typesFile, RarityFile rarityFile)
+        {
+            foreach (string key in rarityFile.ItemRarity.Keys)
+            {
+                TypesItem? item = SearchForTypesItem(key, typesFile);
+                if (item != null)
+                {
+                    switch (rarityFile.ItemRarity[key])
+                    {
+                        case 0:
+                            item.nominal = 0;
+                            item.min = 0;
+                            break;
+                        case 1:
+                            item.nominal = 320;
+                            item.min = 160;
+                            break;
+                        case 2:
+                            item.nominal = 160;
+                            item.min = 80;
+                            break;
+                        case 3:
+                            item.nominal = 80;
+                            item.min = 40;
+                            break;
+                        case 4:
+                            item.nominal = 40;
+                            item.min = 20;
+                            break;
+                        case 5:
+                            item.nominal = 20;
+                            item.min = 10;
+                            break;
+                        case 6:
+                            item.nominal = 10;
+                            item.min = 5;
+                            break;
+                        case 7:
+                            item.nominal = 5;
+                            item.min = 2;
+                            break;
+                        case 8:
+                            item.nominal = 2;
+                            item.min = 1;
+                            break;
+                    }
+                }
+            }
+        }
+        
+        // Updates the lifetime of items in the given TypesFile with the new spawns of another TypesFile
+        public void UpdateLifetime(TypesFile typesFile, TypesChangesFile changesFile)
+        {
+            foreach (TypesChangesItem change in changesFile.types)
+            {
+                TypesItem? item = SearchForTypesItem(change.name, typesFile);
+                if (item != null)
+                {
+                    item.lifetime = change.lifetime;
+                }
+            }
+        }
+
+        public void UpdateEventSpawns(EventSpawnsFile missionEventSpawns, EventSpawnsFile templateEventSpawns)
+        {
+            foreach (EventItem eventItem in templateEventSpawns.eventItems)
+            {
+                EventItem? eventItemInMission = SearchForEventItem(eventItem, missionEventSpawns);
+                if (eventItemInMission != null)
+                {
+                    foreach (PosItem posItem in eventItem.positions)
+                    {
+                        if (!SearchForPosItem(posItem, eventItemInMission))
+                        {
+                            eventItemInMission.positions.Add(posItem);
+                        }
+                    }
+                }
+                else
+                {
+                    missionEventSpawns.eventItems.Add(eventItem);
+                }
+            }
+        }
+
+        public void UpdateEconomyCore(EconomyCoreFile economyCoreFile, EconomyCoreFile templateEconomyCoreFile)
+        {
+            foreach (CeItem ceItem in templateEconomyCoreFile.ceItems)
+            {
+                CeItem? ceItemInMission = SearchForCeItem(ceItem, economyCoreFile);
+                if (ceItemInMission != null)
+                {
+                    foreach (FileItem fileItem in ceItem.fileItems)
+                    {
+                        if (!SearchForFileItem(fileItem, ceItemInMission))
+                        {
+                            ceItemInMission.fileItems.Add(fileItem);
+                        }
+                    }
+                }
+                else
+                {
+                    economyCoreFile.ceItems.Add(ceItem);
+                }
+            }
+        }
+        #endregion UpdateFunctions
+
+        #region SerializationFunctions
+        public void SerializeInitFile(string path, string initFile)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    writer.Write(initFile);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+        
+        public void SerializeTypesFile(string path, TypesFile typesFile)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
+                    serializer.Serialize(writer, typesFile);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
+        public void SerializeRarityFile(string path, RarityFile rarityFile)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    JsonSerializerOptions options = new JsonSerializerOptions();
+                    options.WriteIndented = true;
+                    string json = JsonSerializer.Serialize(rarityFile, options);
+                    writer.Write(json);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
+        public void SerializeGlobalsFile(string path, GlobalsFile globals)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(GlobalsFile));
+                    serializer.Serialize(writer, globals);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
+        public void SerializeEconomyCoreFile(string path, EconomyCoreFile economyCoreFile)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(EconomyCoreFile));
+                    serializer.Serialize(writer, economyCoreFile);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
+        public void SerializeEventSpawns(string path, EventSpawnsFile eventSpawnsFile)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "cfgeventspawns.xml")))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(EventSpawnsFile));
+                    serializer.Serialize(writer, eventSpawnsFile);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+        #endregion SerializationFunctions
+
+        #region DeserializationFunctions
+        public string DeserializeInitFile(string path)
+        {
+            try
+            {
+                using (StreamReader reader = new StreamReader(path))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                return string.Empty;
+            }
+        }
+
+        // Takes a path and returns the deserialized TypesFile
+        public TypesFile? DeserializeTypesFile(string path)
+        {
+            try
+            {
+                if (FileSystem.FileExists(path))
+                {
+                    using (StreamReader reader = new StreamReader(path))
+                    {
+                        XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
+                        return (TypesFile?)serializer.Deserialize(reader);
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                return null;
+            }
+        }
+
+        // Takes a path and returns the deserialized RarityFile
+        public RarityFile? DeserializeRarityFile(string path)
+        {
+            try
+            {
+                if (FileSystem.FileExists(path))
+                {
+                    using (StreamReader reader = new StreamReader(path))
+                    {
+                        string json = reader.ReadToEnd();
+                        return JsonSerializer.Deserialize<RarityFile>(json);
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                return null;
+            }
+        }
+
+        public TypesChangesFile? DeserializeTypesChangesFile(string path)
+        {
+            try
+            {
+                if (FileSystem.FileExists(path))
+                {
+                    using (StreamReader reader = new StreamReader(path))
+                    {
+                        XmlSerializer serializer = new XmlSerializer(typeof(TypesChangesFile));
+                        return (TypesChangesFile?)serializer.Deserialize(reader);
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                return null;
+            }
+        }
+
+        public GlobalsFile? DeserializeGlobalsFile(string path)
+        {
+            try
+            {
+                if (FileSystem.FileExists(path))
+                {
+                    using (StreamReader reader = new StreamReader(path))
+                    {
+                        XmlSerializer serializer = new XmlSerializer(typeof(GlobalsFile));
+                        return (GlobalsFile?)serializer.Deserialize(reader);
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                return null;
+            }
+        }
+
+        public EconomyCoreFile? DeserializeEconomyCoreFile(string path)
+        {
+            try
+            {
+                if (FileSystem.FileExists(path))
+                {
+                    using (StreamReader reader = new StreamReader(path))
+                    {
+                        XmlSerializer serializer = new XmlSerializer(typeof(EconomyCoreFile));
+                        return (EconomyCoreFile?)serializer.Deserialize(reader);
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                return null;
+            }
+        }
+
+        public EventSpawnsFile? DesererializeEventSpawns(string path)
+        {
+            try
+            {
+                if (FileSystem.FileExists(path))
+                {
+                    using (StreamReader reader = new StreamReader(path))
+                    {
+                        XmlSerializer serializer = new XmlSerializer(typeof(EventSpawnsFile));
+                        return (EventSpawnsFile?)serializer.Deserialize(reader);
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                return null;
+            }
+        }
+        #endregion DeserializationFunctions
+
+        #region CopyFunctions
+        public void CopyMissionFolder(string missionPath, string vanillaMissionPath)
+        {
+            try
+            {
+                if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName)))
+                {
+                    if (FileSystem.DirectoryExists(missionPath))
+                    {
+                        if (FileSystem.DirectoryExists(missionPath + "Old"))
+                        {
+                            DeleteOldMission(missionPath);
+                        }
+                        FileSystem.MoveDirectory(missionPath, missionPath + "Old");
+                    }
+                    FileSystem.CopyDirectory(Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName), missionPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+        
+        public void CopyExpansionFiles(string expansionTemplatePath, string missionPath)
+        {
+            try
+            {
+                if (FileSystem.DirectoryExists(expansionTemplatePath))
+                {
+                    FileSystem.CopyDirectory(Path.Combine(expansionTemplatePath, "expansion_ce"), Path.Combine(missionPath, "expansion_ce"), true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
+        public void CopyMissionTemplateFiles(string missionTemplatePath, string missionPath)
+        {
+            try
+            {
+                if (FileSystem.DirectoryExists(missionTemplatePath))
+                {
+                    if (FileSystem.DirectoryExists(Path.Combine(missionTemplatePath, "CustomFiles")))
+                    {
+                        FileSystem.CopyDirectory(Path.Combine(missionTemplatePath, "CustomFiles"), Path.Combine(missionPath, "CustomFiles"), true);
+                    }
+                    if (FileSystem.DirectoryExists(Path.Combine(missionTemplatePath, "expansion")))
+                    {
+                        FileSystem.CopyDirectory(Path.Combine(missionTemplatePath, "expansion"), Path.Combine(missionPath, "expansion"), true);
+                    }
+                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "mapgrouppos.xml")))
+                    {
+                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "mapgrouppos.xml"), Path.Combine(missionPath, "mapgrouppos.xml"), true);
+                    }
+                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgweather.xml")))
+                    {
+                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfgweather.xml"), Path.Combine(missionPath, "cfgweather.xml"), true);
+                    }
+                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgplayerspawnpoints.xml")))
+                    {
+                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfgplayerspawnpoints.xml"), Path.Combine(missionPath, "cfgplayerspawnpoints.xml"), true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+        
+        public void CopyPersistenceData(string missionPath)
+        {
+            try
+            {
+                FileSystem.CopyDirectory(Path.Combine(missionPath + "Old", "storage_1"), Path.Combine(missionPath, "storage_1"));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+        #endregion CopyFunctions
+
+        #region DownloadFunctions
+        public string DownloadExpansionTemplates(Config config)
+        {
+            try
+            {
+                string expansionTemplatePath = string.Empty;
+                if (FileSystem.FileExists(Path.Combine(config.gitInstallationPath, "bin", "git.exe")))
+                {
+                    if (FileSystem.DirectoryExists(config.expansionDownloadPath))
+                    {
+                        ProcessStartInfo gitInfo = new ProcessStartInfo();
+                        gitInfo.CreateNoWindow = false;
+                        gitInfo.FileName = Path.Combine(config.gitInstallationPath, "bin", "git.exe");
+                        gitInfo.Arguments = "pull";
+                        gitInfo.WorkingDirectory = Path.Combine(config.expansionDownloadPath);
+                        Process gitProcess = new Process();
+                        gitProcess.StartInfo = gitInfo;
+                        gitProcess.Start();
+                        gitProcess.WaitForExit();
+                        gitProcess.Close();
+
+                        if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", config.mapName)))
+                        {
+                            return Path.Combine(config.expansionDownloadPath, "Template", config.mapName);
+                        }
+                        else if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName)))
+                        {
+                            return Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName);
+                        }
+                        else
+                        {
+                            return string.Empty;
+                        }
+                    }
+                    else
+                    {
+                        string workingDirectory = string.Empty;
+                        if (config.expansionDownloadPath == string.Empty)
+                        {
+                            config.expansionDownloadPath = Path.Combine(config.serverPath, "mpmissions", "DayZ-Expansion-Missions");
+                            workingDirectory = Path.Combine(config.serverPath, "mpmissions");
+                        }
+                        else
+                        {
+                            workingDirectory = config.expansionDownloadPath.Remove(config.expansionDownloadPath.LastIndexOf("\\") - 1);
+                        }
+                        ProcessStartInfo gitInfo = new ProcessStartInfo();
+                        gitInfo.CreateNoWindow = false;
+                        gitInfo.FileName = Path.Combine(config.gitInstallationPath, "bin", "git.exe");
+                        gitInfo.Arguments = "clone https://github.com/ExpansionModTeam/DayZ-Expansion-Missions.git";
+                        gitInfo.WorkingDirectory = workingDirectory;
+                        Process gitProcess = new Process();
+                        gitProcess.StartInfo = gitInfo;
+                        gitProcess.Start();
+                        gitProcess.WaitForExit();
+                        gitProcess.Close();
+
+                        if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", config.mapName)))
+                        {
+                            return Path.Combine(config.expansionDownloadPath, "Template", config.mapName);
+                        }
+                        else if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName)))
+                        {
+                            return Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName);
+                        }
+                        else
+                        {
+                            return string.Empty;
+                        }
+                    }
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                return string.Empty;
+            }
+        }
+        #endregion DownloadFunctions
+
+        #region DeleteFunctions
+        public void DeleteOldMission(string missionPath)
+        {
+            try
+            {
+                FileSystem.DeleteDirectory(missionPath + "Old", DeleteDirectoryOption.DeleteAllContents);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+        #endregion DeleteFunctions
     }
 }
