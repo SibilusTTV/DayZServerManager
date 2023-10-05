@@ -494,7 +494,7 @@ namespace DayZServerManager.Helpers
         {
             try
             {
-                using (StreamWriter writer = new StreamWriter(Path.Combine(missionPath, "cfgeventspawns.xml")))
+                using (StreamWriter writer = new StreamWriter(path))
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(EventSpawnsFile));
                     serializer.Serialize(writer, eventSpawnsFile);
