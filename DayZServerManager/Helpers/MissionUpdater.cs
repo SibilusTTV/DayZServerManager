@@ -253,13 +253,14 @@ namespace DayZServerManager.Helpers
         #region UpdateFunctions
         public string UpdateInit(string init, string templateInit)
         {
-            int startIndex = init.IndexOf("{") + 1;
-            int endIndex = init.LastIndexOf("}") + 1;
-            int length = startIndex - endIndex;
-            if (length > 0)
+            int initStartIndex = init.IndexOf("{") + 1;
+            int templateStartIndex = templateInit.IndexOf("{") + 1;
+            int templateEndIndex = templateInit.LastIndexOf("}") - 1;
+            int templateLength = templateEndIndex - templateStartIndex;
+            if (templateLength > 0)
             {
-                string insertionString = templateInit.Substring(startIndex, length);
-                return init.Insert(startIndex, insertionString);
+                string insertionString = templateInit.Substring(templateStartIndex, templateLength);
+                return init.Insert(initStartIndex, insertionString);
             }
             else
             {
