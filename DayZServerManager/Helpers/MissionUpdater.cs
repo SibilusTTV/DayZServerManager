@@ -41,7 +41,7 @@ namespace DayZServerManager.Helpers
                 string expansionTemplatePath = DownloadExpansionTemplates(config);
 
                 // Rename the old mission folder and copy the contents of the vanilla folder
-                CopyMissionFolder(missionPath, Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName));
+                CopyMissionFolder(missionPath, Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName), config.backupPath);
 
                 if (FileSystem.DirectoryExists(missionPath))
                 {
@@ -174,7 +174,7 @@ namespace DayZServerManager.Helpers
                 // Delete the old mission
                 if (FileSystem.DirectoryExists(Path.Combine(missionPath + "Old")))
                 {
-                    DeleteOldMission(missionPath);
+                    CopyOldMission(missionPath, config.backupPath);
                 }
             }
             catch (Exception ex)
@@ -254,9 +254,17 @@ namespace DayZServerManager.Helpers
         public string UpdateInit(string init, string templateInit)
         {
             int startIndex = init.IndexOf("{") + 1;
-            int endIndex = init.IndexOf("}") + 1;
-            string insertionString = templateInit.Substring(startIndex, startIndex - endIndex);
-            return init.Insert(startIndex, insertionString);
+            int endIndex = init.LastIndexOf("}") + 1;
+            int length = startIndex - endIndex;
+            if (length > 0)
+            {
+                string insertionString = templateInit.Substring(startIndex, length);
+                return init.Insert(startIndex, insertionString);
+            }
+            else
+            {
+                return init;
+            }
         }
 
         public void UpdateGlobals(GlobalsFile globals)
@@ -583,8 +591,8 @@ namespace DayZServerManager.Helpers
                 {
                     using (StreamReader reader = new StreamReader(path))
                     {
-                        XmlSerializer serializer = new XmlSerializer(typeof(TypesChangesFile));
-                        return (TypesChangesFile?)serializer.Deserialize(reader);
+                        string json = reader.ReadToEnd();
+                        return JsonSerializer.Deserialize<TypesChangesFile>(json);
                     }
                 }
                 else
@@ -673,21 +681,21 @@ namespace DayZServerManager.Helpers
         #endregion DeserializationFunctions
 
         #region CopyFunctions
-        public void CopyMissionFolder(string missionPath, string vanillaMissionPath)
+        public void CopyMissionFolder(string missionPath, string vanillaMissionPath, string backupPath)
         {
             try
             {
-                if (FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName)))
+                if (FileSystem.DirectoryExists(vanillaMissionPath))
                 {
                     if (FileSystem.DirectoryExists(missionPath))
                     {
                         if (FileSystem.DirectoryExists(missionPath + "Old"))
                         {
-                            DeleteOldMission(missionPath);
+                            CopyOldMission(missionPath, backupPath);
                         }
                         FileSystem.MoveDirectory(missionPath, missionPath + "Old");
                     }
-                    FileSystem.CopyDirectory(Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName), missionPath);
+                    FileSystem.CopyDirectory(vanillaMissionPath, missionPath);
                 }
             }
             catch (Exception ex)
@@ -750,6 +758,23 @@ namespace DayZServerManager.Helpers
             try
             {
                 FileSystem.CopyDirectory(Path.Combine(missionPath + "Old", "storage_1"), Path.Combine(missionPath, "storage_1"));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+        }
+
+        public void CopyOldMission(string missionPath, string backupPath)
+        {
+            try
+            {
+                string newPath = Path.Combine(backupPath, "FullMissionBackups", DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
+                if (!FileSystem.DirectoryExists(Path.Combine(backupPath, "FullMissionBackups")))
+                {
+                    FileSystem.CreateDirectory(Path.Combine(backupPath, "FullMissionBackups"));
+                }
+                FileSystem.MoveDirectory(missionPath + "Old", newPath);
             }
             catch (Exception ex)
             {
@@ -842,18 +867,5 @@ namespace DayZServerManager.Helpers
         }
         #endregion DownloadFunctions
 
-        #region DeleteFunctions
-        public void DeleteOldMission(string missionPath)
-        {
-            try
-            {
-                FileSystem.DeleteDirectory(missionPath + "Old", DeleteDirectoryOption.DeleteAllContents);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
-            }
-        }
-        #endregion DeleteFunctions
     }
 }
