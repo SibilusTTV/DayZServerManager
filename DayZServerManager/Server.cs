@@ -14,8 +14,9 @@ namespace DayZServerManager
 
         // Other Variables
         private bool updatedMods;
-        private List<long> updatedModsIDs;
         private bool restartingForUpdates;
+        private bool updatedServer;
+        private List<long> updatedModsIDs;
 
         Process? serverProcess;
         Process? becProcess;
@@ -60,6 +61,7 @@ namespace DayZServerManager
         {
             updatedMods = false;
             restartingForUpdates = false;
+            updatedServer = false;
             string clientModsToLoad = string.Empty;
             foreach (Mod clientMod in config.clientMods)
             {
@@ -340,8 +342,9 @@ namespace DayZServerManager
                         }
                     }
 
-                    if (key == 2116157322 || key == 2572331007)
+                    if (key == 2116157322 || key == 2572331007 || updatedServer)
                     {
+                        updatedServer = false;
                         Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating Mission folder");
                         MissionUpdater upd = new MissionUpdater(config);
                         upd.Update();
@@ -360,10 +363,11 @@ namespace DayZServerManager
 
         public bool CheckForUpdatedMods()
         {
-            if (updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0 && !(becUpdateProcess != null && becUpdateProcess.HasExited))
+            if (config.RestartOnUpdate && ((updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0) || updatedServer) && !(becUpdateProcess != null && becUpdateProcess.HasExited))
             {
                 updatedMods = false;
                 restartingForUpdates = true;
+                updatedServer = false;
                 try
                 {
                     if (becProcess != null && !becProcess.HasExited)

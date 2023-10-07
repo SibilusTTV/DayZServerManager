@@ -23,6 +23,8 @@
   "expansionDownloadPath": "Server\\mpmissions\\DayZ-Expansion-Missions",
   "gitInstallationPath": "C:\\Program Files\\Git",
   "mapName": "Chernarus",
+  "RestartOnUpdate": true,
+  "RestartInterval": 4,
   "clientMods": [],
   "serverMods": []
 }

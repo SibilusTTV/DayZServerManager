@@ -32,6 +32,8 @@ namespace DayZServerManager.ManagerConfigClasses
         public string expansionDownloadPath { get; set; }
         public string gitInstallationPath { get; set; }
         public string mapName { get; set; }
+        public bool RestartOnUpdate { get; set; }
+        public int RestartInterval { get; set; }
         public List<Mod> clientMods { get; set; }
         public List<Mod> serverMods { get; set; }
     }
