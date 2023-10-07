@@ -116,6 +116,7 @@ namespace DayZServerManager.Helpers
 
                     if (hardlineRarity != null)
                     {
+                        RarityFile? customFilesRarityFile = DeserializeRarityFile(Path.Combine(missionTemplatePath, "customFilesRarities.json"));
                         if (vanillaRarity != null)
                         {
                             UpdateHardlineRarity(hardlineRarity, vanillaRarity);
@@ -126,6 +127,10 @@ namespace DayZServerManager.Helpers
                             hardlineRarity.ShowHardlineHUD = expansionRarity.ShowHardlineHUD;
                             hardlineRarity.UseHumanity = expansionRarity.UseHumanity;
                             hardlineRarity.EnableItemRarity = expansionRarity.EnableItemRarity;
+                        }
+                        if (customFilesRarityFile != null)
+                        {
+                            UpdateHardlineRarity(hardlineRarity, customFilesRarityFile);
                         }
                         SerializeRarityFile(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json"), hardlineRarity);
                     }
