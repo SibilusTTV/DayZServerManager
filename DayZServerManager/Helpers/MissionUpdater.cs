@@ -19,6 +19,7 @@ using System.ComponentModel;
 using DayZServerManager.MissionClasses.TypesChangesClasses;
 using System.Reflection.Metadata;
 using System.IO;
+using LibGit2Sharp;
 
 namespace DayZServerManager.Helpers
 {
@@ -42,6 +43,12 @@ namespace DayZServerManager.Helpers
 
                 // Rename the old mission folder and copy the contents of the vanilla folder
                 CopyMissionFolder(missionPath, Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName), config.backupPath);
+
+                // Copy the folder expansion_ce from the expansionTemplate to the new mission folder
+                CopyExpansionFiles(expansionTemplatePath, missionPath);
+
+                // Copy the folders CustomFiles and expansion and also the files mapgrouppos.xml, cfgweather.xml and cfgplayerspawnpoints.xml from the missionTemplate to the new mission folder
+                CopyMissionTemplateFiles(missionTemplatePath, missionPath);
 
                 if (FileSystem.DirectoryExists(missionPath))
                 {
@@ -99,12 +106,6 @@ namespace DayZServerManager.Helpers
                         
                         SerializeInitFile(Path.Combine(missionPath, "init.c"), missionInit);
                     }
-
-                    // Copy the folder expansion_ce from the expansionTemplate to the new mission folder
-                    CopyExpansionFiles(expansionTemplatePath, missionPath);
-
-                    // Copy the folders CustomFiles and expansion and also the files mapgrouppos.xml, cfgweather.xml and cfgplayerspawnpoints.xml from the missionTemplate to the new mission folder
-                    CopyMissionTemplateFiles(missionTemplatePath, missionPath);
 
                     // Changing the types files to reflect the rarities
                     RarityFile? hardlineRarity = DeserializeRarityFile(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json"));
@@ -794,75 +795,47 @@ namespace DayZServerManager.Helpers
         {
             try
             {
-                string expansionTemplatePath = string.Empty;
-                if (FileSystem.FileExists(Path.Combine(config.gitInstallationPath, "bin", "git.exe")))
+                if (FileSystem.DirectoryExists(config.expansionDownloadPath))
                 {
-                    if (FileSystem.DirectoryExists(config.expansionDownloadPath))
-                    {
-                        ProcessStartInfo gitInfo = new ProcessStartInfo();
-                        gitInfo.CreateNoWindow = false;
-                        gitInfo.FileName = Path.Combine(config.gitInstallationPath, "bin", "git.exe");
-                        gitInfo.Arguments = "pull";
-                        gitInfo.WorkingDirectory = Path.Combine(config.expansionDownloadPath);
-                        Process gitProcess = new Process();
-                        gitProcess.StartInfo = gitInfo;
-                        gitProcess.Start();
-                        gitProcess.WaitForExit();
-                        gitProcess.Close();
+                    Repository rep = new Repository(config.expansionDownloadPath);
+                    PullOptions pullOptions = new PullOptions();
+                    pullOptions.FetchOptions = new FetchOptions();
+                    Commands.Pull(rep, new Signature("username", "email", new DateTimeOffset(DateTime.Now)), pullOptions);
 
-                        if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", config.mapName)))
-                        {
-                            return Path.Combine(config.expansionDownloadPath, "Template", config.mapName);
-                        }
-                        else if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName)))
-                        {
-                            return Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName);
-                        }
-                        else
-                        {
-                            return string.Empty;
-                        }
+                    if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", config.mapName)))
+                    {
+                        return Path.Combine(config.expansionDownloadPath, "Template", config.mapName);
+                    }
+                    else if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName)))
+                    {
+                        return Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName);
                     }
                     else
                     {
-                        string workingDirectory = string.Empty;
-                        if (config.expansionDownloadPath == string.Empty)
-                        {
-                            config.expansionDownloadPath = Path.Combine(config.serverPath, "mpmissions", "DayZ-Expansion-Missions");
-                            workingDirectory = Path.Combine(config.serverPath, "mpmissions");
-                        }
-                        else
-                        {
-                            workingDirectory = config.expansionDownloadPath.Remove(config.expansionDownloadPath.LastIndexOf("\\") - 1);
-                        }
-                        ProcessStartInfo gitInfo = new ProcessStartInfo();
-                        gitInfo.CreateNoWindow = false;
-                        gitInfo.FileName = Path.Combine(config.gitInstallationPath, "bin", "git.exe");
-                        gitInfo.Arguments = "clone https://github.com/ExpansionModTeam/DayZ-Expansion-Missions.git";
-                        gitInfo.WorkingDirectory = workingDirectory;
-                        Process gitProcess = new Process();
-                        gitProcess.StartInfo = gitInfo;
-                        gitProcess.Start();
-                        gitProcess.WaitForExit();
-                        gitProcess.Close();
-
-                        if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", config.mapName)))
-                        {
-                            return Path.Combine(config.expansionDownloadPath, "Template", config.mapName);
-                        }
-                        else if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName)))
-                        {
-                            return Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName);
-                        }
-                        else
-                        {
-                            return string.Empty;
-                        }
+                        return string.Empty;
                     }
                 }
                 else
                 {
-                    return string.Empty;
+                    if (config.expansionDownloadPath == string.Empty)
+                    {
+                        config.expansionDownloadPath = Path.Combine(config.serverPath, "mpmissions", "DayZ-Expansion-Missions");
+                    }
+
+                    Repository.Clone("https://github.com/ExpansionModTeam/DayZ-Expansion-Missions.git", config.expansionDownloadPath);
+
+                    if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", config.mapName)))
+                    {
+                        return Path.Combine(config.expansionDownloadPath, "Template", config.mapName);
+                    }
+                    else if (FileSystem.DirectoryExists(Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName)))
+                    {
+                        return Path.Combine(config.expansionDownloadPath, "Template", "0_INCOMPLETE", config.mapName);
+                    }
+                    else
+                    {
+                        return string.Empty;
+                    }
                 }
             }
             catch (Exception ex)

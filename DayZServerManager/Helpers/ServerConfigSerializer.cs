@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DayZServerManager.Helpers
 {
-    public class ConfigSerializer
+    public class ServerConfigSerializer
     {
         public static ServerConfig Deserialize(string config)
         {

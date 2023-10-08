@@ -20,6 +20,8 @@ namespace DayZServerManager.ManagerConfigClasses
         public string serverConfigName { get; set; }
         public string profileName { get; set; }
         public int port { get; set; }
+        public int steamQueryPort { get; set; }
+        public int RConPort { get; set; }
         public int cpuCount { get; set; }
         public bool noFilePatching { get; set; }
         public bool doLogs { get; set; }
@@ -30,7 +32,6 @@ namespace DayZServerManager.ManagerConfigClasses
         public string vanillaMissionName { get; set; }
         public string missionTemplatePath { get; set; }
         public string expansionDownloadPath { get; set; }
-        public string gitInstallationPath { get; set; }
         public string mapName { get; set; }
         public bool RestartOnUpdate { get; set; }
         public int RestartInterval { get; set; }

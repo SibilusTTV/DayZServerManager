@@ -4,11 +4,7 @@ using DayZServerManager.Helpers;
 using DayZServerManager.ManagerConfigClasses;
 using DayZServerManager.ServerConfigClasses;
 using Microsoft.VisualBasic.FileIO;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Xml;
 
 if (FileSystem.FileExists("Config.json"))
 {
@@ -38,15 +34,17 @@ else
     config.steamUsername = "";
     config.steamPassword = "";
     config.serverPath = "Server";
-    config.steamCMDPath = "SteamCMD\\steamcmd.exe";
+    config.steamCMDPath = "SteamCMD";
     config.becPath = "BEC";
     config.workshopPath = "SteamCMD\\steamapps\\workshop\\content\\221100";
-    config.backupPath = "C:\\Users\\julia\\Downloads\\Test\\Backup";
+    config.backupPath = "Backup";
     config.missionName = "Expansion.ChernarusPlus";
     config.instanceId = 1;
     config.serverConfigName = "serverDZ.cfg";
     config.profileName = "Profiles";
     config.port = 2302;
+    config.steamQueryPort = 2305;
+    config.RConPort = 2306;
     config.cpuCount = 8;
     config.noFilePatching = true;
     config.doLogs = true;
@@ -57,22 +55,13 @@ else
     config.vanillaMissionName = "dayzOffline.chernarusplus";
     config.missionTemplatePath = Path.Combine(config.serverPath, "mpmissions", "ChernarusTemplate");
     config.expansionDownloadPath = Path.Combine(config.serverPath, "mpmissions", "DayZ-Expansion-Missions");
-    config.gitInstallationPath = "C:\\Program Files\\Git";
     config.mapName = "Chernarus";
+    config.RestartOnUpdate = true;
+    config.RestartInterval = 4;
     config.clientMods = new List<Mod>();
     config.serverMods = new List<Mod>();
 
-    try
-    {
-        JsonSerializerOptions options = new JsonSerializerOptions();
-        options.WriteIndented = true;
-        string json = JsonSerializer.Serialize(config, options);
-        File.WriteAllText("Config.json", json);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
-    }
+    UpdateConfig(config);
 
     if (config != null)
     {
@@ -107,13 +96,14 @@ void StartServer(Config config)
             using (StreamReader reader = new StreamReader(Path.Combine(config.serverPath, config.serverConfigName)))
             {
                 string serverConfigText = reader.ReadToEnd();
-                serverConfig = ConfigSerializer.Deserialize(serverConfigText);
+                serverConfig = ServerConfigSerializer.Deserialize(serverConfigText);
             }
             serverConfig.template = config.missionName;
             serverConfig.instanceId = config.instanceId;
+            serverConfig.steamQueryPort = config.steamQueryPort;
             using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.serverConfigName)))
             {
-                string serverConfigText = ConfigSerializer.Serialize(serverConfig);
+                string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
                 writer.Write(serverConfigText);
             }
         }
@@ -126,11 +116,19 @@ void StartServer(Config config)
     {
         try
         {
+            if (!FileSystem.DirectoryExists(config.serverPath))
+            {
+                FileSystem.CreateDirectory(config.serverPath);
+            }
             serverConfig = new ServerConfig();
             serverConfig.template = config.missionName;
             serverConfig.instanceId = config.instanceId;
-            string serverConfigText = ConfigSerializer.Serialize(serverConfig);
-            File.WriteAllText(Path.Combine(config.serverPath, config.serverConfigName),serverConfigText);
+            using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.serverConfigName)))
+            {
+                string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
+                writer.Write(serverConfigText);
+                writer.Close();
+            }
         }
         catch (Exception ex)
         {
@@ -144,7 +142,7 @@ void StartServer(Config config)
     s.StartBEC();
     Thread.Sleep(30000);
 
-    int i = 1;
+    int i = 20;
     bool kill = false;
     while (!kill)
     {
@@ -180,5 +178,24 @@ void StartServer(Config config)
     void OnProcessExit(object? sender, EventArgs? e)
     {
         s.KillServerProcesses();
+    }
+}
+
+void UpdateConfig(Config config)
+{
+    try
+    {
+        using (StreamWriter writer = new StreamWriter("Config.json"))
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.WriteIndented = true;
+            string json = JsonSerializer.Serialize(config, options);
+            writer.Write(json);
+            writer.Close();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
     }
 }

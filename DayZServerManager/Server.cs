@@ -1,7 +1,11 @@
 ﻿using DayZServerManager.Helpers;
 using DayZServerManager.ManagerConfigClasses;
+using LibGit2Sharp;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
+using System.IO.Compression;
+using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace DayZServerManager
 {
@@ -143,13 +147,38 @@ namespace DayZServerManager
         {
             try
             {
-                string becStartParameters = $"-f Config.cfg --dsc";
+                if (!FileSystem.DirectoryExists(config.becPath))
+                {
+                    FileSystem.CreateDirectory(config.becPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+
+            try
+            {
+                if (!FileSystem.FileExists(Path.Combine(config.becPath, "Bec.exe")))
+                {
+                    Repository.Clone("https://github.com/TheGamingChief/BattlEye-Extended-Controls.git", config.becPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+
+            try
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo();
+                startInfo.CreateNoWindow = true;
+                startInfo.UseShellExecute = false;
+                startInfo.FileName = Path.Combine(config.becPath, "Bec.exe");
+                startInfo.Arguments = $"-f Config.cfg --dsc";
+                startInfo.WorkingDirectory = config.becPath;
                 becProcess = new Process();
-                becProcess.StartInfo.FileName = Path.Combine(config.becPath, "Bec.exe");
-                becProcess.StartInfo.WorkingDirectory = config.becPath;
-                becProcess.StartInfo.Arguments = becStartParameters;
-                becProcess.StartInfo.UseShellExecute = false;
-                becProcess.StartInfo.CreateNoWindow = true;
+                becProcess.StartInfo = startInfo;
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Starting BEC");
                 becProcess.Start();
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} BEC started");
@@ -187,9 +216,34 @@ namespace DayZServerManager
         {
             try
             {
+                if (!FileSystem.DirectoryExists(config.steamCMDPath))
+                {
+                    FileSystem.CreateDirectory(config.steamCMDPath);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+
+            try
+            {
+                if (!FileSystem.FileExists(Path.Combine(config.steamCMDPath, "steamcmd.exe")))
+                {
+                    string zipName = "steamcmd.zip";
+                    DownloadAndExctractSteamCMD(zipName);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+
+            try
+            {
                 string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", config.serverPath)} +login {config.steamUsername} {config.steamPassword} +\"app_update {dayZServerBranch}\" +quit";
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating the DayZ Server");
-                Process p = Process.Start(config.steamCMDPath, serverUpdateArguments);
+                Process p = Process.Start(Path.Combine(config.steamCMDPath, "steamcmd.exe"), serverUpdateArguments);
                 p.WaitForExit();
                 Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} DayZ Server updated");
             }
@@ -204,17 +258,20 @@ namespace DayZServerManager
             List<Mod> mods = new List<Mod>();
             mods.AddRange(config.clientMods);
             mods.AddRange(config.serverMods);
-            if ( hasToUpdate )
+            if (mods.Count > 0)
             {
-                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating Mods");
-                UpdateMods(mods);
-                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mods updated");
-            }
-            if ( hasToMove )
-            {
-                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Moving Mods");
-                MoveMods(mods);
-                Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mods moved");
+                if (hasToUpdate)
+                {
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Updating Mods");
+                    UpdateMods(mods);
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mods updated");
+                }
+                if (hasToMove)
+                {
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Moving Mods");
+                    MoveMods(mods);
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Mods moved");
+                }
             }
         }
 
@@ -230,8 +287,8 @@ namespace DayZServerManager
                         modUpdateArguments += $" +workshop_download_item {dayZGameBranch} {mod.workshopID.ToString()}";
                     }
                     string arguments = $"+login {config.steamUsername} {config.steamPassword}{modUpdateArguments} +quit"; 
-                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} {config.steamCMDPath} {arguments}");
-                    Process p = Process.Start(config.steamCMDPath, arguments);
+                    Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} {Path.Combine(config.steamCMDPath, "steamcmd.exe")} {arguments}");
+                    Process p = Process.Start(Path.Combine(config.steamCMDPath, "steamcmd.exe"), arguments);
                     p.WaitForExit();
                     Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} All mods were downloaded");
                     foreach (Mod mod in mods)
@@ -391,29 +448,38 @@ namespace DayZServerManager
         {
             try
             {
-                if (FileSystem.DirectoryExists(config.backupPath))
+                if (!FileSystem.DirectoryExists(config.backupPath))
                 {
-                    Console.WriteLine($"{Environment.NewLine} Backing up the server data and moving all the logs!");
-                    string newestBackupPath = Path.Combine(config.backupPath, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-                    string dataPath = Path.Combine(config.serverPath, "mpmissions", config.missionName, "storage_1");
-                    string profilePath = Path.Combine(config.serverPath, config.profileName);
-                    if (FileSystem.DirectoryExists(dataPath))
+                    FileSystem.CreateDirectory(config.backupPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+
+            try
+            {
+                Console.WriteLine($"{Environment.NewLine} Backing up the server data and moving all the logs!");
+                string newestBackupPath = Path.Combine(config.backupPath, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
+                string dataPath = Path.Combine(config.serverPath, "mpmissions", config.missionName, "storage_1");
+                string profilePath = Path.Combine(config.serverPath, config.profileName);
+                if (FileSystem.DirectoryExists(dataPath))
+                {
+                    FileSystem.CopyDirectory(dataPath, Path.Combine(newestBackupPath, "data"));
+                }
+                if (FileSystem.DirectoryExists(profilePath))
+                {
+                    string[] fileNames = FileSystem.GetFiles(profilePath).ToArray();
+                    foreach (string fileName in fileNames)
                     {
-                        FileSystem.CopyDirectory(dataPath, Path.Combine(newestBackupPath, "data"));
-                    }
-                    if (FileSystem.DirectoryExists(profilePath))
-                    {
-                        string[] fileNames = FileSystem.GetFiles(profilePath).ToArray();
-                        foreach (string fileName in fileNames) 
+                        if (fileName.EndsWith(".ADM") || fileName.EndsWith(".RPT") || fileName.EndsWith(".log"))
                         {
-                            if (fileName.EndsWith(".ADM") || fileName.EndsWith(".RPT") || fileName.EndsWith(".log"))
-                            {
-                                FileSystem.MoveFile(fileName, Path.Combine(newestBackupPath, "logs", fileName.Substring(fileName.LastIndexOf("\\") + 1)));
-                            }
+                            FileSystem.MoveFile(fileName, Path.Combine(newestBackupPath, "logs", fileName.Substring(fileName.LastIndexOf("\\") + 1)));
                         }
                     }
-                    Console.WriteLine($"{Environment.NewLine} Server backup and moving of the logs done");
                 }
+                Console.WriteLine($"{Environment.NewLine} Server backup and moving of the logs done");
             }
             catch (Exception ex)
             {
@@ -432,6 +498,27 @@ namespace DayZServerManager
             }
 
             return null;
+        }
+
+        private void DownloadAndExctractSteamCMD(string zipName)
+        {
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    HttpResponseMessage response = client.GetAsync("https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip").Result;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        byte[] content = response.Content.ReadAsByteArrayAsync().Result;
+                        File.WriteAllBytes(Path.Combine(config.steamCMDPath, zipName), content);
+                        ZipFile.ExtractToDirectory(Path.Combine(config.steamCMDPath, zipName), config.steamCMDPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
         }
     }
 }
