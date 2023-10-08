@@ -38,6 +38,148 @@ namespace DayZServerManager.Helpers
                 string missionPath = Path.Combine(config.serverPath, "mpmissions", config.missionName);
                 string missionTemplatePath = Path.Combine(config.missionTemplatePath);
 
+                if (!FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions")))
+                {
+                    FileSystem.CreateDirectory(Path.Combine(config.serverPath, "mpmissions"));
+                }
+
+                if (!FileSystem.DirectoryExists(missionTemplatePath))
+                {
+                    FileSystem.CreateDirectory(missionTemplatePath);
+                }
+
+                if (!FileSystem.DirectoryExists(Path.Combine(missionTemplatePath, "CustomFiles")))
+                {
+                    FileSystem.CreateDirectory(Path.Combine(missionTemplatePath, "CustomFiles"));
+                }
+
+                List<string> directoryNames = FileSystem.GetDirectories(Path.Combine(missionTemplatePath, "CustomFiles")).ToList<string>();
+                if (directoryNames.Count == 0)
+                {
+                    FileSystem.CreateDirectory(Path.Combine(missionTemplatePath, "CustomFiles", "ExampleModFiles"));
+                    directoryNames = FileSystem.GetDirectories(Path.Combine(missionTemplatePath, "CustomFiles")).ToList<string>();
+                }
+
+                List<string> filesNames = FileSystem.GetFiles(Path.Combine(directoryNames[0])).ToList<string>();
+                if (filesNames.Count == 0)
+                {
+                    TypesFile exampleTypesFile = new TypesFile()
+                    {
+                        typesItem = new List<TypesItem>()
+                        {
+                            new TypesItem()
+                            {
+                                name = "ExampleItem",
+                                lifetime = 2000,
+                                nominal = 10,
+                                min = 5
+                            },
+                            new TypesItem()
+                            {
+                                name = "ExampleItem2",
+                                lifetime = 20000,
+                                nominal = 20,
+                                min = 10
+                            }
+                        }
+                    };
+                    SerializeTypesFile(Path.Combine(directoryNames[0], "exampleTypesFile.xml"), exampleTypesFile);
+                }
+                
+                if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgeconomycore.xml")))
+                {
+                    EconomyCoreFile exampleEconomyCore = new EconomyCoreFile()
+                    {
+                        ceItems = new List<CeItem>()
+                        {
+                            new CeItem()
+                            {
+                                folder = Path.Combine("CustomFiles", directoryNames[0].Remove(directoryNames[0].LastIndexOf("\\") + 1)),
+                                fileItems = new List<FileItem>()
+                                {
+                                    new FileItem()
+                                    {
+                                        name = "exampleTypesFile.xml",
+                                        type = "types"
+                                    } 
+                                } 
+                            }
+                        }
+                    };
+                    SerializeEconomyCoreFile(Path.Combine(missionTemplatePath, "cfgeconomycore.xml"), exampleEconomyCore);
+                }
+                else
+                {
+                    EconomyCoreFile? economyCoreFile = DeserializeEconomyCoreFile(Path.Combine(missionTemplatePath, "cfgeconomycore.xml"));
+                    if (economyCoreFile != null)
+                    {
+                        if (economyCoreFile.ceItems == null)
+                        {
+                            economyCoreFile.ceItems = new List<CeItem>();
+                        }
+
+                        economyCoreFile.ceItems.Add(new CeItem()
+                        {
+                            folder = Path.Combine("CustomFiles", directoryNames[0].Remove(directoryNames[0].LastIndexOf("\\") + 1)),
+                            fileItems = new List<FileItem>()
+                                {
+                                    new FileItem()
+                                    {
+                                        name = "exampleTypesFile.xml",
+                                        type = "types"
+                                    }
+                                }
+                        });
+                    }
+                }
+
+                if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "vanillaRarities.json")))
+                {
+                    RarityFile vanillaRarities = new RarityFile();
+                    vanillaRarities.ItemRarity = new Dictionary<string, int>();
+                    vanillaRarities.ItemRarity.Add("example1", 0);
+                    vanillaRarities.ItemRarity.Add("example2", 1);
+                    SerializeRarityFile(Path.Combine(missionTemplatePath, "vanillaRarities.json"), vanillaRarities);
+                }
+
+                if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "expansionRarities.json")))
+                {
+                    RarityFile expansionRarities = new RarityFile();
+                    expansionRarities.ItemRarity = new Dictionary<string, int>();
+                    expansionRarities.ItemRarity.Add("example1", 3);
+                    expansionRarities.ItemRarity.Add("example2", 6);
+                    SerializeRarityFile(Path.Combine(missionTemplatePath, "expansionRarities.json"), expansionRarities);
+                }
+
+                if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "customFilesRarities.json")))
+                {
+                    RarityFile customFilesRarities = new RarityFile();
+                    customFilesRarities.ItemRarity = new Dictionary<string, int>();
+                    customFilesRarities.ItemRarity.Add("example1", 7);
+                    customFilesRarities.ItemRarity.Add("example2", 8);
+                    SerializeRarityFile(Path.Combine(missionTemplatePath, "customFilesRarities.json"), customFilesRarities);
+                }
+
+                if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json")))
+                {
+                    TypesChangesFile vanillaTypesChanges = new TypesChangesFile();
+                    vanillaTypesChanges.types = new List<TypesChangesItem>
+                    {
+                        new TypesChangesItem()
+                        {
+                            name = "example1",
+                            lifetime = 3888000
+                        },
+                        new TypesChangesItem()
+                        {
+                            name = "example2",
+                            lifetime = 3888000
+                        }
+                    };
+
+                    SerializeTypesChangesFile(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json"), vanillaTypesChanges);
+                }
+
                 // Get the new expansion mission template from git
                 string expansionTemplatePath = DownloadExpansionTemplates(config);
 
@@ -469,6 +611,26 @@ namespace DayZServerManager.Helpers
             {
                 Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
             }
+        }
+
+        public void SerializeTypesChangesFile(string path, TypesChangesFile typesChangesFile)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    JsonSerializerOptions options = new JsonSerializerOptions();
+                    options.WriteIndented = true;
+                    string json = JsonSerializer.Serialize(typesChangesFile, options);
+                    writer.Write(json);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            }
+
         }
 
         public void SerializeGlobalsFile(string path, GlobalsFile globals)

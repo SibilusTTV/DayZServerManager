@@ -60,8 +60,16 @@ else
     config.RestartInterval = 4;
     config.clientMods = new List<Mod>();
     config.serverMods = new List<Mod>();
+    Mod mod1 = new Mod();
+    mod1.workshopID = 1559212036;
+    mod1.name = "@CF";
+    config.clientMods.Add(mod1);
+    Mod mod2 = new Mod();
+    mod2.workshopID = 1564026768;
+    mod2.name = "@Community-Online-Tools";
+    config.clientMods.Add(mod2);
 
-    UpdateConfig(config);
+    SaveConfig(config);
 
     if (config != null)
     {
@@ -181,7 +189,7 @@ void StartServer(Config config)
     }
 }
 
-void UpdateConfig(Config config)
+void SaveConfig(Config config)
 {
     try
     {
