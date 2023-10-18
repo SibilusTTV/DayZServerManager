@@ -497,25 +497,55 @@ namespace DayZServerManager
 
         private bool CompareForChanges(string steamModPath, string serverModPath)
         {
+            List<string> steamModFilePaths = FileSystem.GetFiles(steamModPath).ToList<string>();
+            foreach (string filePath in steamModFilePaths)
+            {
+                if (CheckFile(filePath, serverModPath))
+                {
+                    return true;
+                }
+            }
+
+            List<string> steamModDirectoryPaths = FileSystem.GetDirectories(steamModPath).ToList<string>();
+            foreach (string directoryPath in steamModDirectoryPaths)
+            {
+                if (CheckDirectories(directoryPath, serverModPath))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool CheckDirectories(string steamDirectoryPath, string serverModPath)
+        {
             try
             {
-                if (FileSystem.DirectoryExists(steamModPath) && FileSystem.DirectoryExists(serverModPath))
+                string serverDirectoryPath = Path.Combine(serverModPath, steamDirectoryPath.Substring(steamDirectoryPath.LastIndexOf("\\") + 1));
+                if (FileSystem.DirectoryExists(serverModPath) && FileSystem.DirectoryExists(serverDirectoryPath))
                 {
-                    List<string> steamModFileNames = FileSystem.GetFiles(steamModPath).ToList<string>();
-                    List<string> serverModFileNames = FileSystem.GetFiles(serverModPath).ToList<string>();
-                    if (CompareChangeDates(steamModFileNames, serverModFileNames))
+                    List<string> steamModFilePaths = FileSystem.GetFiles(steamDirectoryPath).ToList<string>();
+                    foreach (string filePath in steamModFilePaths)
                     {
-                        return true;
+                        if (CheckFile(filePath, serverDirectoryPath))
+                        {
+                            return true;
+                        }
                     }
 
-                    List<string> steamModDirectoryNames = FileSystem.GetDirectories(steamModPath).ToList<string>();
-                    List<string> serverModDirectoryNames = FileSystem.GetDirectories(serverModPath).ToList<string>();
-                    if (CompareChangeDates(steamModDirectoryNames, serverModDirectoryNames))
+                    List<string> steamModDirectoryPaths = FileSystem.GetDirectories(steamDirectoryPath).ToList<string>();
+                    foreach (string directoryPath in steamModDirectoryPaths)
                     {
-                        return true;
+                        if (CheckDirectories(directoryPath, serverDirectoryPath))
+                        {
+                            return true;
+                        }
                     }
+
+                    return false;
                 }
-                else if (FileSystem.DirectoryExists(steamModPath))
+                else if (FileSystem.DirectoryExists(serverModPath))
                 {
                     return true;
                 }
@@ -523,7 +553,40 @@ namespace DayZServerManager
                 {
                     return false;
                 }
+            }
+            catch(Exception ex)
+            {
+                WriteToConsole(ex.ToString());
                 return false;
+            }
+        }
+
+        private bool CheckFile(string steamFilePath, string serverModPath)
+        {
+            try
+            {
+                string serverFilePath = Path.Combine(serverModPath, steamFilePath.Substring(steamFilePath.LastIndexOf("\\") + 1));
+                if (FileSystem.FileExists(steamFilePath) && FileSystem.FileExists(serverFilePath))
+                {
+                    DateTime steamModChangingDate = File.GetLastWriteTimeUtc(steamFilePath);
+                    DateTime serverModChangingDate = File.GetLastWriteTimeUtc(serverFilePath);
+                    if (steamModChangingDate > serverModChangingDate)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (FileSystem.FileExists(steamFilePath))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             catch (Exception ex)
             {
