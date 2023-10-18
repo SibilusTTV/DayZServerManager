@@ -241,11 +241,42 @@ namespace DayZServerManager
 
             try
             {
+                DateTime dateBeforeUpdate;
+                if (FileSystem.FileExists(Path.Combine(config.serverPath, "DayZServer_x64.exe")))
+                {
+                    dateBeforeUpdate = File.GetLastWriteTimeUtc(Path.Combine(config.serverPath, "DayZServer_x64.exe"));
+                }
+                else
+                {
+                    dateBeforeUpdate = DateTime.MinValue;
+                }
+
                 string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", config.serverPath)} +login {config.steamUsername} {config.steamPassword} +\"app_update {dayZServerBranch}\" +quit";
                 WriteToConsole("Updating the DayZ Server");
                 Process p = Process.Start(Path.Combine(config.steamCMDPath, "steamcmd.exe"), serverUpdateArguments);
                 p.WaitForExit();
-                WriteToConsole("DayZ Server updated");
+
+
+                DateTime dateAfterUpdate;
+                if (FileSystem.FileExists(Path.Combine(config.serverPath, "DayZServer_x64.exe")))
+                {
+                    dateAfterUpdate = File.GetLastWriteTimeUtc(Path.Combine(config.serverPath, "DayZServer_x64.exe"));
+                }
+                else
+                {
+                    dateAfterUpdate = DateTime.Now;
+                }
+                
+                if (dateBeforeUpdate < dateAfterUpdate)
+                {
+                    updatedServer = true;
+                    WriteToConsole("DayZ Server updated");
+                }
+                else
+                {
+                    updatedServer = false;
+                    WriteToConsole("Server was already up-to-date");
+                }
             }
             catch (System.Exception ex)
             {
@@ -587,46 +618,6 @@ namespace DayZServerManager
                 {
                     return false;
                 }
-            }
-            catch (Exception ex)
-            {
-                WriteToConsole(ex.ToString());
-                return false;
-            }
-        }
-
-        private bool CompareChangeDates(List<string> steamModItemName, List<string> serverModItemName)
-        {
-            try
-            {
-                if (steamModItemName.Count > 0 && serverModItemName.Count > 0)
-                {
-                    for (int i = 0; i < steamModItemName.Count; i++)
-                    {
-                        if (serverModItemName.Count > i)
-                        {
-                            DateTime steamModChangingDate = File.GetLastWriteTimeUtc(steamModItemName[i]);
-                            DateTime serverModChangingDate = File.GetLastWriteTimeUtc(serverModItemName[i]);
-                            if (steamModChangingDate > serverModChangingDate)
-                            {
-                                return true;
-                            }
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                }
-                else if (steamModItemName.Count > 0)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-                return false;
             }
             catch (Exception ex)
             {
