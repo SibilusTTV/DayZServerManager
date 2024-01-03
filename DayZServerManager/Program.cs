@@ -1,10 +1,16 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DayZServerManager;
+using DayZServerManager.BecClasses;
 using DayZServerManager.Helpers;
 using DayZServerManager.ManagerConfigClasses;
+using DayZServerManager.MissionClasses.RarityClasses;
+using DayZServerManager.MissionClasses.TypesClasses;
+using DayZServerManager.ProfileClasses.NotificationSchedulerClasses;
 using DayZServerManager.ServerConfigClasses;
 using Microsoft.VisualBasic.FileIO;
+using System.IO;
 using System.Text.Json;
+using System.Xml.Serialization;
 
 if (FileSystem.FileExists("Config.json"))
 {
@@ -94,6 +100,7 @@ void StartServer(Config config)
     Server s = new Server(config);
     s.BackupServerData();
     s.UpdateServer();
+    s.UpdateBEC();
     s.UpdateAndMoveMods(true, true);
 
     ServerConfig serverConfig;
@@ -145,6 +152,79 @@ void StartServer(Config config)
     }
 
     AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+
+    try
+    {
+        if (FileSystem.FileExists(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
+        {
+            SchedulerFile becScheduler;
+            using (StreamReader reader = new StreamReader(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
+            {
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SchedulerFile));
+                SchedulerFile? file = (SchedulerFile?)xmlSerializer.Deserialize(reader);
+                if (file != null)
+                {
+                    becScheduler = file;
+                }
+                else
+                {
+                    becScheduler = new SchedulerFile();
+                }
+            }
+
+            // Checking if one of the clientMods has expansion in its name
+            if (config.clientMods != null && config.clientMods.FindAll(x => x.name.Contains("expansion")).Count > 0)
+            {
+                NotificationSchedulerFile expansionScheduler;
+                if (FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "ExpanionMod", "Settings", "NotificationSchedulerSettings.json")))
+                {
+                    using (StreamReader reader = new StreamReader(Path.Combine(config.serverPath, config.profileName, "ExpanionMod", "Settings", "NotificationSchedulerSettings.json")))
+                    {
+                        string json = reader.ReadToEnd();
+                        NotificationSchedulerFile? file = JsonSerializer.Deserialize<NotificationSchedulerFile>(json);
+                        if (file != null)
+                        {
+                            expansionScheduler = file;
+                        }
+                        else
+                        {
+                            expansionScheduler = new NotificationSchedulerFile();
+                        }
+                    }
+                }
+                else
+                {
+                    expansionScheduler = new NotificationSchedulerFile();
+                }
+
+                RestartUpdater.UpdateRestartScripts(config.RestartInterval, becScheduler, expansionScheduler);
+
+                using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.profileName, "ExpanionMod", "Settings", "NotificationSchedulerSettings.json")))
+                {
+                    JsonSerializerOptions options = new JsonSerializerOptions();
+                    options.WriteIndented = true;
+                    string json = JsonSerializer.Serialize(expansionScheduler, options);
+                    writer.Write(json);
+                    writer.Close();
+                }
+            }
+            else
+            {
+                RestartUpdater.UpdateRestartScripts(config.RestartInterval, becScheduler);
+            }
+
+            using (StreamWriter writer = new StreamWriter(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(SchedulerFile));
+                serializer.Serialize(writer, becScheduler);
+                writer.Close();
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+    }
 
     s.StartServer();
     s.StartBEC();

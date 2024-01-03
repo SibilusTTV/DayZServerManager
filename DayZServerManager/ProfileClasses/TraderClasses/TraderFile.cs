@@ -14,6 +14,6 @@ namespace DayZServerManager.ProfileClasses.TraderClasses
         public string Color { get; set; }
         public int IsExchange { get; set; }
         public float InitStockPercent { get; set; }
-        public TraderItem[] Items { get; set; }
+        public List<TraderItem> Items { get; set; }
     }
 }

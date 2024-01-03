@@ -3,6 +3,7 @@ using DayZServerManager.ManagerConfigClasses;
 using LibGit2Sharp;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -143,7 +144,7 @@ namespace DayZServerManager
             return parameters;
         }
 
-        public void StartBEC()
+        public void UpdateBEC()
         {
             try
             {
@@ -171,8 +172,66 @@ namespace DayZServerManager
 
             try
             {
+                if (FileSystem.FileExists(Path.Combine(config.becPath, "Config", "Config.cfg")))
+                {
+                    string becConfig;
+
+                    using (StreamReader reader = new StreamReader(Path.Combine(config.becPath, "Config", "Config.cfg")))
+                    {
+                        becConfig = reader.ReadToEnd();
+                    }
+
+                    becConfig = becConfig.Replace("C:\\Servers\\DayZ\\ServerName\\BattlEye", Path.Combine(Environment.CurrentDirectory, config.serverPath, config.profileName, "BattlEye"));
+                    becConfig = becConfig.Replace("Port = 2305", "Port = 2306");
+                    becConfig = becConfig.Replace("Timeout = 10", "Timeout = 60");
+
+                    using (StreamWriter writer = new StreamWriter(Path.Combine(config.becPath, "Config", "Config.cfg")))
+                    {
+                        writer.Write(becConfig);
+                        writer.Close();
+                    }
+                }
+
+                if (!FileSystem.DirectoryExists(Path.Combine(config.serverPath, config.profileName, "BattlEye")))
+                {
+                    FileSystem.CreateDirectory(Path.Combine(config.serverPath, config.profileName, "BattlEye"));
+                }
+
+                if (!FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "BattlEye", "BEServer_x64.cfg")))
+                {
+                    string beConfig = "RConPassword YourRCONPasswort";
+                    beConfig += $"{Environment.NewLine}RConPort 2306";
+
+                    using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.profileName, "BattlEye", "BEServer_x64.cfg")))
+                    {
+                        writer.Write(beConfig);
+                        writer.Close();
+                    }
+                }
+
+                if (!FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "BattlEye", "bans.txt")))
+                {
+                    string bans = "";
+
+                    using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.profileName, "BattlEye", "bans.txt")))
+                    {
+                        writer.Write(bans);
+                        writer.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
+            }
+        }
+
+        public void StartBEC()
+        {
+            try
+            {
                 ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.CreateNoWindow = true;
+                startInfo.CreateNoWindow = false;
                 startInfo.UseShellExecute = false;
                 startInfo.FileName = Path.Combine(config.becPath, "Bec.exe");
                 startInfo.Arguments = $"-f Config.cfg --dsc";
