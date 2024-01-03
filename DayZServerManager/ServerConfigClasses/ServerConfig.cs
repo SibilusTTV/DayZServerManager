@@ -84,7 +84,8 @@ namespace DayZServerManager.ServerConfigClasses
             verifySignatures = 2;		    // Verifies .pbos against .bisign files. (only 2 is supported)
             forceSameBuild = 1;			    // When enabled, the server will allow the connection only to clients with same the .exe revision as the server (value 0-1)
             disableVoN = 0;				    // Enable/disable voice over network (value 0-1)
-            vonCodecQuality = 20;		    // Voice over network codec quality, the higher the better (values 0-20)
+            vonCodecQuality = 20;           // Voice over network codec quality, the higher the better (values 0-20)
+            enableCfgGameplayFile = 1;
             disable3rdPerson = 0;		    // Toggles the 3rd person view for players (value 0-1)
             disableCrosshair = 0;		    // Toggles the cross-hair (value 0-1)
             serverTime = "ServerTime";	    // Initial in-game time of the server. "SystemTime" means the local time of the machine. Another possibility is to set the time to some value in "YYYY/MM/DD/HH/MM" format, e.g "2015/4/8/17/23".

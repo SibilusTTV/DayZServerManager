@@ -282,9 +282,26 @@ namespace DayZServerManager.Helpers
                         if (expansionRarity != null)
                         {
                             UpdateHardlineRarity(hardlineRarity, expansionRarity);
+                            hardlineRarity.PoorItemRequirement = expansionRarity.PoorItemRequirement;
+                            hardlineRarity.CommonItemRequirement = expansionRarity.CommonItemRequirement;
+                            hardlineRarity.UncommonItemRequirement = expansionRarity.UncommonItemRequirement;
+                            hardlineRarity.RareItemRequirement = expansionRarity.RareItemRequirement;
+                            hardlineRarity.EpicItemRequirement = expansionRarity.EpicItemRequirement;
+                            hardlineRarity.LegendaryItemRequirement = expansionRarity.LegendaryItemRequirement;
+                            hardlineRarity.MythicItemRequirement = expansionRarity.MythicItemRequirement;
+                            hardlineRarity.ExoticItemRequirement = expansionRarity.ExoticItemRequirement;
                             hardlineRarity.ShowHardlineHUD = expansionRarity.ShowHardlineHUD;
-                            hardlineRarity.UseHumanity = expansionRarity.UseHumanity;
+                            hardlineRarity.UseReputation = expansionRarity.UseReputation;
+                            hardlineRarity.UseFactionReputation = expansionRarity.UseFactionReputation;
+                            hardlineRarity.EnableFactionPersistence = expansionRarity.EnableFactionPersistence;
                             hardlineRarity.EnableItemRarity = expansionRarity.EnableItemRarity;
+                            hardlineRarity.UseItemRarityOnInventoryIcons = expansionRarity.UseItemRarityOnInventoryIcons;
+                            hardlineRarity.UseItemRarityForMarketPurchase = expansionRarity.UseItemRarityForMarketPurchase;
+                            hardlineRarity.UseItemRarityForMarketSell = expansionRarity.UseItemRarityForMarketSell;
+                            hardlineRarity.MaxReputation = expansionRarity.MaxReputation;
+                            hardlineRarity.ReputationLossOnDeath = expansionRarity.ReputationLossOnDeath;
+                            hardlineRarity.DefaultItemRarity = expansionRarity.DefaultItemRarity;
+                            hardlineRarity.EntityReputation = expansionRarity.EntityReputation;
                         }
                         if (customFilesRarityFile != null)
                         {
