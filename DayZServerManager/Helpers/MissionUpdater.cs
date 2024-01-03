@@ -115,21 +115,23 @@ namespace DayZServerManager.Helpers
                     {
                         if (economyCoreFile.ceItems == null)
                         {
-                            economyCoreFile.ceItems = new List<CeItem>();
-                        }
-
-                        economyCoreFile.ceItems.Add(new CeItem()
-                        {
-                            folder = Path.Combine("CustomFiles", directoryNames[0].Remove(directoryNames[0].LastIndexOf("\\") + 1)),
-                            fileItems = new List<FileItem>()
+                            economyCoreFile.ceItems = new List<CeItem>()
+                            {
+                                new CeItem()
                                 {
-                                    new FileItem()
+                                    folder = Path.Combine("CustomFiles", directoryNames[0].Remove(directoryNames[0].LastIndexOf("\\") + 1)),
+                                    fileItems = new List<FileItem>()
                                     {
-                                        name = "exampleTypesFile.xml",
-                                        type = "types"
+                                        new FileItem()
+                                        {
+                                            name = "exampleTypesFile.xml",
+                                            type = "types"
+                                        }
                                     }
                                 }
-                        });
+                            };
+                            SerializeEconomyCoreFile(Path.Combine(missionTemplatePath, "cfgeconomycore.xml"), economyCoreFile);
+                        }
                     }
                 }
 
@@ -137,27 +139,34 @@ namespace DayZServerManager.Helpers
                 {
                     RarityFile vanillaRarities = new RarityFile();
                     vanillaRarities.ItemRarity = new Dictionary<string, int>();
-                    vanillaRarities.ItemRarity.Add("example1", 0);
-                    vanillaRarities.ItemRarity.Add("example2", 1);
+                    vanillaRarities.ItemRarity.Add("example1", 3);
+                    vanillaRarities.ItemRarity.Add("example2", 5);
                     SerializeRarityFile(Path.Combine(missionTemplatePath, "vanillaRarities.json"), vanillaRarities);
                 }
 
-                if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "expansionRarities.json")))
+                if (config.clientMods != null && config.clientMods.Select(p => p.workshopID == 2116157322 || p.workshopID == 2572331007) != null)
                 {
-                    RarityFile expansionRarities = new RarityFile();
-                    expansionRarities.ItemRarity = new Dictionary<string, int>();
-                    expansionRarities.ItemRarity.Add("example1", 3);
-                    expansionRarities.ItemRarity.Add("example2", 6);
-                    SerializeRarityFile(Path.Combine(missionTemplatePath, "expansionRarities.json"), expansionRarities);
-                }
+                    if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "expansionTypesChanges.json")))
+                    {
+                        TypesChangesFile expansionTypesChanges = new TypesChangesFile();
+                        expansionTypesChanges.types = new List<TypesChangesItem>
+                        {
+                            new TypesChangesItem()
+                            {
+                                name = "example1",
+                                lifetime = 3888000,
+                                rarity = 3
+                            },
+                            new TypesChangesItem()
+                            {
+                                name = "example2",
+                                lifetime = 3888000,
+                                rarity = 4
+                            }
+                        };
 
-                if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "customFilesRarities.json")))
-                {
-                    RarityFile customFilesRarities = new RarityFile();
-                    customFilesRarities.ItemRarity = new Dictionary<string, int>();
-                    customFilesRarities.ItemRarity.Add("example1", 7);
-                    customFilesRarities.ItemRarity.Add("example2", 8);
-                    SerializeRarityFile(Path.Combine(missionTemplatePath, "customFilesRarities.json"), customFilesRarities);
+                        SerializeTypesChangesFile(Path.Combine(missionTemplatePath, "expansionTypesChanges.json"), expansionTypesChanges);
+                    }
                 }
 
                 if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json")))
@@ -168,26 +177,32 @@ namespace DayZServerManager.Helpers
                         new TypesChangesItem()
                         {
                             name = "example1",
-                            lifetime = 3888000
+                            lifetime = 3888000,
+                            rarity = 3
                         },
                         new TypesChangesItem()
                         {
                             name = "example2",
-                            lifetime = 3888000
+                            lifetime = 3888000,
+                            rarity = 4
                         }
                     };
 
                     SerializeTypesChangesFile(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json"), vanillaTypesChanges);
                 }
 
-                // Get the new expansion mission template from git
-                string expansionTemplatePath = DownloadExpansionTemplates(config);
-
                 // Rename the old mission folder and copy the contents of the vanilla folder
                 CopyMissionFolder(missionPath, Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName), config.backupPath);
 
-                // Copy the folder expansion_ce from the expansionTemplate to the new mission folder
-                CopyExpansionFiles(expansionTemplatePath, missionPath);
+                string expansionTemplatePath = Path.Combine(config.expansionDownloadPath, "Template", config.mapName);
+                if (config.clientMods != null && config.clientMods.Select(p => p.workshopID == 2116157322 || p.workshopID == 2572331007) != null)
+                {
+                    // Get the new expansion mission template from git
+                    expansionTemplatePath = DownloadExpansionTemplates(config);
+
+                    // Copy the folder expansion_ce from the expansionTemplate to the new mission folder
+                    CopyExpansionFiles(expansionTemplatePath, missionPath);
+                }
 
                 // Copy the folders CustomFiles and expansion and also the files mapgrouppos.xml, cfgweather.xml and cfgplayerspawnpoints.xml from the missionTemplate to the new mission folder
                 CopyMissionTemplateFiles(missionTemplatePath, missionPath);
@@ -466,36 +481,100 @@ namespace DayZServerManager.Helpers
                             item.min = 0;
                             break;
                         case 1:
-                            item.nominal = 320;
-                            item.min = 160;
+                            if (item.category != null && item.category.name == "clothes")
+                            {
+                                item.nominal = 160;
+                                item.min = 80;
+                            }
+                            else
+                            {
+                                item.nominal = 320;
+                                item.min = 160;
+                            }
                             break;
                         case 2:
-                            item.nominal = 160;
-                            item.min = 80;
+                            if (item.category != null && item.category.name == "clothes")
+                            {
+                                item.nominal = 80;
+                                item.min = 40;
+                            }
+                            else
+                            {
+                                item.nominal = 160;
+                                item.min = 80;
+                            }
                             break;
                         case 3:
-                            item.nominal = 80;
-                            item.min = 40;
+                            if (item.category != null && item.category.name == "clothes")
+                            {
+                                item.nominal = 40;
+                                item.min = 20;
+                            }
+                            else
+                            {
+                                item.nominal = 80;
+                                item.min = 40;
+                            }
                             break;
                         case 4:
-                            item.nominal = 40;
-                            item.min = 20;
+                            if (item.category != null && item.category.name == "clothes")
+                            {
+                                item.nominal = 20;
+                                item.min = 10;
+                            }
+                            else
+                            {
+                                item.nominal = 40;
+                                item.min = 20;
+                            }
                             break;
                         case 5:
-                            item.nominal = 20;
-                            item.min = 10;
+                            if (item.category != null && item.category.name == "clothes")
+                            {
+                                item.nominal = 10;
+                                item.min = 5;
+                            }
+                            else
+                            {
+                                item.nominal = 20;
+                                item.min = 10;
+                            }
                             break;
                         case 6:
-                            item.nominal = 10;
-                            item.min = 5;
+                            if (item.category != null && item.category.name == "clothes")
+                            {
+                                item.nominal = 5;
+                                item.min = 2;
+                            }
+                            else
+                            {
+                                item.nominal = 10;
+                                item.min = 5;
+                            }
                             break;
                         case 7:
-                            item.nominal = 5;
-                            item.min = 2;
+                            if (item.category != null && item.category.name == "clothes")
+                            {
+                                item.nominal = 2;
+                                item.min = 1;
+                            }
+                            else
+                            {
+                                item.nominal = 5;
+                                item.min = 2;
+                            }
                             break;
                         case 8:
-                            item.nominal = 2;
-                            item.min = 1;
+                            if (item.category != null && item.category.name == "clothes")
+                            {
+                                item.nominal = 1;
+                                item.min = 1;
+                            }
+                            else
+                            {
+                                item.nominal = 2;
+                                item.min = 1;
+                            }
                             break;
                     }
                 }

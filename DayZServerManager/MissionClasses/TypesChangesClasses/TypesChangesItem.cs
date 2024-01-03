@@ -10,5 +10,6 @@ namespace DayZServerManager.MissionClasses.TypesChangesClasses
     {
         public string name { get; set; }
         public long lifetime { get; set; }
+        public int rarity { get; set; }
     }
 }

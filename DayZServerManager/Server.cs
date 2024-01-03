@@ -303,6 +303,17 @@ namespace DayZServerManager
                     MoveMods(mods);
                     WriteToConsole("Mods moved");
                 }
+
+                if (updatedModsIDs.Contains(2116157322) || updatedModsIDs.Contains(2572331007) || updatedServer)
+                {
+                    updatedServer = false;
+                    WriteToConsole($"Updating Mission folder");
+                    MissionUpdater upd = new MissionUpdater(config);
+                    upd.Update();
+                    WriteToConsole($"Finished updating Mission folder");
+                }
+
+                updatedModsIDs = new List<long>();
             }
         }
 
@@ -375,18 +386,6 @@ namespace DayZServerManager
                         }
                     }
                 }
-
-                if (updatedModsIDs.Contains(2116157322) || updatedModsIDs.Contains(2572331007) || updatedServer)
-                {
-                    updatedServer = false;
-                    WriteToConsole($"Updating Mission folder");
-                    MissionUpdater upd = new MissionUpdater(config);
-                    upd.Update();
-                    WriteToConsole($"Finished updating Mission folder");
-                }
-
-                updatedModsIDs = new List<long>();
-
             }
             catch (Exception ex)
             {
