@@ -993,6 +993,10 @@ namespace DayZServerManager.Helpers
                     {
                         FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfgplayerspawnpoints.xml"), Path.Combine(missionPath, "cfgplayerspawnpoints.xml"), true);
                     }
+                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfggameplay.json")))
+                    {
+                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfggameplay.json"), Path.Combine(missionPath, "cfggameplay.json"), true);
+                    }
                 }
             }
             catch (Exception ex)

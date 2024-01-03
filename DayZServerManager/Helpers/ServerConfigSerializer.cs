@@ -63,6 +63,9 @@ namespace DayZServerManager.Helpers
                         case "vonCodecQuality":
                             cfg.vonCodecQuality = Int32.Parse(match.Groups[4].Value);
                             break;
+                        case "enableCfgGameplayFile":
+                            cfg.enableCfgGameplayFile = Int32.Parse(match.Groups[4].Value);
+                            break;
                         case "disable3rdPerson":
                             cfg.disable3rdPerson = Int32.Parse(match.Groups[4].Value);
                             break;
@@ -248,6 +251,7 @@ namespace DayZServerManager.Helpers
                 returnString += $"{Environment.NewLine}forceSameBuild = {cfg.forceSameBuild.ToString()};";
                 returnString += $"{Environment.NewLine}disableVoN = {cfg.disableVoN.ToString()};";
                 returnString += $"{Environment.NewLine}vonCodecQuality = {cfg.vonCodecQuality.ToString()};";
+                returnString += $"{Environment.NewLine}enableCfgGameplayFile = {cfg.enableCfgGameplayFile.ToString()};";
                 returnString += $"{Environment.NewLine}disable3rdPerson = {cfg.disable3rdPerson.ToString()};";
                 returnString += $"{Environment.NewLine}disableCrosshair = {cfg.disableCrosshair.ToString()};";
                 returnString += $"{Environment.NewLine}disablePersonalLight = {cfg.disablePersonalLight.ToString()};";

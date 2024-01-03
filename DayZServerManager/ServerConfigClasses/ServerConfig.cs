@@ -20,6 +20,7 @@ namespace DayZServerManager.ServerConfigClasses
         public int forceSameBuild { get; set; }
         public int disableVoN { get; set;}
         public int vonCodecQuality { get; set;}
+        public int enableCfgGameplayFile { get; set; }
         public int disable3rdPerson { get; set; }
         public int disableCrosshair { get; set; }
         public int disablePersonalLight { get; set; }
