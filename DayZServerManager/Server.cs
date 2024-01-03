@@ -231,7 +231,7 @@ namespace DayZServerManager
             try
             {
                 ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.CreateNoWindow = false;
+                startInfo.CreateNoWindow = true;
                 startInfo.UseShellExecute = false;
                 startInfo.FileName = Path.Combine(config.becPath, "Bec.exe");
                 startInfo.Arguments = $"-f Config.cfg --dsc";
