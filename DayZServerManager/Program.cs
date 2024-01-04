@@ -173,12 +173,12 @@ void StartServer(Config config)
             }
 
             // Checking if one of the clientMods has expansion in its name
-            if (config.clientMods != null && config.clientMods.FindAll(x => x.name.Contains("expansion")).Count > 0)
+            if (config.clientMods != null && (config.clientMods.FindAll(x => x.name.Contains("expansion") || x.name.Contains("Expansion")).Count > 0))
             {
                 NotificationSchedulerFile expansionScheduler;
-                if (FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "ExpanionMod", "Settings", "NotificationSchedulerSettings.json")))
+                if (FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
                 {
-                    using (StreamReader reader = new StreamReader(Path.Combine(config.serverPath, config.profileName, "ExpanionMod", "Settings", "NotificationSchedulerSettings.json")))
+                    using (StreamReader reader = new StreamReader(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
                     {
                         string json = reader.ReadToEnd();
                         NotificationSchedulerFile? file = JsonSerializer.Deserialize<NotificationSchedulerFile>(json);
@@ -199,7 +199,7 @@ void StartServer(Config config)
 
                 RestartUpdater.UpdateRestartScripts(config.RestartInterval, becScheduler, expansionScheduler);
 
-                using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.profileName, "ExpanionMod", "Settings", "NotificationSchedulerSettings.json")))
+                using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
                 {
                     JsonSerializerOptions options = new JsonSerializerOptions();
                     options.WriteIndented = true;
