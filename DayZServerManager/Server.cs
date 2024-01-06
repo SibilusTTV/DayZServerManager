@@ -36,6 +36,7 @@ namespace DayZServerManager
             serverProcess = null;
             becProcess = null;
             becUpdateProcess = null;
+            updatedModsIDs = new List<long>();
         }
 
         public bool CheckServer()
@@ -371,8 +372,6 @@ namespace DayZServerManager
                     upd.Update();
                     WriteToConsole($"Finished updating Mission folder");
                 }
-
-                updatedModsIDs = new List<long>();
             }
         }
 
@@ -445,6 +444,7 @@ namespace DayZServerManager
                         }
                     }
                 }
+                updatedModsIDs = new List<long>();
             }
             catch (Exception ex)
             {
