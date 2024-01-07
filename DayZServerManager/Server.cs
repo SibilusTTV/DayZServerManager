@@ -30,7 +30,6 @@ namespace DayZServerManager
         public Server(Config config)
         {
             this.config = config;
-            updatedModsIDs = new List<long>();
             dayZServerBranch = 223350;
             dayZGameBranch = 221100;
             serverProcess = null;
@@ -65,6 +64,7 @@ namespace DayZServerManager
 
         public void StartServer()
         {
+            updatedModsIDs = new List<long>();
             updatedMods = false;
             restartingForUpdates = false;
             updatedServer = false;
@@ -444,7 +444,6 @@ namespace DayZServerManager
                         }
                     }
                 }
-                updatedModsIDs = new List<long>();
             }
             catch (Exception ex)
             {
