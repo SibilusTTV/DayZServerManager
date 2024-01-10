@@ -1,5 +1,7 @@
-﻿using DayZServerManager.Helpers;
+﻿using DayZServerManager.BecClasses;
+using DayZServerManager.Helpers;
 using DayZServerManager.ManagerConfigClasses;
+using DayZServerManager.MissionClasses.TypesClasses;
 using LibGit2Sharp;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
@@ -7,6 +9,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 
 namespace DayZServerManager
 {
@@ -55,6 +58,10 @@ namespace DayZServerManager
             if (becProcess != null && !restartingForUpdates)
             {
                 return !becProcess.HasExited;
+            }
+            else if (restartingForUpdates)
+            {
+                return true;
             }
             else
             {
@@ -183,10 +190,21 @@ namespace DayZServerManager
                     }
 
                     becConfig = becConfig.Replace("C:\\Servers\\DayZ\\ServerName\\BattlEye", Path.Combine(Environment.CurrentDirectory, config.serverPath, config.profileName, "BattlEye"));
-                    becConfig = becConfig.Replace("Port = 2305", "Port = 2306");
-                    becConfig = becConfig.Replace("Timeout = 10", "Timeout = 60");
+                    string defaultPort = becConfig.Substring(becConfig.IndexOf("Port = "), becConfig.IndexOf(System.Environment.NewLine, becConfig.IndexOf("Port = ") - 1) - becConfig.IndexOf("Port = "));
+                    becConfig = becConfig.Replace(defaultPort, $"Port = {config.RConPort}");
+                    string defaultTimeout = becConfig.Substring(becConfig.IndexOf("Timeout = "), becConfig.IndexOf(System.Environment.NewLine, becConfig.IndexOf("Timeout = ") - 1) - becConfig.IndexOf("Timeout = "));
+                    becConfig = becConfig.Replace(defaultTimeout, "Timeout = 60");
 
                     using (StreamWriter writer = new StreamWriter(Path.Combine(config.becPath, "Config", "Config.cfg")))
+                    {
+                        writer.Write(becConfig);
+                        writer.Close();
+                    }
+
+                    string defaultScheduler = becConfig.Substring(becConfig.IndexOf("Scheduler = "), becConfig.IndexOf(System.Environment.NewLine, becConfig.IndexOf("Scheduler = ") - 1) - becConfig.IndexOf("Scheduler = "));
+                    becConfig = becConfig.Replace(defaultScheduler, "Scheduler = SchedulerUpdate.xml");
+
+                    using (StreamWriter writer = new StreamWriter(Path.Combine(config.becPath, "Config", "ConfigUpdate.cfg")))
                     {
                         writer.Write(becConfig);
                         writer.Close();
@@ -201,7 +219,7 @@ namespace DayZServerManager
                 if (!FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "BattlEye", "BEServer_x64.cfg")))
                 {
                     string beConfig = "RConPassword YourRCONPasswort";
-                    beConfig += $"{Environment.NewLine}RConPort 2306";
+                    beConfig += $"{Environment.NewLine}RConPort {config.RConPort}";
 
                     using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.profileName, "BattlEye", "BEServer_x64.cfg")))
                     {
@@ -453,26 +471,57 @@ namespace DayZServerManager
 
         public bool CheckForUpdatedMods()
         {
-            if (config.RestartOnUpdate && ((updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0) || updatedServer) && !(becUpdateProcess != null && becUpdateProcess.HasExited))
+            if (config.RestartOnUpdate && !restartingForUpdates && ((updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0) || updatedServer) && !(becUpdateProcess != null && becUpdateProcess.HasExited))
             {
                 updatedMods = false;
-                restartingForUpdates = true;
                 updatedServer = false;
                 try
                 {
-                    if (becProcess != null && !becProcess.HasExited)
+                    SchedulerFile? schedulerFile = DeserializeSchedulerFile(Path.Combine(config.becPath, "Config", "configUpdate.xml"));
+
+                    if (schedulerFile == null)
                     {
-                        becProcess.Kill();
+                        schedulerFile = new SchedulerFile();
                     }
-                    string becStartParameters = $"-f ConfigUpdate.cfg --dsc";
-                    becUpdateProcess = Process.Start(Path.Combine(config.becPath, "Bec.exe"), becStartParameters);
-                    return true;
+
+                    if (RestartUpdater.UpdateOnUpdateRestartScript(config.RestartInterval, DateTime.Now, schedulerFile))
+                    {
+                        restartingForUpdates = true;
+                        if (becProcess != null && !becProcess.HasExited)
+                        {
+                            becProcess.Kill();
+                        }
+
+                        SerializeSchedulerFile(Path.Combine(config.becPath, "Config", "SchedulerUpdate.xml"), schedulerFile);
+
+                        ProcessStartInfo startInfo = new ProcessStartInfo();
+                        startInfo.CreateNoWindow = true;
+                        startInfo.UseShellExecute = false;
+                        startInfo.FileName = Path.Combine(config.becPath, "Bec.exe");
+                        startInfo.Arguments = $"-f ConfigUpdate.cfg --dsc";
+                        startInfo.WorkingDirectory = config.becPath;
+                        becUpdateProcess = new Process();
+                        becUpdateProcess.StartInfo = startInfo;
+                        WriteToConsole("Starting BEC for mod updates");
+                        becUpdateProcess.Start();
+                        WriteToConsole("BEC for mod updates started");
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 catch (Exception ex)
                 {
                     WriteToConsole(ex.ToString());
                     return false;
                 }
+            }
+            else
+            {
+                updatedMods = false;
+                updatedServer = false;
             }
             return false;
         }
@@ -682,5 +731,50 @@ namespace DayZServerManager
                 return false;
             }
         }
+
+        #region SchedulerFile
+        public void SerializeSchedulerFile(string path, SchedulerFile schedulerFile)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(SchedulerFile));
+                    serializer.Serialize(writer, schedulerFile);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
+            }
+        }
+
+
+        // Takes a path and returns the deserialized TypesFile
+        public SchedulerFile? DeserializeSchedulerFile(string path)
+        {
+            try
+            {
+                if (FileSystem.FileExists(path))
+                {
+                    using (StreamReader reader = new StreamReader(path))
+                    {
+                        XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
+                        return (SchedulerFile?)serializer.Deserialize(reader);
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
+                return null;
+            }
+        }
+        #endregion SchedulerFile
     }
 }

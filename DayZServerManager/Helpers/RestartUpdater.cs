@@ -2,6 +2,7 @@
 using DayZServerManager.ProfileClasses.NotificationSchedulerClasses;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DayZServerManager.Helpers
 {
-    internal class RestartUpdater
+    internal static class RestartUpdater
     {
         public static void UpdateRestartScripts(int interval, SchedulerFile? becScheduler, NotificationSchedulerFile? expansionScheduler = null)
         {
@@ -20,6 +21,203 @@ namespace DayZServerManager.Helpers
             else if (expansionScheduler != null && becScheduler != null)
             {
                 UpdateWithExpansion(interval, becScheduler, expansionScheduler);
+            }
+        }
+
+        public static bool UpdateOnUpdateRestartScript(int interval, DateTime currentTime, SchedulerFile? becUpdateScheduler)
+        {
+            if (becUpdateScheduler != null)
+            {
+                becUpdateScheduler.JobItems = new List<JobItem>();
+
+                int id = 0;
+                string days = "1,2,3,4,5,6,7";
+                string runtime = "000000";
+                int loop = 0;
+                string cmd = "#shutdown";
+                string twentyMinuteCmd = "say -1 Alert: The Server is restarting in 20 minutes to load updated mods! Please restart your game afterwards!";
+                string fifteenMinuteCmd = "say -1 Alert: The Server is restarting in 15 minutes to load updated mods! Please restart your game afterwards!";
+                string tenMinuteCmd = "say -1 Alert: The Server is restarting in 10 minutes to load updated mods! Please restart your game afterwards!";
+                string fiveMinuteCmd = "say -1 Alert: The Server is restarting in 5 minutes to load updated mods! ! Please land your helicopters as soon as possible and restart your game afterwards!";
+                string oneMinuteCmd = "say -1 Alert: The Server is restarting in 1 minute to load updated mods! ! Please log out in order to prevent inventory loss and restart your game afterwards!";
+                string restartingNowCmd = "say -1 Alert: The Server is restarting now to load updated mods!! Please your restart your game afterwards!";
+
+                string hour;
+                if (currentTime.Hour < 10)
+                {
+                    hour = $"0{currentTime.Hour}";
+                }
+                else
+                {
+                    hour = $"{currentTime.Hour}";
+                }
+
+                string nextHour;
+                if (currentTime.Hour == 23)
+                {
+                    nextHour = "00";
+                }
+                else if (currentTime.Hour < 9)
+                {
+                    nextHour = $"0{currentTime.Hour + 1}";
+                }
+                else
+                {
+                    nextHour = $"{currentTime.Hour + 1}";
+                }
+
+                string previousHour;
+                if (currentTime.Hour == 0)
+                {
+                    previousHour = "23";
+                }
+                else if (currentTime.Hour < 11)
+                {
+                    previousHour = $"0{currentTime.Hour}";
+                }
+                else
+                {
+                    previousHour = $"{currentTime.Hour}";
+                }
+
+                if (currentTime.Hour % interval == interval - 1)
+                {
+                    if (currentTime.Minute >= 0 && currentTime.Minute < 5)
+                    {
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{previousHour}:55:00", runtime, loop, twentyMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:00:00", runtime, loop, fifteenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:05:00", runtime, loop, tenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:10:00", runtime, loop, fiveMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:14:00", runtime, loop, oneMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:14:50", runtime, loop, restartingNowCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:15:00", runtime, loop, cmd));
+                        return true;
+                    }
+                    else if (currentTime.Minute >= 5 && currentTime.Minute < 20)
+                    {
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:10:00", runtime, loop, twentyMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:15:00", runtime, loop, fifteenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:20:00", runtime, loop, tenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:25:00", runtime, loop, fiveMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:29:00", runtime, loop, oneMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:29:50", runtime, loop, restartingNowCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:30:00", runtime, loop, cmd));
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (currentTime.Minute >= 50 && currentTime.Minute < 60)
+                    {
+
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:55:00", runtime, loop, twentyMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{nextHour}:00:00", runtime, loop, fifteenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{nextHour}:05:00", runtime, loop, tenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{nextHour}:10:00", runtime, loop, fiveMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{nextHour}:14:00", runtime, loop, oneMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{nextHour}:14:50", runtime, loop, restartingNowCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{nextHour}:15:00", runtime, loop, cmd));
+                        return true;
+                    }
+                    else if (currentTime.Minute >= 0 && currentTime.Minute < 5)
+                    {
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{previousHour}:55:00", runtime, loop, twentyMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:00:00", runtime, loop, fifteenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:05:00", runtime, loop, tenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:10:00", runtime, loop, fiveMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:14:00", runtime, loop, oneMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:14:50", runtime, loop, restartingNowCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:15:00", runtime, loop, cmd));
+                        return true;
+                    }
+                    else if (currentTime.Minute >= 5 && currentTime.Minute < 20)
+                    {
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:10:00", runtime, loop, twentyMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:15:00", runtime, loop, fifteenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:20:00", runtime, loop, tenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:25:00", runtime, loop, fiveMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:29:00", runtime, loop, oneMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:29:50", runtime, loop, restartingNowCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:30:00", runtime, loop, cmd));
+                        return true;
+                    }
+                    else if (currentTime.Minute >= 20 && currentTime.Minute < 35)
+                    {
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:25:00", runtime, loop, twentyMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:30:00", runtime, loop, fifteenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:35:00", runtime, loop, tenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:40:00", runtime, loop, fiveMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:44:00", runtime, loop, oneMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:44:50", runtime, loop, restartingNowCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:45:00", runtime, loop, cmd));
+                        return true;
+                    }
+                    else if (currentTime.Minute >= 35 && currentTime.Minute < 50)
+                    {
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:40:00", runtime, loop, twentyMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:45:00", runtime, loop, fifteenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:50:00", runtime, loop, tenMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:55:00", runtime, loop, fiveMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:59:00", runtime, loop, oneMinuteCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:59:50", runtime, loop, restartingNowCmd));
+                        id++;
+                        becUpdateScheduler.JobItems.Add(new JobItem(id, days, $"{nextHour}:00:00", runtime, loop, cmd));
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -35,8 +233,8 @@ namespace DayZServerManager.Helpers
             string oneHourCmd = "say -1 Alert: The Server is restarting in 1 hour";
             string thirtyMinuteCmd = "say -1 Alert: The Server is restarting in 30 minutes";
             string fifteenMinuteCmd = "say -1 Alert: The Server is restarting in 15 minutes";
-            string fiveMinuteCmd = "say -1 Alert: The Server is restarting in 5 minutes";
-            string oneMinuteCmd = "say -1 Alert: The Server is restarting in 1 minute";
+            string fiveMinuteCmd = "say -1 Alert: The Server is restarting in 5 minutes! Please land your helicopters as soon as possible!";
+            string oneMinuteCmd = "say -1 Alert: The Server is restarting in 1 minute! Please log out in order to prevent inventory loss!";
             string restartingNowCmd = "say -1 Alert: The Server is restarting now!!";
 
             for (int i = 0; i < 24; i++)
@@ -84,8 +282,8 @@ namespace DayZServerManager.Helpers
             string oneHourText = "The Server is restarting in 1 hour";
             string thirtyMinuteText = "The Server is restarting in 30 minutes";
             string fifteenMinuteText = "The Server is restarting in 15 minutes";
-            string fiveMinuteText = "The Server is restarting in 5 minutes";
-            string oneMinuteText = "The Server is restarting in 1 minute";
+            string fiveMinuteText = "The Server is restarting in 5 minutes! Please land your helicopters as soon as possible!";
+            string oneMinuteText = "The Server is restarting in 1 minute! Please log out in order to prevent inventory loss!";
             string restartingNowText = "The Server is restarting now!!";
             string icon = "Exclamationmark";
             string color = "";

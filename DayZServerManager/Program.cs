@@ -8,6 +8,7 @@ using DayZServerManager.MissionClasses.TypesClasses;
 using DayZServerManager.ProfileClasses.NotificationSchedulerClasses;
 using DayZServerManager.ServerConfigClasses;
 using Microsoft.VisualBasic.FileIO;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Text.Json;
 using System.Xml.Serialization;
@@ -26,7 +27,7 @@ if (FileSystem.FileExists("Config.json"))
     }
     catch (Exception ex)
     {
-        Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+        WriteToConsole(ex.ToString());
     }
 
     if (config != null)
@@ -87,13 +88,13 @@ void StartServer(Config config)
 {
     if (string.IsNullOrEmpty(config.steamUsername))
     {
-        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Enter steam username");
+        WriteToConsole("Enter steam username");
         config.steamUsername = Console.ReadLine();
     }
 
     if (string.IsNullOrEmpty(config.steamPassword))
     {
-        Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} Enter steam password");
+        WriteToConsole("Enter steam password");
         config.steamPassword = Console.ReadLine();
     }
 
@@ -124,7 +125,7 @@ void StartServer(Config config)
         }
         catch (Exception ex)
         {
-            Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            WriteToConsole(ex.ToString());
         }
     }
     else
@@ -147,7 +148,7 @@ void StartServer(Config config)
         }
         catch (Exception ex)
         {
-            Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+            WriteToConsole(ex.ToString());
         }
     }
 
@@ -157,39 +158,22 @@ void StartServer(Config config)
     {
         if (FileSystem.FileExists(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
         {
-            SchedulerFile becScheduler;
-            using (StreamReader reader = new StreamReader(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
+            SchedulerFile? becScheduler = DeserializeSchedulerFile(Path.Combine(config.becPath, "Config", "Scheduler.xml"));
+            if (becScheduler == null)
             {
-                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SchedulerFile));
-                SchedulerFile? file = (SchedulerFile?)xmlSerializer.Deserialize(reader);
-                if (file != null)
-                {
-                    becScheduler = file;
-                }
-                else
-                {
-                    becScheduler = new SchedulerFile();
-                }
+                becScheduler = new SchedulerFile();
             }
 
             // Checking if one of the clientMods has expansion in its name
             if (config.clientMods != null && (config.clientMods.FindAll(x => x.name.Contains("expansion") || x.name.Contains("Expansion")).Count > 0))
             {
-                NotificationSchedulerFile expansionScheduler;
+                NotificationSchedulerFile? expansionScheduler;
                 if (FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
                 {
-                    using (StreamReader reader = new StreamReader(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
+                    expansionScheduler = DeserializeNotificationSchedulerFile(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
+                    if (expansionScheduler == null)
                     {
-                        string json = reader.ReadToEnd();
-                        NotificationSchedulerFile? file = JsonSerializer.Deserialize<NotificationSchedulerFile>(json);
-                        if (file != null)
-                        {
-                            expansionScheduler = file;
-                        }
-                        else
-                        {
-                            expansionScheduler = new NotificationSchedulerFile();
-                        }
+                        expansionScheduler = new NotificationSchedulerFile();
                     }
                 }
                 else
@@ -199,31 +183,19 @@ void StartServer(Config config)
 
                 RestartUpdater.UpdateRestartScripts(config.RestartInterval, becScheduler, expansionScheduler);
 
-                using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
-                {
-                    JsonSerializerOptions options = new JsonSerializerOptions();
-                    options.WriteIndented = true;
-                    string json = JsonSerializer.Serialize(expansionScheduler, options);
-                    writer.Write(json);
-                    writer.Close();
-                }
+                SerializeNotificationSchedulerFile(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), expansionScheduler);
             }
             else
             {
                 RestartUpdater.UpdateRestartScripts(config.RestartInterval, becScheduler);
             }
 
-            using (StreamWriter writer = new StreamWriter(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
-            {
-                XmlSerializer serializer = new XmlSerializer(typeof(SchedulerFile));
-                serializer.Serialize(writer, becScheduler);
-                writer.Close();
-            }
+            SerializeSchedulerFile(Path.Combine(config.becPath, "Config", "Scheduler.xml"), becScheduler);
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+        WriteToConsole(ex.ToString());
     }
 
     s.StartServer();
@@ -243,7 +215,7 @@ void StartServer(Config config)
         }
         else
         {
-            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} The Server is still running");
+            WriteToConsole("The Server is still running");
         }
         if (!s.CheckBEC())
         {
@@ -251,9 +223,9 @@ void StartServer(Config config)
         }
         else
         {
-            Console.WriteLine($"{Environment.NewLine} {DateTime.Now.ToString("[HH:mm:ss]")} BEC is still running");
+            WriteToConsole("BEC is still running");
         }
-        if (i % 40 == 0)
+        if (i % 4 == 0)
         {
             s.UpdateAndMoveMods(true, false);
             s.CheckForUpdatedMods();
@@ -284,6 +256,105 @@ void SaveConfig(Config config)
     }
     catch (Exception ex)
     {
-        Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+        WriteToConsole(ex.ToString());
     }
 }
+
+void WriteToConsole(string message)
+{
+    Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
+}
+
+
+#region SchedulerFile
+void SerializeSchedulerFile(string path, SchedulerFile schedulerFile)
+{
+    try
+    {
+        using (StreamWriter writer = new StreamWriter(path))
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(SchedulerFile));
+            serializer.Serialize(writer, schedulerFile);
+            writer.Close();
+        }
+    }
+    catch (Exception ex)
+    {
+        WriteToConsole(ex.ToString());
+    }
+}
+
+
+// Takes a path and returns the deserialized TypesFile
+SchedulerFile? DeserializeSchedulerFile(string path)
+{
+    try
+    {
+        if (FileSystem.FileExists(path))
+        {
+            using (StreamReader reader = new StreamReader(path))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(SchedulerFile));
+                return (SchedulerFile?)serializer.Deserialize(reader);
+            }
+        }
+        else
+        {
+            return null;
+        }
+    }
+    catch (Exception ex)
+    {
+        WriteToConsole(ex.ToString());
+        return null;
+    }
+}
+#endregion SchedulerFile
+
+
+#region NotificationScheduler
+void SerializeNotificationSchedulerFile(string path, NotificationSchedulerFile schedulerFile)
+{
+    try
+    {
+        using (StreamWriter writer = new StreamWriter(path))
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.WriteIndented = true;
+            string json = JsonSerializer.Serialize(schedulerFile, options);
+            writer.Write(json);
+            writer.Close();
+        }
+    }
+    catch (Exception ex)
+    {
+        WriteToConsole(ex.ToString());
+    }
+}
+
+
+// Takes a path and returns the deserialized RarityFile
+NotificationSchedulerFile? DeserializeNotificationSchedulerFile(string path)
+{
+    try
+    {
+        if (FileSystem.FileExists(path))
+        {
+            using (StreamReader reader = new StreamReader(path))
+            {
+                string json = reader.ReadToEnd();
+                return JsonSerializer.Deserialize<NotificationSchedulerFile>(json);
+            }
+        }
+        else
+        {
+            return null;
+        }
+    }
+    catch (Exception ex)
+    {
+        WriteToConsole(ex.ToString());
+        return null;
+    }
+}
+#endregion NotificationScheduler
