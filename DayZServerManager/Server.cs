@@ -413,8 +413,15 @@ namespace DayZServerManager
                     {
                         if (CompareForChanges(Path.Combine(config.workshopPath, mod.workshopID.ToString()), Path.Combine(config.serverPath, mod.name)))
                         {
-                            updatedModsIDs.Add(mod.workshopID);
-                            updatedMods = true;
+                            if (updatedModsIDs.Contains(mod.workshopID))
+                            {
+                                updatedMods = true;
+                            }
+                            else
+                            {
+                                updatedModsIDs.Add(mod.workshopID);
+                                updatedMods = true;
+                            }
                         }
                     }
 
