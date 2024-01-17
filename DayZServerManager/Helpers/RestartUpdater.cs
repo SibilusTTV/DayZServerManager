@@ -229,7 +229,8 @@ namespace DayZServerManager.Helpers
             string days = "1,2,3,4,5,6,7";
             string runtime = "000000";
             int loop = 0;
-            string cmd = "#shutdown";
+            string cmdShutdown = "#shutdown";
+            string cmdLock = "#lock";
             string oneHourCmd = "say -1 Alert: The Server is restarting in 1 hour";
             string thirtyMinuteCmd = "say -1 Alert: The Server is restarting in 30 minutes";
             string fifteenMinuteCmd = "say -1 Alert: The Server is restarting in 15 minutes";
@@ -237,9 +238,14 @@ namespace DayZServerManager.Helpers
             string oneMinuteCmd = "say -1 Alert: The Server is restarting in 1 minute! Please log out in order to prevent inventory loss!";
             string restartingNowCmd = "say -1 Alert: The Server is restarting now!!";
 
+            string joinDCmsg = "say -1 Press P for more information on the server or ask on Discord!";
+
+            becScheduler.JobItems.Add(new JobItem(id, days, "001000", "002000", -1, joinDCmsg));
+            id++;
+
             for (int i = 0; i < 24; i++)
             {
-                string hour = "";
+                string hour;
                 if (i < 10)
                 {
                     hour = $"0{i}";
@@ -261,6 +267,8 @@ namespace DayZServerManager.Helpers
                     id++;
                     becScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:59:00", runtime, loop, oneMinuteCmd));
                     id++;
+                    becScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:59:00", runtime, loop, cmdLock));
+                    id++;
                     becScheduler.JobItems.Add(new JobItem(id, days, $"{hour}:59:50", runtime, loop, restartingNowCmd));
                     id++;
 
@@ -268,7 +276,7 @@ namespace DayZServerManager.Helpers
                 else if (i % interval == 0)
                 {
                     string start = $"{hour}:00:00";
-                    becScheduler.JobItems.Add(new JobItem(id, days, start, runtime, loop, cmd));
+                    becScheduler.JobItems.Add(new JobItem(id, days, start, runtime, loop, cmdShutdown));
                     id++;
                 }
             }
@@ -288,16 +296,25 @@ namespace DayZServerManager.Helpers
             string icon = "Exclamationmark";
             string color = "";
 
+            string joinDCmsg = "say -1 Press P for more information on the server or ask on Discord!";
+
             becScheduler.JobItems = new List<JobItem>();
 
             int id = 0;
             string days = "1,2,3,4,5,6,7";
             string runtime = "000000";
             int loop = 0;
-            string cmd = "#shutdown";
+            string cmdShutdown = "#shutdown";
+            string cmdLock = "#lock";
+
+
 
             for (int i = 0; i < 24; i++)
             {
+                expansionScheduler.Notifications.Add(new NotificationItem(i, 10, 0, title, joinDCmsg, icon, color));
+                expansionScheduler.Notifications.Add(new NotificationItem(i, 30, 0, title, joinDCmsg, icon, color));
+                expansionScheduler.Notifications.Add(new NotificationItem(i, 50, 0, title, joinDCmsg, icon, color));
+
                 if (i % interval == interval - 1)
                 {
                     expansionScheduler.Notifications.Add(new NotificationItem(i, 0, 0, title, oneHourText, icon, color));
@@ -306,10 +323,21 @@ namespace DayZServerManager.Helpers
                     expansionScheduler.Notifications.Add(new NotificationItem(i, 55, 0, title, fiveMinuteText, icon, color));
                     expansionScheduler.Notifications.Add(new NotificationItem(i, 59, 0, title, oneMinuteText, icon, color));
                     expansionScheduler.Notifications.Add(new NotificationItem(i, 59, 50, title, restartingNowText, icon, color));
+                    string start;
+                    if (i < 10)
+                    {
+                        start = $"0{i}:59:00";
+                    }
+                    else
+                    {
+                        start = $"{i}:59:00";
+                    }
+                    becScheduler.JobItems.Add(new JobItem(id, days, start, runtime, loop, cmdLock));
+                    id++;
                 }
                 else if (i % interval == 0)
                 {
-                    string start = "";
+                    string start;
                     if (i < 10)
                     {
                         start = $"0{i}:00:00";
@@ -318,7 +346,7 @@ namespace DayZServerManager.Helpers
                     {
                         start = $"{i}:00:00";
                     }
-                    becScheduler.JobItems.Add(new JobItem(id, days, start, runtime, loop, cmd));
+                    becScheduler.JobItems.Add(new JobItem(id, days, start, runtime, loop, cmdShutdown));
                     id++;
                 }
             }
