@@ -6,29 +6,31 @@ using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
 using System.Text.Json;
 using System.Xml.Serialization;
 using Microsoft.VisualBasic.FileIO;
+using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 
 namespace DayZServerManager.Server.Classes
 {
     internal static class Manager
     {
-        public static Config config;
+        public static ManagerConfig managerConfig;
+        public static ServerConfig serverConfig;
         public static Server server;
+        public const string MANAGERCONFIGNAME = "Config.json";
 
         public static void StartServer()
         {
-            if (config != null && server != null)
+            if (managerConfig != null)
             {
+                server = new Server(managerConfig);
 
-                if (string.IsNullOrEmpty(config.steamUsername) || string.IsNullOrEmpty(config.steamPassword))
+                if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
                 {
                     return;
                 }
 
                 BackupAndUpdate(server);
 
-                UpdateServerConfig(config);
-
-                UpdateBECScheduler(config);
+                UpdateBECScheduler(managerConfig);
 
                 //dayZServer.StartServer();
                 //dayZServer.StartBEC();
@@ -67,6 +69,8 @@ namespace DayZServerManager.Server.Classes
                 //}
                 //server.KillServerProcesses();
 
+
+                SaveServerConfig();
             }
         }
     
@@ -86,68 +90,13 @@ namespace DayZServerManager.Server.Classes
             server.UpdateAndMoveMods(true, true);
         }
 
-        private static void UpdateServerConfig(Config config)
-        {
-            ServerConfig serverConfig;
-            if (FileSystem.FileExists(Path.Combine(config.serverPath, config.serverConfigName)))
-            {
-                try
-                {
-                    using (StreamReader reader = new StreamReader(Path.Combine(config.serverPath, config.serverConfigName)))
-                    {
-                        string serverConfigText = reader.ReadToEnd();
-                        serverConfig = ServerConfigSerializer.Deserialize(serverConfigText);
-                    }
-                    AdjustServerConfig(config, serverConfig);
-                    using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.serverConfigName)))
-                    {
-                        string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
-                        writer.Write(serverConfigText);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteToConsole(ex.ToString());
-                }
-            }
-            else
-            {
-                try
-                {
-                    if (!FileSystem.DirectoryExists(config.serverPath))
-                    {
-                        FileSystem.CreateDirectory(config.serverPath);
-                    }
-                    serverConfig = new ServerConfig();
-                    AdjustServerConfig(config, serverConfig);
-                    using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.serverConfigName)))
-                    {
-                        string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
-                        writer.Write(serverConfigText);
-                        writer.Close();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteToConsole(ex.ToString());
-                }
-            }
-        }
-
-        private static void AdjustServerConfig(Config config, ServerConfig serverConfig)
-        {
-            serverConfig.template = config.missionName;
-            serverConfig.instanceId = config.instanceId;
-            serverConfig.steamQueryPort = config.steamQueryPort;
-        }
-
-        private static void UpdateBECScheduler(Config config)
+        private static void UpdateBECScheduler(ManagerConfig config)
         {
             try
             {
                 if (FileSystem.FileExists(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
                 {
-                    SchedulerFile? becScheduler = DeserializeSchedulerFile(Path.Combine(config.becPath, "Config", "Scheduler.xml"));
+                    SchedulerFile? becScheduler = SchedulerFileSerializer.DeserializeSchedulerFile(Path.Combine(config.becPath, "Config", "Scheduler.xml"));
                     if (becScheduler == null)
                     {
                         becScheduler = new SchedulerFile();
@@ -159,7 +108,7 @@ namespace DayZServerManager.Server.Classes
                         NotificationSchedulerFile? expansionScheduler;
                         if (FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
                         {
-                            expansionScheduler = DeserializeNotificationSchedulerFile(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
+                            expansionScheduler = NotificationSchedulerFileSerializer.DeserializeNotificationSchedulerFile(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
                             if (expansionScheduler == null)
                             {
                                 expansionScheduler = new NotificationSchedulerFile();
@@ -172,14 +121,14 @@ namespace DayZServerManager.Server.Classes
 
                         RestartUpdater.UpdateRestartScripts(config.restartInterval, becScheduler, expansionScheduler);
 
-                        SerializeNotificationSchedulerFile(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), expansionScheduler);
+                        NotificationSchedulerFileSerializer.SerializeNotificationSchedulerFile(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), expansionScheduler);
                     }
                     else
                     {
                         RestartUpdater.UpdateRestartScripts(config.restartInterval, becScheduler);
                     }
 
-                    SerializeSchedulerFile(Path.Combine(config.becPath, "Config", "Scheduler.xml"), becScheduler);
+                    SchedulerFileSerializer.SerializeSchedulerFile(Path.Combine(config.becPath, "Config", "Scheduler.xml"), becScheduler);
                 }
             }
             catch (Exception ex)
@@ -188,101 +137,135 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        #region SchedulerFile
-        private static void SerializeSchedulerFile(string path, SchedulerFile schedulerFile)
+        #region ServerConfig
+        public static string GetServerConfig()
         {
-            try
+            if (serverConfig != null)
             {
-                using (StreamWriter writer = new StreamWriter(path))
+                return ServerConfigSerializer.Serialize(serverConfig);
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        public static void PostServerConfig(string newServerConfig)
+        {
+            serverConfig = ServerConfigSerializer.Deserialize(newServerConfig);
+        }
+
+        public static void LoadServerConfig()
+        {
+            if (FileSystem.FileExists(Path.Combine(managerConfig.serverPath, managerConfig.serverConfigName)))
+            {
+                try
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(SchedulerFile));
-                    serializer.Serialize(writer, schedulerFile);
+                    using (StreamReader reader = new StreamReader(Path.Combine(managerConfig.serverPath, managerConfig.serverConfigName)))
+                    {
+                        string serverConfigText = reader.ReadToEnd();
+                        serverConfig = ServerConfigSerializer.Deserialize(serverConfigText);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteToConsole(ex.ToString());
+                }
+            }
+            else
+            {
+                try
+                {
+                    if (!FileSystem.DirectoryExists(managerConfig.serverPath))
+                    {
+                        FileSystem.CreateDirectory(managerConfig.serverPath);
+                    }
+                    serverConfig = new ServerConfig();
+                }
+                catch (Exception ex)
+                {
+                    WriteToConsole(ex.ToString());
+                }
+            }
+        }
+
+        public static void AdjustServerConfig()
+        {
+            serverConfig.template = managerConfig.missionName;
+            serverConfig.instanceId = managerConfig.instanceId;
+            serverConfig.steamQueryPort = managerConfig.steamQueryPort;
+        }
+
+        public static void SaveServerConfig()
+        {
+            if (serverConfig != null)
+            {
+                using (StreamWriter writer = new StreamWriter(Path.Combine(managerConfig.serverPath, managerConfig.serverConfigName)))
+                {
+                    string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
+                    writer.Write(serverConfigText);
                     writer.Close();
                 }
             }
-            catch (Exception ex)
-            {
-                WriteToConsole(ex.ToString());
-            }
         }
+        #endregion ServerConfig
 
-
-        // Takes a path and returns the deserialized TypesFile
-        private static SchedulerFile? DeserializeSchedulerFile(string path)
+        #region ManagerConfig
+        public static string GetManagerConfig()
         {
-            try
+            if (Manager.managerConfig != null)
             {
-                if (FileSystem.FileExists(path))
-                {
-                    using (StreamReader reader = new StreamReader(path))
-                    {
-                        XmlSerializer serializer = new XmlSerializer(typeof(SchedulerFile));
-                        return (SchedulerFile?)serializer.Deserialize(reader);
-                    }
-                }
-                else
-                {
-                    return null;
-                }
+                JsonSerializerOptions options = new JsonSerializerOptions();
+                options.WriteIndented = true;
+                return JsonSerializer.Serialize(Manager.managerConfig, options);
             }
-            catch (Exception ex)
+            else
             {
-                WriteToConsole(ex.ToString());
-                return null;
+                return "";
             }
         }
-        #endregion SchedulerFile
 
-        #region NotificationScheduler
-        private static void SerializeNotificationSchedulerFile(string path, NotificationSchedulerFile schedulerFile)
+        public static void PostManagerConfig(string newConfig)
         {
-            try
+            ManagerConfig? newConfigObject = JsonSerializer.Deserialize<ManagerConfig>(newConfig);
+            if (newConfigObject != null)
             {
-                using (StreamWriter writer = new StreamWriter(path))
-                {
-                    JsonSerializerOptions options = new JsonSerializerOptions();
-                    options.WriteIndented = true;
-                    string json = JsonSerializer.Serialize(schedulerFile, options);
-                    writer.Write(json);
-                    writer.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteToConsole(ex.ToString());
+                managerConfig = newConfigObject;
             }
         }
 
-
-        // Takes a path and returns the deserialized RarityFile
-        private static NotificationSchedulerFile? DeserializeNotificationSchedulerFile(string path)
+        public static void LoadManagerConfig()
         {
-            try
+            string configName = "Config.json";
+
+            if (FileSystem.FileExists(configName))
             {
-                if (FileSystem.FileExists(path))
+                ManagerConfig? deserializedManagerConfig = ManagerConfigSerializer.DeserializeManagerConfig();
+
+                if (deserializedManagerConfig != null)
                 {
-                    using (StreamReader reader = new StreamReader(path))
-                    {
-                        string json = reader.ReadToEnd();
-                        return JsonSerializer.Deserialize<NotificationSchedulerFile>(json);
-                    }
-                }
-                else
-                {
-                    return null;
+                    managerConfig = deserializedManagerConfig;
                 }
             }
-            catch (Exception ex)
+            else
             {
-                WriteToConsole(ex.ToString());
-                return null;
+                managerConfig = new ManagerConfig();
+                SaveManagerConfig();
             }
         }
-        #endregion NotificationScheduler
+
+        public static void SaveManagerConfig()
+        {
+            if (managerConfig != null)
+            {
+                ManagerConfigSerializer.SerializeManagerConfig(managerConfig);
+            }
+        }
+        #endregion ManagerConfig
 
         public static void WriteToConsole(string message)
         {
-            Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
+            System.Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
         }
     }
 }

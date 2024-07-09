@@ -1,12 +1,34 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DayZServerManager.Server.Classes;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using System.Xml.Linq;
 
 namespace DayZServerManager.Server.Controllers
 {
-    public class ManagerConfigController : Controller
+    [ApiController]
+    [Route("[controller]")]
+    public class ManagerConfigController : ControllerBase
     {
-        public IActionResult Index()
+        private readonly ILogger<DayZServerController> _logger;
+
+        public ManagerConfigController(ILogger<DayZServerController> logger)
         {
-            return View();
+            _logger = logger;
+        }
+
+        [HttpGet("GetManagerConfig")]
+        public string GetManagerConfig()
+        {
+            return Manager.GetManagerConfig();
+        }
+
+        [HttpPost("PostManagerConfig")]
+        public bool PostManagerConfig([FromBody] string config)
+        {
+            Manager.PostManagerConfig(config);
+            Manager.SaveManagerConfig();
+            return true;
         }
     }
 }

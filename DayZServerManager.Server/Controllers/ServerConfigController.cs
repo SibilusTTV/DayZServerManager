@@ -1,12 +1,32 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DayZServerManager.Server.Classes;
+using DayZServerManager.Server.Classes.Helpers;
+using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace DayZServerManager.Server.Controllers
 {
-    public class ServerConfigController : Controller
+    [ApiController]
+    [Route("[controller]")]
+    public class ServerConfigController : ControllerBase
     {
-        public IActionResult Index()
+        private readonly ILogger<DayZServerController> _logger;
+
+        public ServerConfigController(ILogger<DayZServerController> logger)
         {
-            return View();
+            _logger = logger;
+        }
+
+        [HttpGet("GetServerConfig")]
+        public string GetServerConfig()
+        {
+            return Manager.GetServerConfig();
+        }
+
+        [HttpPost("PostServerConfig")]
+        public void PostServerConfig([FromBody] string config)
+        {
+            Manager.PostServerConfig(config);
         }
     }
 }

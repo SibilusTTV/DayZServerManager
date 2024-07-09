@@ -2,11 +2,13 @@
 using DayZServerManager.Server.Classes.SerializationClasses.BecClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using LibGit2Sharp;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
@@ -16,7 +18,7 @@ namespace DayZServerManager.Server.Classes
     internal class Server
     {
         // Server Variables
-        private Config config;
+        private ManagerConfig config;
         int dayZServerBranch;
         int dayZGameBranch;
 
@@ -30,7 +32,7 @@ namespace DayZServerManager.Server.Classes
         Process? becProcess;
         Process? becUpdateProcess;
 
-        public Server(Config config)
+        public Server(ManagerConfig config)
         {
             this.config = config;
             dayZServerBranch = 223350;
@@ -382,7 +384,7 @@ namespace DayZServerManager.Server.Classes
                     WriteToConsole("Mods moved");
                 }
 
-                if (updatedModsIDs.Contains(2116157322) || updatedModsIDs.Contains(2572331007) || updatedServer)
+                if ((config.clientMods.FindAll(x => x.name.Contains("expansion") || x.name.Contains("Expansion")).Count > 0 && updatedModsIDs.Contains(config.clientMods.Find(x => x.name.Contains("expansion") || x.name.Contains("Expansion")).workshopID)) || updatedServer)
                 {
                     updatedServer = false;
                     WriteToConsole($"Updating Mission folder");
@@ -484,7 +486,7 @@ namespace DayZServerManager.Server.Classes
                 updatedServer = false;
                 try
                 {
-                    SchedulerFile? schedulerFile = DeserializeSchedulerFile(Path.Combine(config.becPath, "Config", "configUpdate.xml"));
+                    SchedulerFile? schedulerFile = SchedulerFileSerializer.DeserializeSchedulerFile(Path.Combine(config.becPath, "Config", "configUpdate.xml"));
 
                     if (schedulerFile == null)
                     {
@@ -499,7 +501,7 @@ namespace DayZServerManager.Server.Classes
                             becProcess.Kill();
                         }
 
-                        SerializeSchedulerFile(Path.Combine(config.becPath, "Config", "SchedulerUpdate.xml"), schedulerFile);
+                        SchedulerFileSerializer.SerializeSchedulerFile(Path.Combine(config.becPath, "Config", "SchedulerUpdate.xml"), schedulerFile);
 
                         ProcessStartInfo startInfo = new ProcessStartInfo();
                         startInfo.CreateNoWindow = true;
@@ -636,7 +638,7 @@ namespace DayZServerManager.Server.Classes
 
         private void WriteToConsole(string message)
         {
-            Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
+            System.Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
         }
 
         private bool CompareForChanges(string steamModPath, string serverModPath)
@@ -740,48 +742,6 @@ namespace DayZServerManager.Server.Classes
         }
 
         #region SchedulerFile
-        public void SerializeSchedulerFile(string path, SchedulerFile schedulerFile)
-        {
-            try
-            {
-                using (StreamWriter writer = new StreamWriter(path))
-                {
-                    XmlSerializer serializer = new XmlSerializer(typeof(SchedulerFile));
-                    serializer.Serialize(writer, schedulerFile);
-                    writer.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteToConsole(ex.ToString());
-            }
-        }
-
-
-        // Takes a path and returns the deserialized TypesFile
-        public SchedulerFile? DeserializeSchedulerFile(string path)
-        {
-            try
-            {
-                if (FileSystem.FileExists(path))
-                {
-                    using (StreamReader reader = new StreamReader(path))
-                    {
-                        XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
-                        return (SchedulerFile?)serializer.Deserialize(reader);
-                    }
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteToConsole(ex.ToString());
-                return null;
-            }
-        }
         #endregion SchedulerFile
     }
 }

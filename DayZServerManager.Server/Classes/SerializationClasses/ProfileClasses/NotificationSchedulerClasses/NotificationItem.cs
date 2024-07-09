@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses
 {
-    internal class NotificationItem
+    public class NotificationItem
     {
         public int Hour { get; set; }
         public int Minute { get; set; }

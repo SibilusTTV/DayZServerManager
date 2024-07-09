@@ -7,11 +7,6 @@ namespace DayZServerManager.Server.Controllers
     [Route("[controller]")]
     public class DayZServerController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
         private readonly ILogger<DayZServerController> _logger;
 
         public DayZServerController(ILogger<DayZServerController> logger)
@@ -19,29 +14,46 @@ namespace DayZServerManager.Server.Controllers
             _logger = logger;
         }
 
-        [HttpGet(Name = "GetDayZServerStatus")]
-        public string Get()
+        [HttpGet("GetServerStatus")]
+        public bool GetServerStatus()
         {
-            if (Manager.server.CheckServer())
+            if (Manager.server != null && Manager.server.CheckServer())
             {
-                return "Server still running";
+                return true;
             }
             else
             {
-                return "Server is not running";
+                return false;
             }
 
         }
 
-        [HttpGet(Name = "StartDayZServer")]
-        [Route("Start")]
+        [HttpGet("GetBECStatus")]
+        public bool GetBECStatus()
+        {
+            if (Manager.server != null && Manager.server.CheckBEC())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        [HttpGet("StartServer")]
         public string StartDayZServer()
         {
-            if (Manager.server != null)
-            {
-
-            }
+            Manager.StartServer();
             return "Server was not started, because fuck you";
+        }
+
+        [HttpGet("StopServer")]
+        public bool StopDayZServer()
+        {
+            Manager.KillServerProcesses();
+            return true;
         }
     }
 }
