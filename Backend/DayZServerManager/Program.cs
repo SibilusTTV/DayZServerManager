@@ -1,8 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DayZServerManager;
 using DayZServerManager.Helpers;
-using DayZServerManager.MissionClasses.RarityClasses;
-using DayZServerManager.MissionClasses.TypesClasses;
+using DayZServerManager.SerializationClasses.MissionClasses.RarityClasses;
+using DayZServerManager.SerializationClasses.MissionClasses.TypesClasses;
 using DayZServerManager.SerializationClasses.BecClasses;
 using DayZServerManager.SerializationClasses.ManagerConfigClasses;
 using DayZServerManager.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
@@ -13,22 +13,11 @@ using System.IO;
 using System.Text.Json;
 using System.Xml.Serialization;
 
-if (FileSystem.FileExists("Config.json"))
+string configName = "Config.json";
+
+if (FileSystem.FileExists(configName))
 {
-    Config? config = null;
-    try
-    {
-        using (StreamReader reader = new StreamReader("Config.json"))
-        {
-            string json = reader.ReadToEnd();
-            config = JsonSerializer.Deserialize<Config>(json);
-            reader.Close();
-        }
-    }
-    catch (Exception ex)
-    {
-        WriteToConsole(ex.ToString());
-    }
+    Config? config = readConfig(configName);
 
     if (config != null)
     {
@@ -38,72 +27,117 @@ if (FileSystem.FileExists("Config.json"))
 else
 {
     Config config = new Config();
-    config.steamUsername = "";
-    config.steamPassword = "";
-    config.serverPath = "Server";
-    config.steamCMDPath = "SteamCMD";
-    config.becPath = "BEC";
-    config.workshopPath = "SteamCMD\\steamapps\\workshop\\content\\221100";
-    config.backupPath = "Backup";
-    config.missionName = "Expansion.ChernarusPlus";
-    config.instanceId = 1;
-    config.serverConfigName = "serverDZ.cfg";
-    config.profileName = "Profiles";
-    config.port = 2302;
-    config.steamQueryPort = 2305;
-    config.RConPort = 2306;
-    config.cpuCount = 8;
-    config.noFilePatching = true;
-    config.doLogs = true;
-    config.adminLog = true;
-    config.netLog = true;
-    config.freezeCheck = true;
-    config.limitFPS = -1;
-    config.vanillaMissionName = "dayzOffline.chernarusplus";
-    config.missionTemplatePath = Path.Combine(config.serverPath, "mpmissions", "ChernarusTemplate");
-    config.expansionDownloadPath = Path.Combine(config.serverPath, "mpmissions", "DayZ-Expansion-Missions");
-    config.mapName = "Chernarus";
-    config.RestartOnUpdate = true;
-    config.RestartInterval = 4;
-    config.clientMods = new List<Mod>();
-    config.serverMods = new List<Mod>();
-    Mod mod1 = new Mod();
-    mod1.workshopID = 1559212036;
-    mod1.name = "@CF";
-    config.clientMods.Add(mod1);
-    Mod mod2 = new Mod();
-    mod2.workshopID = 1564026768;
-    mod2.name = "@Community-Online-Tools";
-    config.clientMods.Add(mod2);
-
+    SetStandardConfig(config);
     SaveConfig(config);
-
-    if (config != null)
-    {
-        StartServer(config);
-    }
+    StartServer(config);
 }
 
 void StartServer(Config config)
 {
-    if (string.IsNullOrEmpty(config.steamUsername))
+
+    if (string.IsNullOrEmpty(config.steamUsername) || string.IsNullOrEmpty(config.steamPassword))
     {
-        WriteToConsole("Enter steam username");
-        config.steamUsername = Console.ReadLine();
+        return;
     }
 
-    if (string.IsNullOrEmpty(config.steamPassword))
+    Server dayZServer = new Server(config);
+    BackupAndUpdate(dayZServer);
+
+    UpdateServerConfig(config);
+
+    AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+
+    UpdateBECScheduler(config);
+
+    dayZServer.StartServer();
+    dayZServer.StartBEC();
+    Thread.Sleep(30000);
+
+    int i = 20;
+    bool kill = false;
+    while (!kill)
     {
-        WriteToConsole("Enter steam password");
-        config.steamPassword = Console.ReadLine();
+        if (!dayZServer.CheckServer())
+        {
+            dayZServer.BackupServerData();
+            dayZServer.UpdateServer();
+            dayZServer.UpdateAndMoveMods(false, true);
+            dayZServer.StartServer();
+        }
+        else
+        {
+            WriteToConsole("The Server is still running");
+        }
+        if (!dayZServer.CheckBEC())
+        {
+            dayZServer.StartBEC();
+        }
+        else
+        {
+            WriteToConsole("BEC is still running");
+        }
+        if (i % 4 == 0)
+        {
+            dayZServer.UpdateAndMoveMods(true, false);
+            dayZServer.CheckForUpdatedMods();
+        }
+        i++;
+        Thread.Sleep(30000);
     }
+    dayZServer.KillServerProcesses();
 
-    Server s = new Server(config);
-    s.BackupServerData();
-    s.UpdateServer();
-    s.UpdateBEC();
-    s.UpdateAndMoveMods(true, true);
+    void OnProcessExit(object? sender, EventArgs? e)
+    {
+        dayZServer.KillServerProcesses();
+    }
+}
 
+Config? readConfig(string name)
+{
+    try
+    {
+        using (StreamReader reader = new StreamReader(name))
+        {
+            string json = reader.ReadToEnd();
+            return JsonSerializer.Deserialize<Config>(json);
+        }
+    }
+    catch (Exception ex)
+    {
+        WriteToConsole(ex.ToString());
+        return null;
+    }
+}
+
+void SaveConfig(Config config)
+{
+    try
+    {
+        using (StreamWriter writer = new StreamWriter("Config.json"))
+        {
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.WriteIndented = true;
+            string json = JsonSerializer.Serialize(config, options);
+            writer.Write(json);
+            writer.Close();
+        }
+    }
+    catch (Exception ex)
+    {
+        WriteToConsole(ex.ToString());
+    }
+}
+
+void BackupAndUpdate(Server server)
+{
+    server.BackupServerData();
+    server.UpdateServer();
+    server.UpdateBEC();
+    server.UpdateAndMoveMods(true, true);
+}
+
+void UpdateServerConfig(Config config)
+{
     ServerConfig serverConfig;
     if (FileSystem.FileExists(Path.Combine(config.serverPath, config.serverConfigName)))
     {
@@ -114,9 +148,7 @@ void StartServer(Config config)
                 string serverConfigText = reader.ReadToEnd();
                 serverConfig = ServerConfigSerializer.Deserialize(serverConfigText);
             }
-            serverConfig.template = config.missionName;
-            serverConfig.instanceId = config.instanceId;
-            serverConfig.steamQueryPort = config.steamQueryPort;
+            AdjustServerConfig(config, serverConfig);
             using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.serverConfigName)))
             {
                 string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
@@ -137,8 +169,7 @@ void StartServer(Config config)
                 FileSystem.CreateDirectory(config.serverPath);
             }
             serverConfig = new ServerConfig();
-            serverConfig.template = config.missionName;
-            serverConfig.instanceId = config.instanceId;
+            AdjustServerConfig(config, serverConfig);
             using (StreamWriter writer = new StreamWriter(Path.Combine(config.serverPath, config.serverConfigName)))
             {
                 string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
@@ -151,9 +182,10 @@ void StartServer(Config config)
             WriteToConsole(ex.ToString());
         }
     }
+}
 
-    AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
-
+void UpdateBECScheduler(Config config)
+{
     try
     {
         if (FileSystem.FileExists(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
@@ -197,74 +229,61 @@ void StartServer(Config config)
     {
         WriteToConsole(ex.ToString());
     }
-
-    s.StartServer();
-    s.StartBEC();
-    Thread.Sleep(30000);
-
-    int i = 20;
-    bool kill = false;
-    while (!kill)
-    {
-        if (!s.CheckServer())
-        {
-            s.BackupServerData();
-            s.UpdateServer();
-            s.UpdateAndMoveMods(false, true);
-            s.StartServer();
-        }
-        else
-        {
-            WriteToConsole("The Server is still running");
-        }
-        if (!s.CheckBEC())
-        {
-            s.StartBEC();
-        }
-        else
-        {
-            WriteToConsole("BEC is still running");
-        }
-        if (i % 4 == 0)
-        {
-            s.UpdateAndMoveMods(true, false);
-            s.CheckForUpdatedMods();
-        }
-        i++;
-        Thread.Sleep(30000);
-    }
-    s.KillServerProcesses();
-
-    void OnProcessExit(object? sender, EventArgs? e)
-    {
-        s.KillServerProcesses();
-    }
 }
 
-void SaveConfig(Config config)
-{
-    try
-    {
-        using (StreamWriter writer = new StreamWriter("Config.json"))
-        {
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.WriteIndented = true;
-            string json = JsonSerializer.Serialize(config, options);
-            writer.Write(json);
-            writer.Close();
-        }
-    }
-    catch (Exception ex)
-    {
-        WriteToConsole(ex.ToString());
-    }
-}
 
 void WriteToConsole(string message)
 {
     Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
 }
 
+void AdjustServerConfig(Config config, ServerConfig serverConfig)
+{
+    serverConfig.template = config.missionName;
+    serverConfig.instanceId = config.instanceId;
+    serverConfig.steamQueryPort = config.steamQueryPort;
+}
+
+void SetStandardConfig(Config config)
+{
+    config.steamUsername = StandardManagerConfig.STEAMUSERNAME;
+    config.steamPassword = StandardManagerConfig.STEAMPASSWORD;
+    config.serverPath = StandardManagerConfig.SERVERPATH;
+    config.steamCMDPath = StandardManagerConfig.STEAMCMDPATH;
+    config.becPath = StandardManagerConfig.BECPATH;
+    config.workshopPath = StandardManagerConfig.WORKSHOPPATH;
+    config.backupPath = StandardManagerConfig.BACKUPPATH;
+    config.missionName = StandardManagerConfig.MISSIONNAME;
+    config.instanceId = StandardManagerConfig.INSTANCEID;
+    config.serverConfigName = StandardManagerConfig.SERVERCONFIGNAME;
+    config.profileName = StandardManagerConfig.PROFILENAME;
+    config.port = StandardManagerConfig.PORT;
+    config.steamQueryPort = StandardManagerConfig.STEAMQUERYPORT;
+    config.RConPort = StandardManagerConfig.RCONPORT;
+    config.cpuCount = StandardManagerConfig.CPUCOUNT;
+    config.noFilePatching = StandardManagerConfig.NOFILEPATCHING;
+    config.doLogs = StandardManagerConfig.DOLOGS;
+    config.adminLog = StandardManagerConfig.ADMINLOG;
+    config.netLog = StandardManagerConfig.NETLOG;
+    config.freezeCheck = StandardManagerConfig.FREEZECHECK;
+    config.limitFPS = StandardManagerConfig.LIMITFPS;
+    config.vanillaMissionName = StandardManagerConfig.VANILLAMISSIONNAME;
+    config.missionTemplatePath = StandardManagerConfig.MISSIONTEMPLATEPATH;
+    config.expansionDownloadPath = StandardManagerConfig.EXPANSIONDOWNLOADPATH;
+    config.mapName = StandardManagerConfig.MAPNAME;
+    config.RestartOnUpdate = StandardManagerConfig.RESTARTONUPDATE;
+    config.RestartInterval = StandardManagerConfig.RESTARTINTERVAL;
+    config.clientMods = new List<Mod>();
+    config.serverMods = new List<Mod>();
+    Mod mod1 = new Mod();
+    mod1.workshopID = 1559212036;
+    mod1.name = "@CF";
+    config.clientMods.Add(mod1);
+    Mod mod2 = new Mod();
+    mod2.workshopID = 1564026768;
+    mod2.name = "@Community-Online-Tools";
+    config.clientMods.Add(mod2);
+}
 
 #region SchedulerFile
 void SerializeSchedulerFile(string path, SchedulerFile schedulerFile)
@@ -310,7 +329,6 @@ SchedulerFile? DeserializeSchedulerFile(string path)
     }
 }
 #endregion SchedulerFile
-
 
 #region NotificationScheduler
 void SerializeNotificationSchedulerFile(string path, NotificationSchedulerFile schedulerFile)
