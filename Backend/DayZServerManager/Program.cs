@@ -1,12 +1,12 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using DayZServerManager;
-using DayZServerManager.BecClasses;
 using DayZServerManager.Helpers;
-using DayZServerManager.ManagerConfigClasses;
 using DayZServerManager.MissionClasses.RarityClasses;
 using DayZServerManager.MissionClasses.TypesClasses;
-using DayZServerManager.ProfileClasses.NotificationSchedulerClasses;
-using DayZServerManager.ServerConfigClasses;
+using DayZServerManager.SerializationClasses.BecClasses;
+using DayZServerManager.SerializationClasses.ManagerConfigClasses;
+using DayZServerManager.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
+using DayZServerManager.SerializationClasses.ServerConfigClasses;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics.Metrics;
 using System.IO;

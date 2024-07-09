@@ -1,7 +1,7 @@
-﻿using DayZServerManager.BecClasses;
-using DayZServerManager.Helpers;
-using DayZServerManager.ManagerConfigClasses;
-using DayZServerManager.MissionClasses.TypesClasses;
+﻿using DayZServerManager.Helpers;
+using DayZServerManager.SerializationClasses.BecClasses;
+using DayZServerManager.SerializationClasses.ManagerConfigClasses;
+using DayZServerManager.SerializationClasses.MissionClasses.TypesClasses;
 using LibGit2Sharp;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;

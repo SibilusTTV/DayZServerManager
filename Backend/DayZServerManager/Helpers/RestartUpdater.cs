@@ -1,5 +1,5 @@
-﻿using DayZServerManager.BecClasses;
-using DayZServerManager.ProfileClasses.NotificationSchedulerClasses;
+﻿using DayZServerManager.SerializationClasses.BecClasses;
+using DayZServerManager.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;

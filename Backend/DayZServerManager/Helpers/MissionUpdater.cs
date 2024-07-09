@@ -1,5 +1,4 @@
-﻿using DayZServerManager.ManagerConfigClasses;
-using Microsoft.VisualBasic.FileIO;
+﻿using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,18 +7,19 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using DayZServerManager.MissionClasses.TypesClasses;
-using DayZServerManager.MissionClasses.RarityClasses;
 using System.Xml.Serialization;
-using DayZServerManager.MissionClasses.GlobalsClasses;
-using DayZServerManager.MissionClasses.EconomyCoreClasses;
 using System.Xml;
-using DayZServerManager.MissionClasses.EventSpawnClasses;
 using System.ComponentModel;
-using DayZServerManager.MissionClasses.TypesChangesClasses;
 using System.Reflection.Metadata;
 using System.IO;
 using LibGit2Sharp;
+using DayZServerManager.SerializationClasses.MissionClasses.EconomyCoreClasses;
+using DayZServerManager.SerializationClasses.MissionClasses.EventSpawnClasses;
+using DayZServerManager.SerializationClasses.MissionClasses.GlobalsClasses;
+using DayZServerManager.SerializationClasses.MissionClasses.RarityClasses;
+using DayZServerManager.SerializationClasses.MissionClasses.TypesChangesClasses;
+using DayZServerManager.SerializationClasses.MissionClasses.TypesClasses;
+using DayZServerManager.SerializationClasses.ManagerConfigClasses;
 
 namespace DayZServerManager.Helpers
 {
@@ -35,9 +35,11 @@ namespace DayZServerManager.Helpers
         {
             try
             {
+                //Creating path variables for later use
                 string missionPath = Path.Combine(config.serverPath, "mpmissions", config.missionName);
                 string missionTemplatePath = Path.Combine(config.missionTemplatePath);
 
+                #region Creating directories
                 if (!FileSystem.DirectoryExists(Path.Combine(config.serverPath, "mpmissions")))
                 {
                     FileSystem.CreateDirectory(Path.Combine(config.serverPath, "mpmissions"));
@@ -52,7 +54,10 @@ namespace DayZServerManager.Helpers
                 {
                     FileSystem.CreateDirectory(Path.Combine(missionTemplatePath, "CustomFiles"));
                 }
+                #endregion Creating directories
 
+                #region Creating example CustomFiles
+                //Creating CustomFiles folder
                 List<string> directoryNames = FileSystem.GetDirectories(Path.Combine(missionTemplatePath, "CustomFiles")).ToList<string>();
                 if (directoryNames.Count == 0)
                 {
@@ -60,6 +65,7 @@ namespace DayZServerManager.Helpers
                     directoryNames = FileSystem.GetDirectories(Path.Combine(missionTemplatePath, "CustomFiles")).ToList<string>();
                 }
 
+                //Creating Example typesFile
                 List<string> filesNames = FileSystem.GetFiles(Path.Combine(directoryNames[0])).ToList<string>();
                 if (filesNames.Count == 0)
                 {
@@ -86,6 +92,7 @@ namespace DayZServerManager.Helpers
                     SerializeTypesFile(Path.Combine(directoryNames[0], "exampleTypesFile.xml"), exampleTypesFile);
                 }
                 
+                // Creating Exmple cfgeconomycore
                 if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgeconomycore.xml")))
                 {
                     EconomyCoreFile exampleEconomyCore = new EconomyCoreFile()
@@ -134,7 +141,10 @@ namespace DayZServerManager.Helpers
                         }
                     }
                 }
+                #endregion Create example CustomFiles
 
+                #region Creating example rarities files
+                //Creating VanillaRarities file
                 if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "vanillaRarities.json")))
                 {
                     RarityFile vanillaRarities = new RarityFile();
@@ -144,6 +154,7 @@ namespace DayZServerManager.Helpers
                     SerializeRarityFile(Path.Combine(missionTemplatePath, "vanillaRarities.json"), vanillaRarities);
                 }
 
+                //Creating ExpansionRarities, if Expansion is part of the mods
                 if (config.clientMods != null && config.clientMods.Select(p => p.workshopID == 2116157322 || p.workshopID == 2572331007) != null)
                 {
                     if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "expansionTypesChanges.json")))
@@ -168,7 +179,9 @@ namespace DayZServerManager.Helpers
                         SerializeTypesChangesFile(Path.Combine(missionTemplatePath, "expansionTypesChanges.json"), expansionTypesChanges);
                     }
                 }
+                #endregion Creating example rarities files
 
+                #region Creating example TypesChanges file
                 if (!FileSystem.FileExists(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json")))
                 {
                     TypesChangesFile vanillaTypesChanges = new TypesChangesFile();
@@ -190,6 +203,7 @@ namespace DayZServerManager.Helpers
 
                     SerializeTypesChangesFile(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json"), vanillaTypesChanges);
                 }
+                #endregion Creating example TypesChanges file
 
                 // Rename the old mission folder and copy the contents of the vanilla folder
                 CopyMissionFolder(missionPath, Path.Combine(config.serverPath, "mpmissions", config.vanillaMissionName), config.backupPath);
@@ -201,7 +215,7 @@ namespace DayZServerManager.Helpers
                     expansionTemplatePath = DownloadExpansionTemplates(config);
 
                     // Copy the folder expansion_ce from the expansionTemplate to the new mission folder
-                    CopyExpansionFiles(expansionTemplatePath, missionPath);
+                    CopyExpansionTemplateFiles(expansionTemplatePath, missionPath);
                 }
 
                 // Copy the folders CustomFiles and expansion and also the files mapgrouppos.xml, cfgweather.xml and cfgplayerspawnpoints.xml from the missionTemplate to the new mission folder
@@ -334,12 +348,12 @@ namespace DayZServerManager.Helpers
                 // Delete the old mission
                 if (FileSystem.DirectoryExists(Path.Combine(missionPath + "Old")))
                 {
-                    CopyOldMission(missionPath, config.backupPath);
+                    CopyOldMission(Path.Combine(missionPath + "Old"), config.backupPath);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
 
@@ -649,7 +663,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
         
@@ -666,7 +680,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
 
@@ -685,7 +699,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
 
@@ -704,7 +718,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
 
         }
@@ -722,7 +736,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
 
@@ -739,7 +753,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
 
@@ -756,7 +770,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
         #endregion SerializationFunctions
@@ -773,7 +787,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
                 return string.Empty;
             }
         }
@@ -798,7 +812,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
                 return null;
             }
         }
@@ -823,7 +837,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
                 return null;
             }
         }
@@ -847,7 +861,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
                 return null;
             }
         }
@@ -871,7 +885,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
                 return null;
             }
         }
@@ -895,7 +909,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
                 return null;
             }
         }
@@ -919,7 +933,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
                 return null;
             }
         }
@@ -945,11 +959,11 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
         
-        public void CopyExpansionFiles(string expansionTemplatePath, string missionPath)
+        public void CopyExpansionTemplateFiles(string expansionTemplatePath, string missionPath)
         {
             try
             {
@@ -960,7 +974,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
 
@@ -998,7 +1012,7 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
         
@@ -1010,11 +1024,11 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
 
-        public void CopyOldMission(string missionPath, string backupPath)
+        public void CopyOldMission(string oldPath, string backupPath)
         {
             try
             {
@@ -1023,11 +1037,11 @@ namespace DayZServerManager.Helpers
                 {
                     FileSystem.CreateDirectory(Path.Combine(backupPath, "FullMissionBackups"));
                 }
-                FileSystem.MoveDirectory(missionPath + "Old", newPath);
+                FileSystem.MoveDirectory(oldPath, newPath);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
             }
         }
         #endregion CopyFunctions
@@ -1082,11 +1096,16 @@ namespace DayZServerManager.Helpers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + ex.ToString());
+                WriteToConsole(ex.ToString());
                 return string.Empty;
             }
         }
         #endregion DownloadFunctions
+
+        private void WriteToConsole(string message)
+        {
+            Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
+        }
 
     }
 }
