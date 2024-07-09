@@ -61,8 +61,3 @@ void OnProcessExit(object? sender, EventArgs? e)
 {
     Manager.KillServerProcesses();
 }
-
-void WriteToConsole(string message)
-{
-    System.Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
-}

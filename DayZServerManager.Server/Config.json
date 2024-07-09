@@ -1,0 +1,41 @@
+{
+  "steamUsername": "",
+  "steamPassword": "",
+  "serverPath": "Server",
+  "steamCMDPath": "SteamCMD",
+  "becPath": "BEC",
+  "workshopPath": "SteamCMD/steamapps/workshop/content/221100",
+  "backupPath": "Backup",
+  "missionName": "Expansion.ChernarusPlus",
+  "instanceId": 1,
+  "serverConfigName": "serverDZ.cfg",
+  "profileName": "Profiles",
+  "port": 2302,
+  "steamQueryPort": 2305,
+  "RConPort": 2306,
+  "cpuCount": 8,
+  "noFilePatching": true,
+  "doLogs": true,
+  "adminLog": true,
+  "freezeCheck": true,
+  "netLog": true,
+  "limitFPS": -1,
+  "vanillaMissionName": "dayzOffline.chernarusplus",
+  "missionTemplatePath": "Server/mpmissions/ChernarusTemplate",
+  "expansionDownloadPath": "Server/mpmissions/DayZ-Expansion-Missions",
+  "mapName": "Chernarus",
+  "restartOnUpdate": true,
+  "restartInterval": 4,
+  "autoStartServer": false,
+  "clientMods": [
+    {
+      "name": "@CF",
+      "workshopID": 1559212036
+    },
+    {
+      "name": "@Community-Online-Tools",
+      "workshopID": 1564026768
+    }
+  ],
+  "serverMods": []
+}
