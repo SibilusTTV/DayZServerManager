@@ -39,7 +39,9 @@
         "ASPNETCORE_URLS": "https://+:443;http://+:80"
       },
       "publishAllPorts": true,
-      "useSSL": true
+      "useSSL": true,
+      "httpPort":  32801,
+      "sslPort":  32802
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json",

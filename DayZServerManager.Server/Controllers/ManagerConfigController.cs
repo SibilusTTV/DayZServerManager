@@ -18,15 +18,15 @@ namespace DayZServerManager.Server.Controllers
         }
 
         [HttpGet("GetManagerConfig")]
-        public string GetManagerConfig()
+        public JsonResult GetManagerConfig()
         {
-            return Manager.GetManagerConfig();
+            return new JsonResult(Manager.managerConfig);
         }
 
         [HttpPost("PostManagerConfig")]
-        public bool PostManagerConfig([FromBody] string config)
+        public bool PostManagerConfig([FromBody] ManagerConfig config)
         {
-            Manager.PostManagerConfig(config);
+            Manager.managerConfig = config;
             Manager.SaveManagerConfig();
             return true;
         }
