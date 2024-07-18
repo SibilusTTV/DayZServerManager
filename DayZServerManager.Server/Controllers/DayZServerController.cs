@@ -45,8 +45,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("StartServer")]
         public string StartDayZServer()
         {
-            Manager.StartServer();
-            return "Server was not started, because fuck you";
+            return Manager.StartServer();
         }
 
         [HttpGet("StopServer")]

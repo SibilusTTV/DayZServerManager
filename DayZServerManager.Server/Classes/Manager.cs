@@ -17,7 +17,7 @@ namespace DayZServerManager.Server.Classes
         public static Server server;
         public const string MANAGERCONFIGNAME = "Config.json";
 
-        public static void StartServer()
+        public static string StartServer()
         {
             if (managerConfig != null)
             {
@@ -25,7 +25,7 @@ namespace DayZServerManager.Server.Classes
 
                 if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
                 {
-                    return;
+                    return "Please set Username and Password";
                 }
 
                 BackupAndUpdate(server);
@@ -69,8 +69,13 @@ namespace DayZServerManager.Server.Classes
                 //}
                 //server.KillServerProcesses();
 
-
                 SaveServerConfig();
+
+                return "Server was started";
+            }
+            else
+            {
+                return "No Manager Config";
             }
         }
     

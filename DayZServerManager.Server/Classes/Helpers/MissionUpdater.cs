@@ -651,11 +651,6 @@ namespace DayZServerManager.Server.Classes.Helpers
         }
         #endregion UpdateFunctions
 
-        #region DeserializationFunctions
-
-
-        #endregion DeserializationFunctions
-
         #region CopyFunctions
         public void CopyMissionFolder(string missionPath, string vanillaMissionPath, string backupPath)
         {
