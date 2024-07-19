@@ -111,10 +111,14 @@ namespace DayZServerManager.Server.Classes
                 procInf.WorkingDirectory = config.serverPath;
                 procInf.Arguments = startParameters;
                 procInf.FileName = Path.Combine(config.serverPath, "DayZServer_x64.exe");
+                procInf.RedirectStandardOutput = true;
                 serverProcess.StartInfo = procInf;
                 WriteToConsole($"Starting Server");
                 serverProcess.Start();
                 WriteToConsole($"Server starting at {Path.Combine(config.serverPath, "DayZServer_x64.exe")} with the parameters {startParameters}");
+                string lines = serverProcess.StandardOutput.ReadToEnd();
+                Console.WriteLine(lines);
+
             }
             catch (Exception ex)
             {

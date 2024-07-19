@@ -32,7 +32,7 @@ namespace DayZServerManager.Server.Classes
 
                 UpdateBECScheduler(managerConfig);
 
-                //dayZServer.StartServer();
+                dayZServer.StartServer();
                 //dayZServer.StartBEC();
                 //Thread.Sleep(30000);
 
