@@ -52,6 +52,7 @@ Manager.SaveManagerConfig();
 
 if (Manager.managerConfig.autoStartServer)
 {
+    Manager.props = new ManagerProps("Starting", "");
     Manager.StartServer();
 }
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -10,6 +10,34 @@
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="BEC\**" />
+    <Compile Remove="Mods\**" />
+    <Compile Remove="Server\**" />
+    <Compile Remove="SteamCMD\**" />
+    <Content Remove="BEC\**" />
+    <Content Remove="Mods\**" />
+    <Content Remove="Server\**" />
+    <Content Remove="SteamCMD\**" />
+    <EmbeddedResource Remove="BEC\**" />
+    <EmbeddedResource Remove="Mods\**" />
+    <EmbeddedResource Remove="Server\**" />
+    <EmbeddedResource Remove="SteamCMD\**" />
+    <None Remove="BEC\**" />
+    <None Remove="Mods\**" />
+    <None Remove="Server\**" />
+    <None Remove="SteamCMD\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Config.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="steamcmd.tar" />
+    <None Remove="steamcmd.tar.gz" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="LibGit2Sharp" Version="0.30.0" />

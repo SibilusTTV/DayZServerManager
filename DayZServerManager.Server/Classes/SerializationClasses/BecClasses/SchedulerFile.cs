@@ -7,10 +7,11 @@ using System.Xml.Serialization;
 
 namespace DayZServerManager.Server.Classes.SerializationClasses.BecClasses
 {
-    [XmlRoot("Scheduler")]
+    [XmlRoot(ElementName = "Scheduler")]
+    [XmlType("Scheduler")]
     public class SchedulerFile
     {
-        [XmlElement("job")]
+        [XmlElement(ElementName = "job")]
         public List<JobItem> JobItems;
     }
 }

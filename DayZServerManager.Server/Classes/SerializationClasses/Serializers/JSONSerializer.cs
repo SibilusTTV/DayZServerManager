@@ -1,12 +1,11 @@
-﻿using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
-using Microsoft.VisualBasic.FileIO;
+﻿using Microsoft.VisualBasic.FileIO;
 using System.Text.Json;
 
 namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
 {
-    public static class NotificationSchedulerFileSerializer
+    public class JSONSerializer
     {
-        public static void SerializeNotificationSchedulerFile(string path, NotificationSchedulerFile schedulerFile)
+        public static void SerializeJSONFile<JSONFile>(string path, JSONFile rarityFile)
         {
             try
             {
@@ -14,9 +13,8 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                 {
                     JsonSerializerOptions options = new JsonSerializerOptions();
                     options.WriteIndented = true;
-                    string json = JsonSerializer.Serialize(schedulerFile, options);
+                    string json = JsonSerializer.Serialize(rarityFile, options);
                     writer.Write(json);
-                    writer.Close();
                 }
             }
             catch (Exception ex)
@@ -25,9 +23,8 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
         }
 
-
-        // Takes a path and returns the deserialized RarityFile
-        public static NotificationSchedulerFile? DeserializeNotificationSchedulerFile(string path)
+        // Takes a path and returns the deserialized class
+        public static JSONFile? DeserializeJSONFile<JSONFile>(string path)
         {
             try
             {
@@ -36,18 +33,18 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                     using (StreamReader reader = new StreamReader(path))
                     {
                         string json = reader.ReadToEnd();
-                        return JsonSerializer.Deserialize<NotificationSchedulerFile>(json);
+                        return JsonSerializer.Deserialize<JSONFile>(json);
                     }
                 }
                 else
                 {
-                    return null;
+                    return default(JSONFile);
                 }
             }
             catch (Exception ex)
             {
                 Manager.WriteToConsole(ex.ToString());
-                return null;
+                return default(JSONFile);
             }
         }
     }

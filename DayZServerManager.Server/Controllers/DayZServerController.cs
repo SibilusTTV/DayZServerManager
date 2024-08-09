@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using DayZServerManager.Server.Classes;
+using DayZServerManager.Server.Classes.Helpers;
 
 namespace DayZServerManager.Server.Controllers
 {
@@ -17,7 +18,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetServerStatus")]
         public bool GetServerStatus()
         {
-            if (Manager.server != null && Manager.server.CheckServer())
+            if (Manager.dayZServer != null && Manager.dayZServer.CheckServer())
             {
                 return true;
             }
@@ -31,7 +32,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetBECStatus")]
         public bool GetBECStatus()
         {
-            if (Manager.server != null && Manager.server.CheckBEC())
+            if (Manager.dayZServer != null && Manager.dayZServer.CheckBEC())
             {
                 return true;
             }
@@ -45,7 +46,39 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("StartServer")]
         public string StartDayZServer()
         {
-            return Manager.StartServer();
+            Manager.props = new ManagerProps("Starting", "");
+            Task startTask = new Task(() => { Manager.StartServer(); });
+            startTask.Start();
+            if (startTask != null)
+            {
+                while (Manager.dayZServer == null)
+                {
+                    Thread.Sleep(1000);
+                }
+                while (Manager.props._updateStatus != "Server downloaded" && Manager.props._updateStatus != "Error")
+                {
+                    if (Manager.props._updateStatus == "Steam Guard")
+                    {
+                        return "Steam Guard";
+                    }
+                    Thread.Sleep(1000);
+                }
+
+                while (Manager.props._updateStatus != "Mods downloaded" && Manager.props._updateStatus != "Error")
+                {
+                    if (Manager.props._updateStatus == "Steam Guard")
+                    {
+                        return "Steam Guard";
+                    }
+                    Thread.Sleep(1000);
+                }
+
+                return "";
+            }
+            else
+            {
+                return Manager.props._serverStatus;
+            }
         }
 
         [HttpGet("StopServer")]
@@ -53,6 +86,12 @@ namespace DayZServerManager.Server.Controllers
         {
             Manager.KillServerProcesses();
             return true;
+        }
+
+        [HttpPost("SendSteamGuard")]
+        public string SendSteamGuard([FromBody] SteamGuard guard)
+        {
+            return Manager.SetSteamGuard(guard.code);
         }
     }
 }

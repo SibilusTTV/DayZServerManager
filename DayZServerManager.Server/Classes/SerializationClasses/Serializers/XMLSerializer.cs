@@ -1,20 +1,23 @@
-﻿using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses;
-using Microsoft.VisualBasic.FileIO;
+﻿using Microsoft.VisualBasic.FileIO;
 using System.Xml.Serialization;
 
 namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
 {
-    public static class TypesFileSerializer
+    public class XMLSerializer
     {
-        public static void SerializeTypesFile(string path, TypesFile typesFile)
+
+        public static void SerializeXMLFile<XMLFile>(string path, XMLFile? xmlFile)
         {
             try
             {
-                using (StreamWriter writer = new StreamWriter(path))
+                if (xmlFile != null)
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
-                    serializer.Serialize(writer, typesFile);
-                    writer.Close();
+                    using (StreamWriter writer = new StreamWriter(path))
+                    {
+                        XmlSerializer serializer = new XmlSerializer(typeof(XMLFile));
+                        serializer.Serialize(writer, xmlFile);
+                        writer.Close();
+                    }
                 }
             }
             catch (Exception ex)
@@ -23,8 +26,9 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
         }
 
+
         // Takes a path and returns the deserialized TypesFile
-        public static TypesFile? DeserializeTypesFile(string path)
+        public static XMLFile? DeserializeXMLFile<XMLFile>(string path)
         {
             try
             {
@@ -32,19 +36,19 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                 {
                     using (StreamReader reader = new StreamReader(path))
                     {
-                        XmlSerializer serializer = new XmlSerializer(typeof(TypesFile));
-                        return (TypesFile?)serializer.Deserialize(reader);
+                        XmlSerializer serializer = new XmlSerializer(typeof(XMLFile));
+                        return (XMLFile?)serializer.Deserialize(reader);
                     }
                 }
                 else
                 {
-                    return null;
+                    return default(XMLFile);
                 }
             }
             catch (Exception ex)
             {
                 Manager.WriteToConsole(ex.ToString());
-                return null;
+                return default(XMLFile);
             }
         }
     }

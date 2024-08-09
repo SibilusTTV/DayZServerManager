@@ -9,6 +9,10 @@
 *.user
 *.userosscache
 *.sln.docstates
+SteamCMD
+Backup
+Server
+BEC
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -362,3 +366,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /DayZServerManager.Server/Config.json
+/DayZServerManager.Server/steamcmd.tar
+/DayZServerManager.Server/Mods/steamapps/workshop
+/DayZServerManager.Server/steamcmd.tar.gz
