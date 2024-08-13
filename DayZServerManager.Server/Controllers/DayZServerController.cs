@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using DayZServerManager.Server.Classes;
 using DayZServerManager.Server.Classes.Helpers;
+using System.Numerics;
 
 namespace DayZServerManager.Server.Controllers
 {
@@ -46,31 +47,28 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("StartServer")]
         public string StartDayZServer()
         {
-            Manager.props = new ManagerProps("Starting", "");
+            Manager.props = new ManagerProps("Starting");
             Task startTask = new Task(() => { Manager.StartServer(); });
             startTask.Start();
             if (startTask != null)
             {
-                while (Manager.dayZServer == null)
+                while (startTask.IsCompleted || (Manager.props._serverStatus != "Error" && Manager.props._serverStatus != "Please set Username and Password" && Manager.props._serverStatus != "Server Started" && Manager.props._serverStatus != "Steam Guard" && Manager.props._serverStatus != "Server Stopped"))
                 {
-                    Thread.Sleep(1000);
-                }
-                while (Manager.props._updateStatus != "Server downloaded" && Manager.props._updateStatus != "Error")
-                {
-                    if (Manager.props._updateStatus == "Steam Guard")
-                    {
-                        return "Steam Guard";
-                    }
-                    Thread.Sleep(1000);
+                    Thread.Sleep(5000);
                 }
 
-                while (Manager.props._updateStatus != "Mods downloaded" && Manager.props._updateStatus != "Error")
+                switch (Manager.props._serverStatus)
                 {
-                    if (Manager.props._updateStatus == "Steam Guard")
-                    {
+                    case "Please set Username and Password":
+                        return "Please set Username and Password";
+                    case "Steam Guard":
                         return "Steam Guard";
-                    }
-                    Thread.Sleep(1000);
+                    case "Server Started":
+                        return "Server Started";
+                    case "Error":
+                        return "Error";
+                    case "Server Stopped":
+                        return "Server Stopped";
                 }
 
                 return "";
@@ -84,7 +82,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("StopServer")]
         public bool StopDayZServer()
         {
-            Manager.KillServerProcesses();
+            Manager.StopServer();
             return true;
         }
 

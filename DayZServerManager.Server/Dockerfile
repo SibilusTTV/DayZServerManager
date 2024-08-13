@@ -5,9 +5,12 @@ USER root
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
-RUN dpkg --add-architecture i386
+EXPOSE 2302/udp
+EXPOSE 2305/udp
 RUN apt update
+RUN apt upgrade
 RUN apt -y install lib32gcc-s1
+USER app
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release

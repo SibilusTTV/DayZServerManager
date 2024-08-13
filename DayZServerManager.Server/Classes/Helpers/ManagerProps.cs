@@ -3,11 +3,9 @@
     public class ManagerProps
     {
         public string _serverStatus;
-        public string _updateStatus;
-        public ManagerProps(string serverStatus, string updateStatus) 
+        public ManagerProps(string serverStatus) 
         {
             _serverStatus = serverStatus;
-            _updateStatus = updateStatus;
         }
     }
 }

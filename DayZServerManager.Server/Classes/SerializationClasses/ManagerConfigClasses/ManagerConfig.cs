@@ -65,7 +65,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
             freezeCheck = true;
             limitFPS = -1;
             vanillaMissionName = "dayzOffline.chernarusplus";
-            missionTemplatePath = Path.Combine(serverPath, "mpmissions", "ChernarusTemplate");
+            missionTemplatePath = Path.Combine(serverPath, "mpmissions", "template.chernarus");
             expansionDownloadPath = Path.Combine("Server", "mpmissions", "DayZ-Expansion-Missions");
             mapName = "Chernarus";
             restartOnUpdate = true;

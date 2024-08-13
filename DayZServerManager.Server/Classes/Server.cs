@@ -39,8 +39,6 @@ namespace DayZServerManager.Server.Classes
         Process? becUpdateProcess;
         Process? steamCMDProcess;
 
-        private bool kill;
-
         public Server(ManagerConfig config)
         {
             this.config = config;
@@ -50,7 +48,6 @@ namespace DayZServerManager.Server.Classes
             becProcess = null;
             becUpdateProcess = null;
             updatedModsIDs = new List<long>();
-            kill = false;
             if (OperatingSystem.IsWindows())
             {
                 folderSeparator = '\\';
@@ -173,7 +170,6 @@ namespace DayZServerManager.Server.Classes
                 else
                 {
                     WriteToConsole($"Server starting at {Path.Combine(config.serverPath, "DayZServer")} with the parameters {startParameters}");
-
                 }
             }
             catch (Exception ex)
@@ -184,7 +180,7 @@ namespace DayZServerManager.Server.Classes
 
         private string GetServerStartParameters(string clientModsToLoad, string serverModsToLoad)
         {
-            string parameters = $"-instanceId={config.instanceId} -config={config.serverConfigName} -profiles={config.profileName} -port={config.port} {clientModsToLoad} {serverModsToLoad} -cpuCount={config.cpuCount}";
+            string parameters = $"-instanceId={config.instanceId} \"-config={config.serverConfigName}\" \"-profiles={config.profileName}\" -port={config.port} {clientModsToLoad} {serverModsToLoad}-cpuCount={config.cpuCount}";
 
             if (config.noFilePatching)
             {
@@ -358,12 +354,12 @@ namespace DayZServerManager.Server.Classes
 
         public void KillServerProcesses()
         {
-            kill = true;
             try
             {
                 if (serverProcess != null)
                 {
                     serverProcess.Kill();
+                    serverProcess = null;
                 }
             }
             catch (Exception ex)
@@ -377,6 +373,7 @@ namespace DayZServerManager.Server.Classes
                 if (becProcess != null)
                 {
                     becProcess.Kill();
+                    becProcess = null;
                 }
             }
             catch (Exception ex)
@@ -390,6 +387,7 @@ namespace DayZServerManager.Server.Classes
                 if (becUpdateProcess != null)
                 {
                     becUpdateProcess.Kill();
+                    becUpdateProcess = null;
                 }
             }
             catch (Exception ex)
@@ -403,6 +401,7 @@ namespace DayZServerManager.Server.Classes
                 if (steamCMDProcess != null)
                 {
                     steamCMDProcess.Kill();
+                    steamCMDProcess = null;
                 }
             }
             catch (Exception ex)
@@ -451,7 +450,7 @@ namespace DayZServerManager.Server.Classes
                 string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", config.serverPath)} +\"login {config.steamUsername} {config.steamPassword}\" +\"app_update {dayZServerBranch}\" +quit";
                 WriteToConsole("Updating the DayZ Server");
                 StartSteamCMD(props, serverUpdateArguments);
-                if (props._updateStatus == "Server downloaded")
+                if (props._serverStatus == "Server downloaded")
                 {
                     CheckForUpdatedServer(dateBeforeUpdate);
                 }
@@ -459,7 +458,7 @@ namespace DayZServerManager.Server.Classes
             catch (System.Exception ex)
             {
                 WriteToConsole(ex.ToString());
-                props._updateStatus = "Error";
+                props._serverStatus = "Error";
             }
         }
 
@@ -494,7 +493,7 @@ namespace DayZServerManager.Server.Classes
                         WriteToConsole(s);
                         if ( outputTime != -1 && s.Contains("Steam Guard"))
                         {
-                            props._updateStatus = "Steam Guard";
+                            props._serverStatus = "Steam Guard";
                         }
                         if (s.Contains("Waiting for client config"))
                         {
@@ -510,10 +509,10 @@ namespace DayZServerManager.Server.Classes
                 while (!task.IsCompleted)
                 {
                     Thread.Sleep(1000);
-                    if (outputTime > 15 && props._updateStatus != "Steam Guard")
+                    if (outputTime > 15 && props._serverStatus != "Steam Guard")
                     {
                         WriteToConsole("Steam Guard");
-                        props._updateStatus = "Steam Guard";
+                        props._serverStatus = "Steam Guard";
                         outputTime = -1;
                     }
                     if (outputTime != -1)
@@ -524,12 +523,12 @@ namespace DayZServerManager.Server.Classes
                 }
 
                 steamCMDProcess.WaitForExit();
-                props._updateStatus = "Server downloaded";
+                props._serverStatus = "Server downloaded";
             }
             catch (System.Exception ex)
             {
                 WriteToConsole(ex.ToString());
-                props._updateStatus = "Error";
+                props._serverStatus = "Error";
             }
         }
 
@@ -789,9 +788,12 @@ namespace DayZServerManager.Server.Classes
                         startInfo.WorkingDirectory = config.becPath;
                         becUpdateProcess = new Process();
                         becUpdateProcess.StartInfo = startInfo;
-                        WriteToConsole("Starting BEC for mod updates");
-                        becUpdateProcess.Start();
-                        WriteToConsole("BEC for mod updates started");
+                        if (OperatingSystem.IsWindows())
+                        {
+                            WriteToConsole("Starting BEC for mod updates");
+                            becUpdateProcess.Start();
+                            WriteToConsole("BEC for mod updates started");
+                        }
                         return true;
                     }
                     else
@@ -893,7 +895,7 @@ namespace DayZServerManager.Server.Classes
                         File.WriteAllBytes(Path.Combine(config.steamCMDPath, zipName), content);
                         if (OperatingSystem.IsWindows())
                         {
-                            ZipFile.ExtractToDirectory(Path.Combine(config.steamCMDPath, "steamcmd.tar"), config.steamCMDPath);
+                            ZipFile.ExtractToDirectory(Path.Combine(config.steamCMDPath, zipName), config.steamCMDPath);
                         }
                         else
                         {
@@ -1061,11 +1063,6 @@ namespace DayZServerManager.Server.Classes
                 WriteToConsole(ex.ToString());
                 return false;
             }
-        }
-
-        public bool Kill
-        {
-            get { return kill; }
         }
     }
 }
