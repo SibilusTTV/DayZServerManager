@@ -42,22 +42,8 @@ app.MapControllers();
 
 app.MapFallbackToFile("/index.html");
 
-AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+AppDomain.CurrentDomain.ProcessExit += new EventHandler((s, e) => { Manager.KillServerOnClose(); });
 
-Manager.LoadManagerConfig();
-
-Manager.LoadServerConfig();
-Manager.AdjustServerConfig();
-Manager.SaveManagerConfig();
-
-if (Manager.managerConfig.autoStartServer)
-{
-    Manager.StartServer();
-}
+Manager.InitiateManager();
 
 app.Run();
-
-void OnProcessExit(object? sender, EventArgs? e)
-{
-    Manager.KillServerProcesses();
-}

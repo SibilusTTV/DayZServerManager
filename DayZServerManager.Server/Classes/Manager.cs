@@ -7,92 +7,200 @@ using System.Text.Json;
 using System.Xml.Serialization;
 using Microsoft.VisualBasic.FileIO;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
+using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Hosting.Server;
 
 namespace DayZServerManager.Server.Classes
 {
     internal static class Manager
     {
-        public static ManagerConfig managerConfig;
-        public static ServerConfig serverConfig;
-        public static Server server;
-        public const string MANAGERCONFIGNAME = "Config.json";
+        public static ManagerConfig? managerConfig;
+        public static ServerConfig? serverConfig;
+        public static Server? dayZServer;
+        public static Task? serverLoop;
+        public static ManagerProps? props;
+        public static bool kill = false;
 
-        public static string StartServer()
+        #region Constants
+        public const string MANAGERCONFIGNAME = "Config.json";
+        public const string dwadw = "";
+        #endregion Constants
+
+        public static void InitiateManager()
         {
+            Manager.LoadManagerConfig();
+
             if (managerConfig != null)
             {
-                server = new Server(managerConfig);
+                props = new ManagerProps("Waiting for Starting");
 
                 if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
                 {
-                    return "Please set Username and Password";
+                    props._serverStatus = "Please set Username and Password";
+                    return;
                 }
-
-                BackupAndUpdate(server);
 
                 UpdateBECScheduler(managerConfig);
 
+                //LoadServerConfig();
+                //AdjustServerConfig();
+                //SaveManagerConfig();
+
+                if (managerConfig.autoStartServer)
+                {
+                    StartServer();
+                }
+            }
+        }
+
+        public static void StartServer()
+        {
+            if (props != null && managerConfig != null)
+            {
+                if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
+                {
+                    props._serverStatus = "Please set Username and Password";
+                    return;
+                }
+
+                if (dayZServer == null)
+                {
+                    dayZServer = new Server(managerConfig);
+                }
+                else
+                {
+                    return;
+                }
+
+                BackupServer(dayZServer);
+                UpdateServer(dayZServer);
+
+                kill = false;
                 dayZServer.StartServer();
-                //dayZServer.StartBEC();
-                //Thread.Sleep(30000);
 
-                //int i = 20;
-                //bool kill = false;
-                //while (!kill)
-                //{
-                //    if (!dayZServer.CheckServer())
-                //    {
-                //        dayZServer.BackupServerData();
-                //        dayZServer.UpdateServer();
-                //        dayZServer.UpdateAndMoveMods(false, true);
-                //        dayZServer.StartServer();
-                //    }
-                //    else
-                //    {
-                //        WriteToConsole("The Server is still running");
-                //    }
-                //    if (!dayZServer.CheckBEC())
-                //    {
-                //        dayZServer.StartBEC();
-                //    }
-                //    else
-                //    {
-                //        WriteToConsole("BEC is still running");
-                //    }
-                //    if (i % 4 == 0)
-                //    {
-                //        dayZServer.UpdateAndMoveMods(true, false);
-                //        dayZServer.CheckForUpdatedMods();
-                //    }
-                //    i++;
-                //    Thread.Sleep(30000);
-                //}
-                //server.KillServerProcesses();
+                if (OperatingSystem.IsWindows())
+                {
+                    dayZServer.StartBEC();
+                }
 
-                SaveServerConfig();
+                props._serverStatus = "Server started";
 
-                return "Server was started";
+                serverLoop = new Task(() => { StartServerLoop(); });
+                serverLoop.Start();
             }
             else
             {
-                return "No Manager Config";
-            }
-        }
-    
-        public static void KillServerProcesses()
-        {
-            if (server != null)
-            {
-                server.KillServerProcesses();
+                props = new ManagerProps("No Manager Config");
             }
         }
 
-        private static void BackupAndUpdate(Server server)
+        private static void StartServerLoop()
         {
-            server.BackupServerData();
-            server.UpdateServer();
-            server.UpdateBEC();
-            server.UpdateAndMoveMods(true, true);
+            if (props != null)
+            {
+
+                Thread.Sleep(60000);
+
+                int i = 20;
+                while (!kill)
+                {
+                    if (dayZServer != null)
+                    {
+                        if (!dayZServer.CheckServer())
+                        {
+                            dayZServer.BackupServerData();
+                            dayZServer.UpdateServer(props);
+                            dayZServer.UpdateAndMoveMods(props, false, true);
+                            dayZServer.StartServer();
+                        }
+                        else
+                        {
+                            WriteToConsole("The Server is still running");
+                        }
+
+                        if (!dayZServer.CheckBEC())
+                        {
+                            if (OperatingSystem.IsWindows())
+                            {
+                                dayZServer.StartBEC();
+                            }
+                        }
+                        else
+                        {
+                            WriteToConsole("BEC is still running");
+                        }
+
+                        if (i % 4 == 0)
+                        {
+                            dayZServer.UpdateAndMoveMods(props, true, false);
+                            dayZServer.CheckForUpdatedMods();
+                        }
+                        i++;
+                        Thread.Sleep(60000);
+                    }
+                }
+
+                WriteToConsole("Stopping Server");
+
+                KillServerProcesses();
+
+                //SaveServerConfig();
+
+                props._serverStatus = "Server stopped";
+
+                WriteToConsole("Server was stopped");
+            }
+        }
+
+        public static void StopServer()
+        {
+            kill = true;
+        }
+
+        public static void KillServerProcesses()
+        {
+            if (dayZServer != null)
+            {
+                dayZServer.KillServerProcesses();
+            }
+        }
+
+        public static void KillServerOnClose()
+        {
+            kill = true;
+            if (dayZServer != null)
+            {
+                dayZServer.KillServerProcesses();
+            }
+            if (serverLoop != null)
+            {
+                serverLoop = null;
+            }
+        }
+
+        private static void UpdateServer(Server server)
+        {
+            if (props != null)
+            {
+                props._serverStatus = "Updating server";
+                server.UpdateServer(props);
+                props._serverStatus = "Updating BEC";
+                server.UpdateBEC();
+                props._serverStatus = "Updating mods";
+                server.UpdateAndMoveMods(props, true, true);
+                props._serverStatus = "Server, Mods and BEC updated";
+            }
+        }
+
+        private static void BackupServer(Server server)
+        {
+            if (props != null)
+            {
+                props._serverStatus = "Backing up server";
+                server.BackupServerData();
+                props._serverStatus = "Backed up server";
+            }
+
         }
 
         private static void UpdateBECScheduler(ManagerConfig config)
@@ -101,7 +209,7 @@ namespace DayZServerManager.Server.Classes
             {
                 if (FileSystem.FileExists(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
                 {
-                    SchedulerFile? becScheduler = SchedulerFileSerializer.DeserializeSchedulerFile(Path.Combine(config.becPath, "Config", "Scheduler.xml"));
+                    SchedulerFile? becScheduler = XMLSerializer.DeserializeXMLFile<SchedulerFile>(Path.Combine(config.becPath, "Config", "Scheduler.xml"));
                     if (becScheduler == null)
                     {
                         becScheduler = new SchedulerFile();
@@ -113,7 +221,7 @@ namespace DayZServerManager.Server.Classes
                         NotificationSchedulerFile? expansionScheduler;
                         if (FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
                         {
-                            expansionScheduler = NotificationSchedulerFileSerializer.DeserializeNotificationSchedulerFile(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
+                            expansionScheduler = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
                             if (expansionScheduler == null)
                             {
                                 expansionScheduler = new NotificationSchedulerFile();
@@ -126,19 +234,39 @@ namespace DayZServerManager.Server.Classes
 
                         RestartUpdater.UpdateRestartScripts(config.restartInterval, becScheduler, expansionScheduler);
 
-                        NotificationSchedulerFileSerializer.SerializeNotificationSchedulerFile(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), expansionScheduler);
+                        JSONSerializer.SerializeJSONFile<NotificationSchedulerFile>(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), expansionScheduler);
                     }
                     else
                     {
                         RestartUpdater.UpdateRestartScripts(config.restartInterval, becScheduler);
                     }
 
-                    SchedulerFileSerializer.SerializeSchedulerFile(Path.Combine(config.becPath, "Config", "Scheduler.xml"), becScheduler);
+                    XMLSerializer.SerializeXMLFile<SchedulerFile>(Path.Combine(config.becPath, "Config", "Scheduler.xml"), becScheduler);
                 }
             }
             catch (Exception ex)
             {
                 WriteToConsole(ex.ToString());
+            }
+        }
+
+        public static string SetSteamGuard(string code)
+        {
+            try
+            {
+                if (dayZServer != null)
+                {
+                    return dayZServer.WriteSteamGuard(code);
+                }
+                else
+                {
+                    return "DayZServer not running";
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
+                return "Error";
             }
         }
 
@@ -245,7 +373,7 @@ namespace DayZServerManager.Server.Classes
 
             if (FileSystem.FileExists(configName))
             {
-                ManagerConfig? deserializedManagerConfig = ManagerConfigSerializer.DeserializeManagerConfig();
+                ManagerConfig? deserializedManagerConfig = JSONSerializer.DeserializeJSONFile<ManagerConfig>(MANAGERCONFIGNAME);
 
                 if (deserializedManagerConfig != null)
                 {
@@ -263,7 +391,7 @@ namespace DayZServerManager.Server.Classes
         {
             if (managerConfig != null)
             {
-                ManagerConfigSerializer.SerializeManagerConfig(managerConfig);
+                JSONSerializer.SerializeJSONFile<ManagerConfig>(MANAGERCONFIGNAME, managerConfig);
             }
         }
         #endregion ManagerConfig

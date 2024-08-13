@@ -8,6 +8,7 @@ interface ManagerConfig {
     serverPath: string;
     steamCMDPath: string;
     becPath: string;
+    modsPath: string;
     workshopPath: string;
     backupPath: string;
     missionName: string;
@@ -142,6 +143,7 @@ export default function ManagerConfigEditor() {
                 <TextField id="serverPath" variant="outlined" label="Server Path" defaultValue={managerConfig.serverPath} onChange={handleChange} />
                 <TextField id="steamCMDPath" variant="outlined" label="Steam CMD Path" defaultValue={managerConfig.steamCMDPath} onChange={handleChange} />
                 <TextField id="becPath" variant="outlined" label="BEC Path" defaultValue={managerConfig.becPath} onChange={handleChange} />
+                <TextField id="modsPath" variant="outlined" label="Workshop Path" defaultValue={managerConfig.modsPath} onChange={handleChange} />
                 <TextField id="workshopPath" variant="outlined" label="Workshop Path" defaultValue={managerConfig.workshopPath} onChange={handleChange} />
                 <TextField id="backupPath" variant="outlined" label="Backup Path" defaultValue={managerConfig.backupPath} onChange={handleChange} />
                 <TextField id="missionName" variant="outlined" label="Mission Name" defaultValue={managerConfig.missionName} onChange={handleChange} />
