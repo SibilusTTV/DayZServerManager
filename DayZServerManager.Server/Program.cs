@@ -34,7 +34,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
@@ -46,4 +46,4 @@ AppDomain.CurrentDomain.ProcessExit += new EventHandler((s, e) => { Manager.Kill
 
 Manager.InitiateManager();
 
-app.Run();
+app.Run("http://0.0.0.0:5040");

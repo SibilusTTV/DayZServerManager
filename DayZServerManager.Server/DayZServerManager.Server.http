@@ -1,6 +1,0 @@
-@DayZServerManager.Server_HostAddress = http://localhost:5133
-
-GET {{DayZServerManager.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
