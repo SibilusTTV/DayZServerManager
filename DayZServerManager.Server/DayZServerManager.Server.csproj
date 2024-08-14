@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -8,6 +8,29 @@
     <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
     <SpaProxyServerUrl>https://localhost:5173</SpaProxyServerUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Backup\**" />
+    <Compile Remove="BEC\**" />
+    <Compile Remove="mods\**" />
+    <Compile Remove="Server\**" />
+    <Compile Remove="SteamCMD\**" />
+    <Content Remove="Backup\**" />
+    <Content Remove="BEC\**" />
+    <Content Remove="mods\**" />
+    <Content Remove="Server\**" />
+    <Content Remove="SteamCMD\**" />
+    <EmbeddedResource Remove="Backup\**" />
+    <EmbeddedResource Remove="BEC\**" />
+    <EmbeddedResource Remove="mods\**" />
+    <EmbeddedResource Remove="Server\**" />
+    <EmbeddedResource Remove="SteamCMD\**" />
+    <None Remove="Backup\**" />
+    <None Remove="BEC\**" />
+    <None Remove="mods\**" />
+    <None Remove="Server\**" />
+    <None Remove="SteamCMD\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Remove="Config.json" />

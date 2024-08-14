@@ -2,6 +2,6 @@
 {
     public class SteamGuard
     {
-        public string code {  get; set; }
+        public string? code {  get; set; }
     }
 }

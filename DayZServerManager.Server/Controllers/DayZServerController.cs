@@ -52,33 +52,17 @@ namespace DayZServerManager.Server.Controllers
             startTask.Start();
             if (startTask != null)
             {
-                while (startTask.IsCompleted || (Manager.props._serverStatus != "Error" && Manager.props._serverStatus != "Please set Username and Password" && Manager.props._serverStatus != "Server Started" && Manager.props._serverStatus != "Steam Guard" && Manager.props._serverStatus != "Server Stopped"))
+                while (!startTask.IsCompleted && Manager.props._serverStatus != "Error" && Manager.props._serverStatus != "Please set Username and Password" && Manager.props._serverStatus != "Server Started" && Manager.props._serverStatus != "Steam Guard" && Manager.props._serverStatus != "Server Stopped")
                 {
                     Thread.Sleep(5000);
                 }
-
-                switch (Manager.props._serverStatus)
-                {
-                    case "Please set Username and Password":
-                        return "Please set Username and Password";
-                    case "Steam Guard":
-                        return "Steam Guard";
-                    case "Server Started":
-                        return "Server Started";
-                    case "Error":
-                        return "Error";
-                    case "Server Stopped":
-                        return "Server Stopped";
-                    case "Server already running":
-                        return "Server already running";
-                }
-
-                return "";
             }
             else
             {
-                return Manager.props._serverStatus;
+                Manager.props._serverStatus = "Error";
             }
+
+            return Manager.props._serverStatus;
         }
 
         [HttpGet("StopServer")]
@@ -91,7 +75,14 @@ namespace DayZServerManager.Server.Controllers
         [HttpPost("SendSteamGuard")]
         public string SendSteamGuard([FromBody] SteamGuard guard)
         {
-            return Manager.SetSteamGuard(guard.code);
+            if (guard != null && guard.code != null)
+            {
+                return Manager.SetSteamGuard(guard.code);
+            }
+            else
+            {
+                return "Invalid input";
+            }
         }
     }
 }

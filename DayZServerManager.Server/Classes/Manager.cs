@@ -22,8 +22,15 @@ namespace DayZServerManager.Server.Classes
         public static bool kill = false;
 
         #region Constants
-        public const string MANAGERCONFIGNAME = "Config.json";
-        public const string dwadw = "";
+        public const string MANAGER_CONFIG_NAME = "Config.json";
+        public const string SERVER_PATH = "Server";
+        public const string STEAM_CMD_PATH = "SteamCMD";
+        public const string BEC_PATH = "BEC";
+        public const string MODS_PATH = "Mods";
+        public static string WORKSHOP_PATH = Path.Combine("steamapps", "workshop", "content", "221100");
+        public const string PROFILE_NAME = "Profiles";
+        public static string MISSION_PATH = Path.Combine(SERVER_PATH, "mpmissions");
+        public static string EXPANSION_DOWNLOAD_PATH = Path.Combine(MISSION_PATH, "DayZ-Expansion-Missions");
         #endregion Constants
 
         public static void InitiateManager()
@@ -40,11 +47,30 @@ namespace DayZServerManager.Server.Classes
                     return;
                 }
 
+                List<string> directories = FileSystem.GetDirectories(Environment.CurrentDirectory).ToList<string>();
+                if (!directories.Contains(SERVER_PATH))
+                {
+                    FileSystem.CreateDirectory(SERVER_PATH);
+                }
+                if (!directories.Contains(STEAM_CMD_PATH))
+                {
+                    FileSystem.CreateDirectory(STEAM_CMD_PATH);
+                }
+                if (!directories.Contains(MODS_PATH))
+                {
+                    FileSystem.CreateDirectory(MODS_PATH);
+                }
+                if (!directories.Contains(BEC_PATH))
+                {
+                    FileSystem.CreateDirectory(BEC_PATH);
+                }
+
                 UpdateBECScheduler(managerConfig);
 
-                //LoadServerConfig();
-                //AdjustServerConfig();
-                //SaveManagerConfig();
+                LoadServerConfig();
+                AdjustServerConfig();
+                SaveManagerConfig();
+                SaveServerConfig();
 
                 if (managerConfig.autoStartServer)
                 {
@@ -71,6 +97,11 @@ namespace DayZServerManager.Server.Classes
                 {
                     props._serverStatus = "Server already running";
                     return;
+                }
+
+                if (serverConfig != null)
+                {
+                    SaveServerConfig();
                 }
 
                 BackupServer(dayZServer);
@@ -145,7 +176,9 @@ namespace DayZServerManager.Server.Classes
 
                 KillServerProcesses();
 
-                //SaveServerConfig();
+                Thread.Sleep(10000);
+
+                SaveServerConfig();
 
                 props._serverStatus = "Server stopped";
 
@@ -163,6 +196,7 @@ namespace DayZServerManager.Server.Classes
             if (dayZServer != null)
             {
                 dayZServer.KillServerProcesses();
+                dayZServer = null;
             }
         }
 
@@ -208,9 +242,9 @@ namespace DayZServerManager.Server.Classes
         {
             try
             {
-                if (FileSystem.FileExists(Path.Combine(config.becPath, "Config", "Scheduler.xml")))
+                if (FileSystem.FileExists(Path.Combine(BEC_PATH, "Config", "Scheduler.xml")))
                 {
-                    SchedulerFile? becScheduler = XMLSerializer.DeserializeXMLFile<SchedulerFile>(Path.Combine(config.becPath, "Config", "Scheduler.xml"));
+                    SchedulerFile? becScheduler = XMLSerializer.DeserializeXMLFile<SchedulerFile>(Path.Combine(BEC_PATH, "Config", "Scheduler.xml"));
                     if (becScheduler == null)
                     {
                         becScheduler = new SchedulerFile();
@@ -220,9 +254,9 @@ namespace DayZServerManager.Server.Classes
                     if (config.clientMods != null && (config.clientMods.FindAll(x => x.name.Contains("expansion") || x.name.Contains("Expansion")).Count > 0))
                     {
                         NotificationSchedulerFile? expansionScheduler;
-                        if (FileSystem.FileExists(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
+                        if (FileSystem.FileExists(Path.Combine(SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
                         {
-                            expansionScheduler = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
+                            expansionScheduler = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
                             if (expansionScheduler == null)
                             {
                                 expansionScheduler = new NotificationSchedulerFile();
@@ -235,14 +269,14 @@ namespace DayZServerManager.Server.Classes
 
                         RestartUpdater.UpdateRestartScripts(config.restartInterval, becScheduler, expansionScheduler);
 
-                        JSONSerializer.SerializeJSONFile<NotificationSchedulerFile>(Path.Combine(config.serverPath, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), expansionScheduler);
+                        JSONSerializer.SerializeJSONFile<NotificationSchedulerFile>(Path.Combine(SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), expansionScheduler);
                     }
                     else
                     {
                         RestartUpdater.UpdateRestartScripts(config.restartInterval, becScheduler);
                     }
 
-                    XMLSerializer.SerializeXMLFile<SchedulerFile>(Path.Combine(config.becPath, "Config", "Scheduler.xml"), becScheduler);
+                    XMLSerializer.SerializeXMLFile<SchedulerFile>(Path.Combine(BEC_PATH, "Config", "Scheduler.xml"), becScheduler);
                 }
             }
             catch (Exception ex)
@@ -291,11 +325,11 @@ namespace DayZServerManager.Server.Classes
 
         public static void LoadServerConfig()
         {
-            if (FileSystem.FileExists(Path.Combine(managerConfig.serverPath, managerConfig.serverConfigName)))
+            if (managerConfig != null && FileSystem.FileExists(Path.Combine(SERVER_PATH, managerConfig.serverConfigName)))
             {
                 try
                 {
-                    using (StreamReader reader = new StreamReader(Path.Combine(managerConfig.serverPath, managerConfig.serverConfigName)))
+                    using (StreamReader reader = new StreamReader(Path.Combine(SERVER_PATH, managerConfig.serverConfigName)))
                     {
                         string serverConfigText = reader.ReadToEnd();
                         serverConfig = ServerConfigSerializer.Deserialize(serverConfigText);
@@ -310,9 +344,9 @@ namespace DayZServerManager.Server.Classes
             {
                 try
                 {
-                    if (!FileSystem.DirectoryExists(managerConfig.serverPath))
+                    if (!FileSystem.DirectoryExists(SERVER_PATH))
                     {
-                        FileSystem.CreateDirectory(managerConfig.serverPath);
+                        FileSystem.CreateDirectory(SERVER_PATH);
                     }
                     serverConfig = new ServerConfig();
                 }
@@ -325,16 +359,19 @@ namespace DayZServerManager.Server.Classes
 
         public static void AdjustServerConfig()
         {
-            serverConfig.template = managerConfig.missionName;
-            serverConfig.instanceId = managerConfig.instanceId;
-            serverConfig.steamQueryPort = managerConfig.steamQueryPort;
+            if (serverConfig != null && managerConfig != null)
+            {
+                serverConfig.template = managerConfig.missionName;
+                serverConfig.instanceId = managerConfig.instanceId;
+                serverConfig.steamQueryPort = managerConfig.steamQueryPort;
+            }
         }
 
         public static void SaveServerConfig()
         {
-            if (serverConfig != null)
+            if (serverConfig != null && managerConfig != null)
             {
-                using (StreamWriter writer = new StreamWriter(Path.Combine(managerConfig.serverPath, managerConfig.serverConfigName)))
+                using (StreamWriter writer = new StreamWriter(Path.Combine(SERVER_PATH, managerConfig.serverConfigName)))
                 {
                     string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
                     writer.Write(serverConfigText);
@@ -374,7 +411,7 @@ namespace DayZServerManager.Server.Classes
 
             if (FileSystem.FileExists(configName))
             {
-                ManagerConfig? deserializedManagerConfig = JSONSerializer.DeserializeJSONFile<ManagerConfig>(MANAGERCONFIGNAME);
+                ManagerConfig? deserializedManagerConfig = JSONSerializer.DeserializeJSONFile<ManagerConfig>(MANAGER_CONFIG_NAME);
 
                 if (deserializedManagerConfig != null)
                 {
@@ -392,7 +429,7 @@ namespace DayZServerManager.Server.Classes
         {
             if (managerConfig != null)
             {
-                JSONSerializer.SerializeJSONFile<ManagerConfig>(MANAGERCONFIGNAME, managerConfig);
+                JSONSerializer.SerializeJSONFile<ManagerConfig>(MANAGER_CONFIG_NAME, managerConfig);
             }
         }
         #endregion ManagerConfig
