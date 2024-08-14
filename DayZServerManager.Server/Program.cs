@@ -1,17 +1,4 @@
-using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
-using DayZServerManager;
 using DayZServerManager.Server.Classes;
-using DayZServerManager.Server.Classes.Helpers;
-using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.RarityClasses;
-using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses;
-using DayZServerManager.Server.Classes.SerializationClasses.BecClasses;
-using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
-using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
-using Microsoft.VisualBasic.FileIO;
-using System.Diagnostics.Metrics;
-using System.IO;
-using System.Text.Json;
-using System.Xml.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,8 +21,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
 app.MapControllers();
@@ -46,4 +31,4 @@ AppDomain.CurrentDomain.ProcessExit += new EventHandler((s, e) => { Manager.Kill
 
 Manager.InitiateManager();
 
-app.Run("http://0.0.0.0:5040");
+app.Run("http://0.0.0.0:5172");

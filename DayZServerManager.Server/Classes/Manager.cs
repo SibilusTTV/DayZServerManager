@@ -69,6 +69,7 @@ namespace DayZServerManager.Server.Classes
                 }
                 else
                 {
+                    props._serverStatus = "Server already running";
                     return;
                 }
 

@@ -69,6 +69,8 @@ namespace DayZServerManager.Server.Controllers
                         return "Error";
                     case "Server Stopped":
                         return "Server Stopped";
+                    case "Server already running":
+                        return "Server already running";
                 }
 
                 return "";
