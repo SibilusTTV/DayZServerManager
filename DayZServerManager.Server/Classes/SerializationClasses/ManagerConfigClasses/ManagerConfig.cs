@@ -12,6 +12,8 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         public string steamPassword { get; set; }
         public string backupPath { get; set; }
         public string missionName { get; set; }
+        public string vanillaMissionName { get; set; }
+        public string missionTemplateName { get; set; }
         public int instanceId { get; set; }
         public string serverConfigName { get; set; }
         public string profileName { get; set; }
@@ -25,8 +27,6 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         public bool freezeCheck { get; set; }
         public bool netLog { get; set; }
         public int limitFPS { get; set; }
-        public string vanillaMissionName { get; set; }
-        public string missionTemplateName { get; set; }
         public string mapName { get; set; }
         public bool restartOnUpdate { get; set; }
         public int restartInterval { get; set; }
