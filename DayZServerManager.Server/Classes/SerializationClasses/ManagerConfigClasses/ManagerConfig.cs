@@ -10,13 +10,10 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
     {
         public string steamUsername { get; set; }
         public string steamPassword { get; set; }
-        public string serverPath { get; set; }
-        public string steamCMDPath { get; set; }
-        public string becPath { get; set; }
-        public string modsPath { get; set; }
-        public string workshopPath { get; set; }
         public string backupPath { get; set; }
         public string missionName { get; set; }
+        public string vanillaMissionName { get; set; }
+        public string missionTemplateName { get; set; }
         public int instanceId { get; set; }
         public string serverConfigName { get; set; }
         public string profileName { get; set; }
@@ -30,9 +27,6 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         public bool freezeCheck { get; set; }
         public bool netLog { get; set; }
         public int limitFPS { get; set; }
-        public string vanillaMissionName { get; set; }
-        public string missionTemplatePath { get; set; }
-        public string expansionDownloadPath { get; set; }
         public string mapName { get; set; }
         public bool restartOnUpdate { get; set; }
         public int restartInterval { get; set; }
@@ -44,11 +38,6 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         {
             steamUsername = "";
             steamPassword = "";
-            serverPath = "Server";
-            steamCMDPath = "SteamCMD";
-            becPath = "BEC";
-            modsPath = "Mods";
-            workshopPath = Path.Combine("steamapps", "workshop", "content", "221100");
             backupPath = "Backup";
             missionName = "Expansion.ChernarusPlus";
             instanceId = 1;
@@ -65,8 +54,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
             freezeCheck = true;
             limitFPS = -1;
             vanillaMissionName = "dayzOffline.chernarusplus";
-            missionTemplatePath = Path.Combine(serverPath, "mpmissions", "template.chernarus");
-            expansionDownloadPath = Path.Combine("Server", "mpmissions", "DayZ-Expansion-Missions");
+            missionTemplateName = "template.chernarus";
             mapName = "Chernarus";
             restartOnUpdate = true;
             restartInterval = 4;

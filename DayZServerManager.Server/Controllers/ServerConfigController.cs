@@ -28,5 +28,12 @@ namespace DayZServerManager.Server.Controllers
         {
             Manager.serverConfig = config;
         }
+
+        [HttpGet("SaveServerConfig")]
+        public bool SaveServerConfig()
+        {
+            Manager.SaveServerConfig();
+            return true;
+        }
     }
 }
