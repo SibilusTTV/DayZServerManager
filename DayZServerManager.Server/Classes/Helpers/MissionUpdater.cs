@@ -201,7 +201,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                 }
 
                 //Creating expansionRarities.json and expansionTypesChanges.json, if Expansion is part of the mods
-                if (config.clientMods != null && config.clientMods.FindAll(p => p.name.Contains("Expansion") || p.name.Contains("expansion")).Count > 0)
+                if (config.clientMods != null && config.clientMods.FindAll(p => p.name.ToLower().Contains("expansion")).Count > 0)
                 {
                     //Creating expansionRarities.json
                     if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "expansionRarities.json") == null)
@@ -299,7 +299,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                 CopyVanillaMissionFolder(missionPath, Path.Combine(Manager.SERVER_PATH, "mpmissions", config.vanillaMissionName), config.backupPath);
 
                 string expansionTemplatePath = Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", config.mapName);
-                if (config.clientMods != null && config.clientMods.FindAll(p => p.name.Contains("Expansion") || p.name.Contains("expansion")).Count > 0)
+                if (config.clientMods != null && config.clientMods.FindAll(p => p.name.ToLower().Contains("expansion")).Count > 0)
                 {
                     // Get the new expansion mission template from git
                     expansionTemplatePath = DownloadExpansionTemplates(config);

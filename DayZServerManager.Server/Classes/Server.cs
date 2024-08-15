@@ -26,7 +26,6 @@ namespace DayZServerManager.Server.Classes
         private ManagerConfig config;
         int dayZServerBranch;
         int dayZGameBranch;
-        private char folderSeparator;
 
         // Other Variables
         private bool updatedMods;
@@ -48,14 +47,6 @@ namespace DayZServerManager.Server.Classes
             becProcess = null;
             becUpdateProcess = null;
             updatedModsIDs = new List<long>();
-            if (OperatingSystem.IsWindows())
-            {
-                folderSeparator = '\\';
-            }
-            else
-            {
-                folderSeparator = '/';
-            }
         }
 
         public bool CheckServer()
@@ -74,7 +65,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 serverProcess = null;
                 return false;
             }
@@ -107,7 +98,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 becProcess = null;
                 return false;
             }
@@ -152,29 +143,15 @@ namespace DayZServerManager.Server.Classes
                 string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
                 procInf.WorkingDirectory = Manager.SERVER_PATH;
                 procInf.Arguments = startParameters;
-                if (OperatingSystem.IsWindows())
-                {
-                    procInf.FileName = Path.Combine(Manager.SERVER_PATH, "DayZServer_x64.exe");
-                }
-                else
-                {
-                    procInf.FileName = Path.Combine(Manager.SERVER_PATH, "DayZServer");
-                }
+                procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE);
                 serverProcess.StartInfo = procInf;
-                WriteToConsole($"Starting Server");
+                Manager.WriteToConsole($"Starting Server");
                 serverProcess.Start();
-                if (OperatingSystem.IsWindows())
-                {
-                    WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, "DayZServer_x64.exe")} with the parameters {startParameters}");
-                }
-                else
-                {
-                    WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, "DayZServer")} with the parameters {startParameters}");
-                }
+                Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -218,7 +195,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     FileSystem.CreateDirectory(Manager.BEC_PATH);
                 }
-                if (!FileSystem.FileExists(Path.Combine(Manager.BEC_PATH, "Bec.exe")))
+                if (!FileSystem.FileExists(Path.Combine(Manager.BEC_PATH, Manager.BEC_EXECUTABLE)))
                 {
                     Repository.Clone("https://github.com/TheGamingChief/BattlEye-Extended-Controls.git", Manager.BEC_PATH);
                 }
@@ -236,7 +213,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
 
             try
@@ -289,37 +266,37 @@ namespace DayZServerManager.Server.Classes
                     }
                 }
 
-                if (!FileSystem.DirectoryExists(Path.Combine(Manager.SERVER_PATH, config.profileName, "BattlEye")))
+                string battleyeParentFolder = "";
+
+                if (OperatingSystem.IsWindows())
                 {
-                    FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, config.profileName, "BattlEye"));
+                    battleyeParentFolder = Path.Combine(Manager.SERVER_PATH, config.profileName);
+                }
+                else
+                {
+                    battleyeParentFolder = Manager.SERVER_PATH;
                 }
 
-                if (!FileSystem.FileExists(Path.Combine(Manager.SERVER_PATH, config.profileName, "BattlEye", "BEServer_x64.cfg")))
+                List<string> serverDirectories = FileSystem.GetDirectories(battleyeParentFolder).ToList<string>();
+                if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_FOLDER_NAME) == null)
                 {
-                    string beConfig = "RConPassword YourRCONPasswort";
-                    beConfig += $"{Environment.NewLine}RConPort {config.RConPort}";
-
-                    using (StreamWriter writer = new StreamWriter(Path.Combine(Manager.SERVER_PATH, config.profileName, "BattlEye", "BEServer_x64.cfg")))
-                    {
-                        writer.Write(beConfig);
-                        writer.Close();
-                    }
+                    FileSystem.CreateDirectory(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME));
                 }
 
-                if (!FileSystem.FileExists(Path.Combine(Manager.SERVER_PATH, config.profileName, "BattlEye", "bans.txt")))
+                List<string> battleyeDirectories = FileSystem.GetDirectories(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME)).ToList<string>();
+                if (battleyeDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_CONFIG_NAME) == null)
                 {
-                    string bans = "";
+                    CreateAndSaveNewBeConfig(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_CONFIG_NAME));
+                }
 
-                    using (StreamWriter writer = new StreamWriter(Path.Combine(Manager.SERVER_PATH, config.profileName, "BattlEye", "bans.txt")))
-                    {
-                        writer.Write(bans);
-                        writer.Close();
-                    }
+                if (battleyeDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_BANS_NAME) == null)
+                {
+                    CreateAndSaveNewBans(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_BANS_NAME));
                 }
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -334,21 +311,21 @@ namespace DayZServerManager.Server.Classes
                 {
                     startInfo.FileName = Path.Combine(Manager.BEC_PATH, "Bec.exe");
                 }
-                else
-                {
-                    startInfo.FileName = Path.Combine(Manager.BEC_PATH, "Bec");
-                }
+                //else
+                //{
+                //    startInfo.FileName = Path.Combine(Manager.BEC_PATH, "Bec");
+                //}
                 startInfo.Arguments = $"-f Config.cfg --dsc";
                 startInfo.WorkingDirectory = Manager.BEC_PATH;
                 becProcess = new Process();
                 becProcess.StartInfo = startInfo;
-                WriteToConsole("Starting BEC");
+                Manager.WriteToConsole("Starting BEC");
                 becProcess.Start();
-                WriteToConsole("BEC started");
+                Manager.WriteToConsole("BEC started");
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -364,7 +341,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 serverProcess = null;
             }
 
@@ -378,7 +355,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 becProcess = null;
             }
 
@@ -392,7 +369,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 becUpdateProcess = null;
             }
 
@@ -406,7 +383,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 steamCMDProcess = null;
             }
         }
@@ -422,33 +399,27 @@ namespace DayZServerManager.Server.Classes
             }
             catch (System.Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
 
             try
             {
-                if (OperatingSystem.IsWindows() && !FileSystem.FileExists(Path.Combine(Manager.STEAM_CMD_PATH, "steamcmd.exe")))
+                if (!FileSystem.FileExists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE)))
                 {
-                    string zipName = "steamcmd.zip";
-                    DownloadAndExctractSteamCMD(zipName);
-                }
-                else if (!OperatingSystem.IsWindows() && !FileSystem.FileExists(Path.Combine(Manager.STEAM_CMD_PATH, "steamcmd.sh")))
-                {
-                    string zipName = "steamcmd.tar.gz";
-                    DownloadAndExctractSteamCMD(zipName);
+                    DownloadAndExctractSteamCMD(Manager.STEAM_CMD_ZIP_NAME);
                 }
             }
             catch (System.Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
 
             try
             {
                 DateTime dateBeforeUpdate = GetDateBeforeUpdate();
 
-                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_PATH)} +\"login {config.steamUsername} {config.steamPassword}\" +\"app_update {dayZServerBranch}\" +quit";
-                WriteToConsole("Updating the DayZ Server");
+                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_PATH)} \"+login {config.steamUsername} {config.steamPassword}\" \"+app_update {dayZServerBranch}\" +quit";
+                Manager.WriteToConsole("Updating the DayZ Server");
                 StartSteamCMD(props, serverUpdateArguments);
                 if (props._serverStatus == "Server downloaded")
                 {
@@ -457,7 +428,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (System.Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 props._serverStatus = "Error";
             }
         }
@@ -472,25 +443,16 @@ namespace DayZServerManager.Server.Classes
                 steamCMDProcess.StartInfo.RedirectStandardError = true;
                 steamCMDProcess.StartInfo.RedirectStandardInput = true;
                 steamCMDProcess.StartInfo.RedirectStandardOutput = true;
-                if (OperatingSystem.IsWindows())
-                {
-                    WriteToConsole(Path.Combine(Manager.STEAM_CMD_PATH, "steamcmd.exe") + " " + serverUpdateArguments);
-                    steamCMDProcess.StartInfo.FileName = Path.Combine(Manager.STEAM_CMD_PATH, "steamcmd.exe");
-                    steamCMDProcess.Start();
-                }
-                else
-                {
-                    WriteToConsole(Path.Combine(Manager.STEAM_CMD_PATH, "steamcmd.sh") + " " + serverUpdateArguments);
-                    steamCMDProcess.StartInfo.FileName = Path.Combine(Manager.STEAM_CMD_PATH, "steamcmd.sh");
-                    steamCMDProcess.Start();
-                }
+                Manager.WriteToConsole(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE) + " " + serverUpdateArguments);
+                steamCMDProcess.StartInfo.FileName = Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE);
+                steamCMDProcess.Start();
 
                 int outputTime = 0;
                 Task task = ConsumeOutput(steamCMDProcess.StandardOutput, s =>
                 {
                     if (s != null)
                     {
-                        WriteToConsole(s);
+                        Manager.WriteToConsole(s);
                         if ( outputTime != -1 && s.Contains("Steam Guard"))
                         {
                             props._serverStatus = "Steam Guard";
@@ -511,7 +473,7 @@ namespace DayZServerManager.Server.Classes
                     Thread.Sleep(1000);
                     if (outputTime > 15 && props._serverStatus != "Steam Guard")
                     {
-                        WriteToConsole("Steam Guard");
+                        Manager.WriteToConsole("Steam Guard");
                         props._serverStatus = "Steam Guard";
                         outputTime = -1;
                     }
@@ -527,7 +489,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (System.Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 props._serverStatus = "Error";
             }
         }
@@ -564,7 +526,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (System.Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 return "Error";
             }
         }
@@ -573,13 +535,10 @@ namespace DayZServerManager.Server.Classes
         {
             try
             {
-                if (FileSystem.FileExists(Path.Combine(Manager.SERVER_PATH, "DayZServer_x64.exe")))
+                List<string> serverDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
+                if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.SERVER_EXECUTABLE) != null)
                 {
-                    return File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, "DayZServer_x64.exe"));
-                }
-                else if (FileSystem.FileExists(Path.Combine(Manager.SERVER_PATH, "DayZServer")))
-                {
-                    return File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, "DayZServer"));
+                    return File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE));
                 }
                 else
                 {
@@ -588,7 +547,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (System.Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 return DateTime.MinValue;
             }
         }
@@ -598,33 +557,30 @@ namespace DayZServerManager.Server.Classes
             try
             {
                 DateTime dateAfterUpdate;
-                if (FileSystem.FileExists(Path.Combine(Manager.SERVER_PATH, "DayZServer_x64.exe")))
+                List<string> serverDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
+                if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.SERVER_EXECUTABLE) != null)
                 {
-                    dateAfterUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, "DayZServer_x64.exe"));
-                }
-                else if (FileSystem.FileExists(Path.Combine(Manager.SERVER_PATH, "DayZServer")))
-                {
-                    dateAfterUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, "DayZServer"));
+                    dateAfterUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE));
                 }
                 else
                 {
-                    dateAfterUpdate = DateTime.Now;
+                    dateAfterUpdate = DateTime.MinValue;
                 }
 
                 if (dateBeforeUpdate < dateAfterUpdate)
                 {
                     updatedServer = true;
-                    WriteToConsole("DayZ Server updated");
+                    Manager.WriteToConsole("DayZ Server updated");
                 }
                 else
                 {
                     updatedServer = false;
-                    WriteToConsole("Server was already up-to-date");
+                    Manager.WriteToConsole("Server was already up-to-date");
                 }
             }
             catch (System.Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -642,26 +598,26 @@ namespace DayZServerManager.Server.Classes
             {
                 if (hasToUpdate)
                 {
-                    WriteToConsole("Updating Mods");
+                    Manager.WriteToConsole("Updating Mods");
                     UpdateMods(props, mods);
-                    WriteToConsole("Mods updated");
+                    Manager.WriteToConsole("Mods updated");
                 }
                 if (hasToMove)
                 {
-                    WriteToConsole("Moving Mods");
+                    Manager.WriteToConsole("Moving Mods");
                     MoveMods(mods);
-                    WriteToConsole("Mods moved");
+                    Manager.WriteToConsole("Mods moved");
                 }
 
-                List<Mod> expansionMods = config.clientMods.FindAll(x => x.name.Contains("expansion") || x.name.Contains("Expansion"));
+                List<Mod> expansionMods = config.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
 
                 if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
                 {
                     updatedServer = false;
-                    WriteToConsole($"Updating Mission folder");
+                    Manager.WriteToConsole($"Updating Mission folder");
                     MissionUpdater upd = new MissionUpdater(config);
                     upd.Update();
-                    WriteToConsole($"Finished updating Mission folder");
+                    Manager.WriteToConsole($"Finished updating Mission folder");
                 }
             }
         }
@@ -681,7 +637,7 @@ namespace DayZServerManager.Server.Classes
 
                     StartSteamCMD(props, arguments);
 
-                    WriteToConsole($"All mods were downloaded");
+                    Manager.WriteToConsole($"All mods were downloaded");
 
                     foreach (Mod mod in mods)
                     {
@@ -704,14 +660,14 @@ namespace DayZServerManager.Server.Classes
                         Mod? mod = SearchForMod(key, mods);
                         if (mod != null)
                         {
-                            WriteToConsole($"{mod.name} was updated");
+                            Manager.WriteToConsole($"{mod.name} was updated");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -727,7 +683,7 @@ namespace DayZServerManager.Server.Classes
                         string steamModPath = Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString());
                         string serverModPath = Path.Combine(Manager.SERVER_PATH, mod.name);
 
-                        WriteToConsole($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
+                        Manager.WriteToConsole($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
                         if (FileSystem.DirectoryExists(steamModPath))
                         {
                             FileSystem.CopyDirectory(steamModPath, serverModPath, true);
@@ -739,13 +695,13 @@ namespace DayZServerManager.Server.Classes
                             {
                                 FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
                                 }
-                            WriteToConsole($"Mod was moved to {mod.name}");
+                            Manager.WriteToConsole($"Mod was moved to {mod.name}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    WriteToConsole(ex.ToString());
+                    Manager.WriteToConsole(ex.ToString());
                 }
             }
         }
@@ -792,9 +748,9 @@ namespace DayZServerManager.Server.Classes
                         becUpdateProcess.StartInfo = startInfo;
                         if (OperatingSystem.IsWindows())
                         {
-                            WriteToConsole("Starting BEC for mod updates");
+                            Manager.WriteToConsole("Starting BEC for mod updates");
                             becUpdateProcess.Start();
-                            WriteToConsole("BEC for mod updates started");
+                            Manager.WriteToConsole("BEC for mod updates started");
                         }
                         return true;
                     }
@@ -805,7 +761,7 @@ namespace DayZServerManager.Server.Classes
                 }
                 catch (Exception ex)
                 {
-                    WriteToConsole(ex.ToString());
+                    Manager.WriteToConsole(ex.ToString());
                     return false;
                 }
             }
@@ -828,14 +784,14 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
 
             try
             {
-                WriteToConsole($"Backing up the server data and moving all the logs!");
+                Manager.WriteToConsole($"Backing up the server data and moving all the logs!");
                 string newestBackupPath = Path.Combine(config.backupPath, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-                string dataPath = Path.Combine(Manager.SERVER_PATH, "mpmissions", config.missionName, "storage_1");
+                string dataPath = Path.Combine(Manager.MISSION_PATH, config.missionName, "storage_1");
                 string profilePath = Path.Combine(Manager.SERVER_PATH, config.profileName);
                 if (FileSystem.DirectoryExists(dataPath))
                 {
@@ -843,20 +799,20 @@ namespace DayZServerManager.Server.Classes
                 }
                 if (FileSystem.DirectoryExists(profilePath))
                 {
-                    string[] fileNames = FileSystem.GetFiles(profilePath).ToArray();
-                    foreach (string fileName in fileNames)
+                    string[] filePaths = FileSystem.GetFiles(profilePath).ToArray();
+                    foreach (string filePath in filePaths)
                     {
-                        if (fileName.EndsWith(".ADM") || fileName.EndsWith(".RPT") || fileName.EndsWith(".log"))
+                        if (Path.GetExtension(filePath) == ".ADM" || Path.GetExtension(filePath) == ".RPT" || Path.GetExtension(filePath) == ".log" || Path.GetExtension(filePath) == ".mdmp")
                         {
-                            FileSystem.MoveFile(fileName, Path.Combine(newestBackupPath, "logs", fileName.Substring(fileName.LastIndexOf(folderSeparator) + 1)));
+                            FileSystem.MoveFile(filePath, Path.Combine(newestBackupPath, "logs", Path.GetFileName(filePath)));
                         }
                     }
                 }
-                WriteToConsole($"Server backup and moving of the logs done");
+                Manager.WriteToConsole($"Server backup and moving of the logs done");
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -921,7 +877,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -934,20 +890,8 @@ namespace DayZServerManager.Server.Classes
                     List<string> subFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
                     foreach (string subFolder in subFolders)
                     {
-                        string folderName = subFolder.Substring(subFolder.LastIndexOf(folderSeparator) + 1);
-                        if (folderName == "keys")
-                        {
-                            return subFolder;
-                        }
-                        else if (folderName == "Keys")
-                        {
-                            return subFolder;
-                        }
-                        else if (folderName == "key")
-                        {
-                            return subFolder;
-                        }
-                        else if (folderName == "Key")
+                        string folderName = Path.GetFileName(subFolder);
+                        if (folderName.ToLower() == "keys" || folderName.ToLower() == "key")
                         {
                             return subFolder;
                         }
@@ -957,14 +901,9 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 return string.Empty;
             }
-        }
-
-        private void WriteToConsole(string message)
-        {
-            System.Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
         }
 
         private bool CompareForChanges(string steamModPath, string serverModPath)
@@ -994,7 +933,7 @@ namespace DayZServerManager.Server.Classes
         {
             try
             {
-                string serverDirectoryPath = Path.Combine(serverModPath, steamDirectoryPath.Substring(steamDirectoryPath.LastIndexOf(folderSeparator) + 1));
+                string serverDirectoryPath = Path.Combine(serverModPath, Path.GetFileName(steamDirectoryPath));
                 if (FileSystem.DirectoryExists(serverModPath) && FileSystem.DirectoryExists(serverDirectoryPath))
                 {
                     List<string> steamModFilePaths = FileSystem.GetFiles(steamDirectoryPath).ToList<string>();
@@ -1028,7 +967,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch(Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 return false;
             }
         }
@@ -1037,7 +976,7 @@ namespace DayZServerManager.Server.Classes
         {
             try
             {
-                string serverFilePath = Path.Combine(serverModPath, steamFilePath.Substring(steamFilePath.LastIndexOf(folderSeparator) + 1));
+                string serverFilePath = Path.Combine(serverModPath, Path.GetFileName(steamFilePath));
                 if (FileSystem.FileExists(steamFilePath) && FileSystem.FileExists(serverFilePath))
                 {
                     DateTime steamModChangingDate = File.GetLastWriteTimeUtc(steamFilePath);
@@ -1062,8 +1001,39 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Manager.WriteToConsole(ex.ToString());
                 return false;
+            }
+        }
+
+        private void CreateAndSaveNewBeConfig(string path)
+        {
+            try
+            {
+                string beConfig = $"RConPassword {config.RConPassword}";
+                beConfig += $"{Environment.NewLine}RConPort {config.RConPort}";
+                beConfig += $"{Environment.NewLine}RestrictRCon 0";
+
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    writer.Write(beConfig);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+            }
+        }
+
+        private void CreateAndSaveNewBans(string path)
+        {
+            string bans = "";
+
+            using (StreamWriter writer = new StreamWriter(path))
+            {
+                writer.Write(bans);
+                writer.Close();
             }
         }
     }

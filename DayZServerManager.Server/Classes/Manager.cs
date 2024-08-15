@@ -31,6 +31,13 @@ namespace DayZServerManager.Server.Classes
         public const string PROFILE_NAME = "Profiles";
         public static string MISSION_PATH = Path.Combine(SERVER_PATH, "mpmissions");
         public static string EXPANSION_DOWNLOAD_PATH = Path.Combine(MISSION_PATH, "DayZ-Expansion-Missions");
+        public static string STEAM_CMD_EXECUTABLE = OperatingSystem.IsWindows() ? "steamcmd.exe" : "steamcmd.sh";
+        public static string STEAM_CMD_ZIP_NAME = OperatingSystem.IsWindows() ? "steamcmd.zip" : "steamcmd.tar.gz";
+        public static string BATTLEYE_FOLDER_NAME = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
+        public static string BATTLEYE_CONFIG_NAME = OperatingSystem.IsWindows() ? "BEServer_x64.cfg" : "beserver_x64.cfg";
+        public const string BEC_EXECUTABLE = "Bec.exe";
+        public static string SERVER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
+        public const string BATTLEYE_BANS_NAME = "Bans.txt";
         #endregion Constants
 
         public static void InitiateManager()
@@ -251,7 +258,7 @@ namespace DayZServerManager.Server.Classes
                     }
 
                     // Checking if one of the clientMods has expansion in its name
-                    if (config.clientMods != null && (config.clientMods.FindAll(x => x.name.Contains("expansion") || x.name.Contains("Expansion")).Count > 0))
+                    if (config.clientMods != null && (config.clientMods.FindAll(x => x.name.ToLower().Contains("expansion")).Count > 0))
                     {
                         NotificationSchedulerFile? expansionScheduler;
                         if (FileSystem.FileExists(Path.Combine(SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))

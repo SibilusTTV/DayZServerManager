@@ -20,6 +20,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         public int port { get; set; }
         public int steamQueryPort { get; set; }
         public int RConPort { get; set; }
+        public string RConPassword { get; set; }
         public int cpuCount { get; set; }
         public bool noFilePatching { get; set; }
         public bool doLogs { get; set; }
@@ -46,6 +47,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
             port = 2302;
             steamQueryPort = 2305;
             RConPort = 2306;
+            RConPassword = "YouRConPassword";
             cpuCount = 8;
             noFilePatching = true;
             doLogs = true;
