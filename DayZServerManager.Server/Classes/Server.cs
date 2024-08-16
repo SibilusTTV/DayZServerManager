@@ -13,6 +13,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -144,10 +145,21 @@ namespace DayZServerManager.Server.Classes
                 procInf.WorkingDirectory = Manager.SERVER_PATH;
                 procInf.Arguments = startParameters;
                 procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_EXECUTABLE);
+                procInf.RedirectStandardError = true;
+                procInf.RedirectStandardOutput = true;
+                procInf.RedirectStandardInput = true;
                 serverProcess.StartInfo = procInf;
                 Manager.WriteToConsole($"Starting Server");
                 serverProcess.Start();
                 Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_EXECUTABLE)} with the parameters {startParameters}");
+
+                Task task = ConsumeOutput(serverProcess.StandardOutput, s =>
+                {
+                    if (s != null && (s.ToLower().Contains("player") || s.ToLower().Contains("fps")|| s.ToLower().Contains("rcon")))
+                    {
+                        Manager.WriteToConsole(s);
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -208,6 +220,17 @@ namespace DayZServerManager.Server.Classes
                     string zipPath = Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_ZIP_NAME);
                     File.WriteAllBytes(zipPath, content);
                     ZipFile.ExtractToDirectory(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_ZIP_NAME), Manager.SCHEDULER_PATH, true);
+                }
+
+                if (OperatingSystem.IsLinux())
+                {
+                    ProcessStartInfo procInf = new ProcessStartInfo("chmod", $"+x {Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_EXECUTABLE)}");
+                    Process chmodProcess = new Process();
+                    chmodProcess.StartInfo = procInf;
+                    Manager.WriteToConsole("Giving executable rights to the scheduler");
+                    chmodProcess.Start();
+                    chmodProcess.WaitForExit();
+                    Manager.WriteToConsole("Executable rights successfully given to the scheduler");
                 }
             }
             catch (Exception ex)
@@ -712,12 +735,9 @@ namespace DayZServerManager.Server.Classes
                         startInfo.WorkingDirectory = Manager.SCHEDULER_PATH;
                         schedulerUpdateProcess = new Process();
                         schedulerUpdateProcess.StartInfo = startInfo;
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Manager.WriteToConsole("Starting Scheduler for mod updates");
-                            schedulerUpdateProcess.Start();
-                            Manager.WriteToConsole("Scheduler for mod updates started");
-                        }
+                        Manager.WriteToConsole("Starting Scheduler for mod updates");
+                        schedulerUpdateProcess.Start();
+                        Manager.WriteToConsole("Scheduler for mod updates started");
                         return true;
                     }
                     else

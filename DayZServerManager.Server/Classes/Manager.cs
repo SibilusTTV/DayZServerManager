@@ -121,11 +121,7 @@ namespace DayZServerManager.Server.Classes
 
                 kill = false;
                 dayZServer.StartServer();
-
-                if (OperatingSystem.IsWindows())
-                {
-                    dayZServer.StartScheduler();
-                }
+                dayZServer.StartScheduler();
 
                 props._serverStatus = "Server started";
 
@@ -164,10 +160,7 @@ namespace DayZServerManager.Server.Classes
 
                         if (!dayZServer.CheckScheduler())
                         {
-                            if (OperatingSystem.IsWindows())
-                            {
-                                dayZServer.StartScheduler();
-                            }
+                            dayZServer.StartScheduler();
                         }
                         else
                         {
