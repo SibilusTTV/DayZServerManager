@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -13,21 +13,25 @@
     <Compile Remove="Backup\**" />
     <Compile Remove="BEC\**" />
     <Compile Remove="mods\**" />
+    <Compile Remove="Scheduler\**" />
     <Compile Remove="Server\**" />
     <Compile Remove="SteamCMD\**" />
     <Content Remove="Backup\**" />
     <Content Remove="BEC\**" />
     <Content Remove="mods\**" />
+    <Content Remove="Scheduler\**" />
     <Content Remove="Server\**" />
     <Content Remove="SteamCMD\**" />
     <EmbeddedResource Remove="Backup\**" />
     <EmbeddedResource Remove="BEC\**" />
     <EmbeddedResource Remove="mods\**" />
+    <EmbeddedResource Remove="Scheduler\**" />
     <EmbeddedResource Remove="Server\**" />
     <EmbeddedResource Remove="SteamCMD\**" />
     <None Remove="Backup\**" />
     <None Remove="BEC\**" />
     <None Remove="mods\**" />
+    <None Remove="Scheduler\**" />
     <None Remove="Server\**" />
     <None Remove="SteamCMD\**" />
   </ItemGroup>

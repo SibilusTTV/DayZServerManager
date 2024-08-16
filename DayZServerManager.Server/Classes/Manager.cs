@@ -1,5 +1,4 @@
 ﻿using DayZServerManager.Server.Classes.Helpers;
-using DayZServerManager.Server.Classes.SerializationClasses.BecClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
@@ -25,7 +24,7 @@ namespace DayZServerManager.Server.Classes
         public const string MANAGER_CONFIG_NAME = "Config.json";
         public const string SERVER_PATH = "Server";
         public const string STEAM_CMD_PATH = "SteamCMD";
-        public const string BEC_PATH = "BEC";
+        public const string SCHEDULER_PATH = "Scheduler";
         public const string MODS_PATH = "Mods";
         public static string WORKSHOP_PATH = Path.Combine("steamapps", "workshop", "content", "221100");
         public const string PROFILE_NAME = "Profiles";
@@ -35,9 +34,17 @@ namespace DayZServerManager.Server.Classes
         public static string STEAM_CMD_ZIP_NAME = OperatingSystem.IsWindows() ? "steamcmd.zip" : "steamcmd.tar.gz";
         public static string BATTLEYE_FOLDER_NAME = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
         public static string BATTLEYE_CONFIG_NAME = OperatingSystem.IsWindows() ? "BEServer_x64.cfg" : "beserver_x64.cfg";
-        public const string BEC_EXECUTABLE = "Bec.exe";
-        public static string SERVER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
+        public static string BATTLEYE_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
         public const string BATTLEYE_BANS_NAME = "Bans.txt";
+        public const string SCHEDULER_DOWNLOAD_URL = "https://github.com/SibilusTTV/DayZScheduler/releases/download";
+        public static string SCHEDULER_ZIP_NAME = OperatingSystem.IsWindows() ? "Windows.zip" : "Linux.zip";
+        public static string STEAMCMD_DOWNLOAD_URL = OperatingSystem.IsWindows() ? "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip" : "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz";
+        public const string SCHEDULER_CONFIG_FOLDER = "Config";
+        public const string SCHEDULER_CONFIG_NAME = "Config.json";
+        public const string SCHEDULER_CONFIG_UPDATE_NAME = "ConfigUpdate.json";
+        public const string SCHEDULER_FILE_NAME = "Scheduler.json";
+        public const string SCHEDULER_FILE_UPDATE_NAME = "SchedulerUpdate.json";
+        public static string SCHEDULER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZScheduler.exe" : "DayZScheduler";
         #endregion Constants
 
         public static void InitiateManager()
@@ -67,12 +74,10 @@ namespace DayZServerManager.Server.Classes
                 {
                     FileSystem.CreateDirectory(MODS_PATH);
                 }
-                if (!directories.Contains(BEC_PATH))
+                if (!directories.Contains(SCHEDULER_PATH))
                 {
-                    FileSystem.CreateDirectory(BEC_PATH);
+                    FileSystem.CreateDirectory(SCHEDULER_PATH);
                 }
-
-                UpdateBECScheduler(managerConfig);
 
                 LoadServerConfig();
                 AdjustServerConfig();
@@ -119,7 +124,7 @@ namespace DayZServerManager.Server.Classes
 
                 if (OperatingSystem.IsWindows())
                 {
-                    dayZServer.StartBEC();
+                    dayZServer.StartScheduler();
                 }
 
                 props._serverStatus = "Server started";
@@ -157,16 +162,16 @@ namespace DayZServerManager.Server.Classes
                             WriteToConsole("The Server is still running");
                         }
 
-                        if (!dayZServer.CheckBEC())
+                        if (!dayZServer.CheckScheduler())
                         {
                             if (OperatingSystem.IsWindows())
                             {
-                                dayZServer.StartBEC();
+                                dayZServer.StartScheduler();
                             }
                         }
                         else
                         {
-                            WriteToConsole("BEC is still running");
+                            WriteToConsole("Scheduler is still running");
                         }
 
                         if (i % 4 == 0)
@@ -226,11 +231,11 @@ namespace DayZServerManager.Server.Classes
             {
                 props._serverStatus = "Updating server";
                 server.UpdateServer(props);
-                props._serverStatus = "Updating BEC";
-                server.UpdateBEC();
+                props._serverStatus = "Updating Scheduler";
+                server.UpdateScheduler();
                 props._serverStatus = "Updating mods";
                 server.UpdateAndMoveMods(props, true, true);
-                props._serverStatus = "Server, Mods and BEC updated";
+                props._serverStatus = "Server, Mods and Scheduler updated";
             }
         }
 
@@ -243,53 +248,6 @@ namespace DayZServerManager.Server.Classes
                 props._serverStatus = "Backed up server";
             }
 
-        }
-
-        private static void UpdateBECScheduler(ManagerConfig config)
-        {
-            try
-            {
-                if (FileSystem.FileExists(Path.Combine(BEC_PATH, "Config", "Scheduler.xml")))
-                {
-                    SchedulerFile? becScheduler = XMLSerializer.DeserializeXMLFile<SchedulerFile>(Path.Combine(BEC_PATH, "Config", "Scheduler.xml"));
-                    if (becScheduler == null)
-                    {
-                        becScheduler = new SchedulerFile();
-                    }
-
-                    // Checking if one of the clientMods has expansion in its name
-                    if (config.clientMods != null && (config.clientMods.FindAll(x => x.name.ToLower().Contains("expansion")).Count > 0))
-                    {
-                        NotificationSchedulerFile? expansionScheduler;
-                        if (FileSystem.FileExists(Path.Combine(SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json")))
-                        {
-                            expansionScheduler = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
-                            if (expansionScheduler == null)
-                            {
-                                expansionScheduler = new NotificationSchedulerFile();
-                            }
-                        }
-                        else
-                        {
-                            expansionScheduler = new NotificationSchedulerFile();
-                        }
-
-                        RestartUpdater.UpdateRestartScripts(config.restartInterval, becScheduler, expansionScheduler);
-
-                        JSONSerializer.SerializeJSONFile<NotificationSchedulerFile>(Path.Combine(SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), expansionScheduler);
-                    }
-                    else
-                    {
-                        RestartUpdater.UpdateRestartScripts(config.restartInterval, becScheduler);
-                    }
-
-                    XMLSerializer.SerializeXMLFile<SchedulerFile>(Path.Combine(BEC_PATH, "Config", "Scheduler.xml"), becScheduler);
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteToConsole(ex.ToString());
-            }
         }
 
         public static string SetSteamGuard(string code)

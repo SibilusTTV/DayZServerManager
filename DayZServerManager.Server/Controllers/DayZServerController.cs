@@ -30,10 +30,10 @@ namespace DayZServerManager.Server.Controllers
 
         }
 
-        [HttpGet("GetBECStatus")]
-        public bool GetBECStatus()
+        [HttpGet("GetSchedulerStatus")]
+        public bool GetSchedulerStatus()
         {
-            if (Manager.dayZServer != null && Manager.dayZServer.CheckBEC())
+            if (Manager.dayZServer != null && Manager.dayZServer.CheckScheduler())
             {
                 return true;
             }

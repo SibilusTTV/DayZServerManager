@@ -13,6 +13,7 @@ SteamCMD
 Backup
 Server
 BEC
+Scheduler
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
