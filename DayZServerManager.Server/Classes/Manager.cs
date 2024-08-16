@@ -36,7 +36,7 @@ namespace DayZServerManager.Server.Classes
         public static string BATTLEYE_CONFIG_NAME = OperatingSystem.IsWindows() ? "BEServer_x64.cfg" : "beserver_x64.cfg";
         public static string BATTLEYE_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
         public const string BATTLEYE_BANS_NAME = "Bans.txt";
-        public const string SCHEDULER_DOWNLOAD_URL = "https://github.com/SibilusTTV/DayZScheduler/releases/download";
+        public const string SCHEDULER_DOWNLOAD_URL = "https://github.com/SibilusTTV/DayZScheduler/releases/latest/download/";
         public static string SCHEDULER_ZIP_NAME = OperatingSystem.IsWindows() ? "Windows.zip" : "Linux.zip";
         public static string STEAMCMD_DOWNLOAD_URL = OperatingSystem.IsWindows() ? "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip" : "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz";
         public const string SCHEDULER_CONFIG_FOLDER = "Config";

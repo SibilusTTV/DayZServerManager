@@ -199,7 +199,7 @@ namespace DayZServerManager.Server.Classes
                 HttpResponseMessage response;
                 using (HttpClient client = new HttpClient())
                 {
-                    response = client.GetAsync($"{Manager.SCHEDULER_DOWNLOAD_URL}/{config.schedulerVersion}/{Manager.SCHEDULER_ZIP_NAME}").Result;
+                    response = client.GetAsync($"{Manager.SCHEDULER_DOWNLOAD_URL}{Manager.SCHEDULER_ZIP_NAME}").Result;
                 }
 
                 if (response.IsSuccessStatusCode)

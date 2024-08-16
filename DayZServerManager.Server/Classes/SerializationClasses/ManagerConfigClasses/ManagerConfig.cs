@@ -32,7 +32,6 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         public bool restartOnUpdate { get; set; }
         public int restartInterval { get; set; }
         public bool autoStartServer { get; set; }
-        public string schedulerVersion { get; set; }
         public List<Mod> clientMods { get; set; }
         public List<Mod> serverMods { get; set; }
 
@@ -62,7 +61,6 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
             restartOnUpdate = true;
             restartInterval = 4;
             autoStartServer = false;
-            schedulerVersion = "v0.0.1";
             clientMods = new List<Mod>();
             serverMods = new List<Mod>();
             Mod mod1 = new Mod();
