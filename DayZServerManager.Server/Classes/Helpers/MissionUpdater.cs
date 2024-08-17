@@ -913,32 +913,25 @@ namespace DayZServerManager.Server.Classes.Helpers
             try
             {
                 Manager.WriteToConsole("Moving mission template files and folders");
-                if (FileSystem.DirectoryExists(missionTemplatePath))
+                List<string> templateDirectories = FileSystem.GetDirectories(missionTemplatePath).ToList<string>();
+                List<string> templateFiles = FileSystem.GetFiles(missionTemplatePath).ToList<string>();
+
+                foreach (string directory in templateDirectories)
                 {
-                    if (FileSystem.DirectoryExists(Path.Combine(missionTemplatePath, "CustomFiles")))
-                    {
-                        FileSystem.CopyDirectory(Path.Combine(missionTemplatePath, "CustomFiles"), Path.Combine(missionPath, "CustomFiles"), true);
-                    }
-                    if (FileSystem.DirectoryExists(Path.Combine(missionTemplatePath, "expansion")))
-                    {
-                        FileSystem.CopyDirectory(Path.Combine(missionTemplatePath, "expansion"), Path.Combine(missionPath, "expansion"), true);
-                    }
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "mapgrouppos.xml")))
-                    {
-                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "mapgrouppos.xml"), Path.Combine(missionPath, "mapgrouppos.xml"), true);
-                    }
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgweather.xml")))
-                    {
-                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfgweather.xml"), Path.Combine(missionPath, "cfgweather.xml"), true);
-                    }
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfgplayerspawnpoints.xml")))
-                    {
-                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfgplayerspawnpoints.xml"), Path.Combine(missionPath, "cfgplayerspawnpoints.xml"), true);
-                    }
-                    if (FileSystem.FileExists(Path.Combine(missionTemplatePath, "cfggameplay.json")))
-                    {
-                        FileSystem.CopyFile(Path.Combine(missionTemplatePath, "cfggameplay.json"), Path.Combine(missionPath, "cfggameplay.json"), true);
-                    }
+                    FileSystem.CopyDirectory(directory, Path.Combine(missionPath, Path.GetFileName(directory)));
+                }
+
+                foreach (string file in templateFiles)
+                {
+                    string fileName = Path.GetFileName(file);
+                    if (fileName != "cfgeconomycore.xml"
+                        || fileName != "customFilesRarities.json"
+                        || fileName != "expansionRarities.json"
+                        || fileName != "expansionTypesChanges.json"
+                        || fileName != "init.c"
+                        || fileName != "vanillaRarities.json"
+                        || fileName != "vanillaTypesChanges.json")
+                    FileSystem.CopyDirectory(file, Path.Combine(missionPath, Path.GetFileName(file)));
                 }
                 Manager.WriteToConsole("Finshed moving mission template files and folders");
             }
