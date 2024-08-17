@@ -201,6 +201,7 @@ namespace DayZServerManager.Server.Classes
             if (dayZServer != null)
             {
                 dayZServer.KillServerProcesses();
+                Thread.Sleep(5000);
                 dayZServer = null;
             }
         }

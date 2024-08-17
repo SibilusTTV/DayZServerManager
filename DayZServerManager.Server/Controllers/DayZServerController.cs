@@ -69,7 +69,18 @@ namespace DayZServerManager.Server.Controllers
         public bool StopDayZServer()
         {
             Manager.StopServer();
-            return true;
+            if (Manager.props != null)
+            {
+                while (Manager.props._serverStatus != "Server stopped")
+                {
+                    Thread.Sleep(5000);
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         [HttpPost("SendSteamGuard")]
