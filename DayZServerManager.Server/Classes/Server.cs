@@ -145,21 +145,10 @@ namespace DayZServerManager.Server.Classes
                 procInf.WorkingDirectory = Manager.SERVER_PATH;
                 procInf.Arguments = startParameters;
                 procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_EXECUTABLE);
-                procInf.RedirectStandardError = true;
-                procInf.RedirectStandardOutput = true;
-                procInf.RedirectStandardInput = true;
                 serverProcess.StartInfo = procInf;
                 Manager.WriteToConsole($"Starting Server");
                 serverProcess.Start();
                 Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_EXECUTABLE)} with the parameters {startParameters}");
-
-                Task task = ConsumeOutput(serverProcess.StandardOutput, s =>
-                {
-                    if (s != null && (s.ToLower().Contains("player") || s.ToLower().Contains("fps")|| s.ToLower().Contains("rcon")))
-                    {
-                        Manager.WriteToConsole(s);
-                    }
-                });
             }
             catch (Exception ex)
             {
