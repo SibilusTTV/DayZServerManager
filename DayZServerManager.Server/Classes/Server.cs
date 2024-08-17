@@ -1,23 +1,12 @@
 ﻿using DayZScheduler.Classes.SerializationClasses.SchedulerConfigClasses;
 using DayZServerManager.Server.Classes.Helpers;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
-using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
-using LibGit2Sharp;
 using Microsoft.VisualBasic.FileIO;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.Formats.Tar;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Numerics;
-using System.Reflection.PortableExecutable;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using System.Xml.Serialization;
 
 namespace DayZServerManager.Server.Classes
 {
@@ -258,14 +247,51 @@ namespace DayZServerManager.Server.Classes
                     schedulerConfig.Scheduler = Manager.SCHEDULER_FILE_NAME;
                     schedulerConfig.IsOnUpdate = false;
                     schedulerConfig.BePath = Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME);
+                    schedulerConfig.CustomMessages = new List<JobItem>();
+                    int id = 0;
+                    foreach (CustomMessage item in config.customMessages)
+                    {
+                        schedulerConfig.CustomMessages.Add(new JobItem(id, item.IsTimeOfDay, item.WaitTime, item.Interval, 0, item.Message));
+                        id++;
+                    }
                 }
 
                 JSONSerializer.SerializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_NAME), schedulerConfig);
 
                 schedulerConfig.Scheduler = Manager.SCHEDULER_FILE_UPDATE_NAME;
                 schedulerConfig.IsOnUpdate = true;
+                schedulerConfig.CustomMessages = new List<JobItem>();
 
                 JSONSerializer.SerializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_UPDATE_NAME), schedulerConfig);
+
+                if (config.clientMods.FindAll(mod => mod.name.ToLower().Contains("expansion")).Count > 0)
+                {
+                    List<string> serverRootDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
+                    if (serverRootDirectories.Find(x => Path.GetFileName(x) == config.profileName) == null)
+                    {
+                        FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, config.profileName));
+                    }
+
+                    List<string> profileDirectories = FileSystem.GetDirectories(Path.Combine(Manager.SERVER_PATH, config.profileName)).ToList<string>();
+                    if (profileDirectories.Find(x => Path.GetFileName(x) == "ExpansionMod") == null)
+                    {
+                        FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod"));
+                    }
+
+                    List<string> expansionDirectories = FileSystem.GetDirectories(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod")).ToList<string>();
+                    if (expansionDirectories.Find(x => Path.GetFileName(x) == "Settings") == null)
+                    {
+                        FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod", "Settings"));
+                    }
+
+                    NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
+                    if (notFile == null)
+                    {
+                        notFile = new NotificationSchedulerFile();
+                    }
+                    RestartUpdater.UpdateExpansionScheduler(config, notFile);
+                    JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), notFile);
+                }
 
                 List<string> serverDirectories = FileSystem.GetDirectories(battleyeParentFolder).ToList<string>();
                 if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_FOLDER_NAME) == null)

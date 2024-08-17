@@ -34,6 +34,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         public bool autoStartServer { get; set; }
         public List<Mod> clientMods { get; set; }
         public List<Mod> serverMods { get; set; }
+        public List<CustomMessage> customMessages { get; set; }
 
         public ManagerConfig()
         {
@@ -71,6 +72,8 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
             mod2.workshopID = 1564026768;
             mod2.name = "@Community-Online-Tools";
             clientMods.Add(mod2);
+            customMessages = new List<CustomMessage>();
+            customMessages.Add(new CustomMessage(false, new Dictionary<string, double> { { "hours", 0 }, { "minutes", 5 }, { "seconds", 0 } }, new Dictionary<string, double> { { "hours", 0 }, { "minutes", 15 }, { "seconds", 0 } }, "Need Help?", "Make sure to join our Discord", "ExclamationMark", ""));
         }
     }
 }

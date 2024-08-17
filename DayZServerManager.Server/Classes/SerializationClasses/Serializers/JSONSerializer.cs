@@ -5,7 +5,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
 {
     public class JSONSerializer
     {
-        public static void SerializeJSONFile<JSONFile>(string path, JSONFile rarityFile)
+        public static void SerializeJSONFile<JSONFile>(string path, JSONFile jsonfile)
         {
             try
             {
@@ -13,7 +13,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                 {
                     JsonSerializerOptions options = new JsonSerializerOptions();
                     options.WriteIndented = true;
-                    string json = JsonSerializer.Serialize(rarityFile, options);
+                    string json = JsonSerializer.Serialize(jsonfile, options);
                     writer.Write(json);
                 }
             }
