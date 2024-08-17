@@ -49,7 +49,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         Dictionary<string, double> nextMessageTime = item.WaitTime;
                         if (item.IsTimeOfDay)
                         {
-                            for (nextRestart = 0; nextMessageTime["hours"] < nextRestart; nextRestart += interval);
+                            for (nextRestart = 0; nextMessageTime["hours"] > nextRestart; nextRestart += interval);
                         }
                         while (nextMessageTime["hours"] < 24)
                         {
