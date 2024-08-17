@@ -1,17 +1,4 @@
 ﻿using Microsoft.VisualBasic.FileIO;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Xml.Serialization;
-using System.Xml;
-using System.ComponentModel;
-using System.Reflection.Metadata;
-using System.IO;
 using LibGit2Sharp;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EconomyCoreClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EventSpawnClasses;
@@ -21,6 +8,7 @@ using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.Types
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
+using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EnvironmentClasses;
 
 namespace DayZServerManager.Server.Classes.Helpers
 {
@@ -355,6 +343,24 @@ namespace DayZServerManager.Server.Classes.Helpers
                             UpdateEventSpawns(missionEventSpawns, missionTemplateEventSpawns);
                         }
                         XMLSerializer.SerializeXMLFile<EventSpawnsFile>(Path.Combine(missionPath, "cfgeventspawns.xml"), missionEventSpawns);
+                    }
+
+                    EnvironmentFile? missionEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(missionPath, "cfgenvironment.xml"));
+
+                    if (missionEnvironmentFile != null)
+                    {
+                        EnvironmentFile? expansionTemplateEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(expansionTemplatePath, "cfgenvironment.xml"));
+                        EnvironmentFile? missionTemplateEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(missionTemplatePath, "cfgenvironment.xml"));
+
+                        if (expansionTemplateEnvironmentFile != null)
+                        {
+                            UpdateEnvironmentFile(missionEnvironmentFile, expansionTemplateEnvironmentFile);
+                        }
+                        if (missionTemplateEnvironmentFile != null)
+                        {
+                            UpdateEnvironmentFile(missionEnvironmentFile, missionTemplateEnvironmentFile);
+                        }
+                        XMLSerializer.SerializeXMLFile<EnvironmentFile>(Path.Combine(missionPath, "cfgenvironment.xml"), missionEnvironmentFile);
                     }
 
                     List<string> missionFiles = FileSystem.GetFiles(missionPath).ToList<string>();
@@ -833,6 +839,36 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
         }
 
+        public void UpdateEnvironmentFile(EnvironmentFile missionEnvironmentFile, EnvironmentFile tempalteEnvironmentFile)
+        {
+            try
+            {
+                Manager.WriteToConsole("Updating environment file");
+                if (missionEnvironmentFile.Territories != null && tempalteEnvironmentFile.Territories != null)
+                {
+                    if (missionEnvironmentFile.Territories.Files != null && tempalteEnvironmentFile.Territories.Files != null)
+                    {
+                        foreach (EnvironmentFileItem file in tempalteEnvironmentFile.Territories.Files)
+                        {
+                            missionEnvironmentFile.Territories.Files.Add(file);
+                        }
+                    }
+                    if (missionEnvironmentFile.Territories.Territories != null && tempalteEnvironmentFile.Territories.Territories != null)
+                    {
+                        foreach (TerritoryItem territory in tempalteEnvironmentFile.Territories.Territories)
+                        {
+                            missionEnvironmentFile.Territories.Territories.Add(territory);
+                        }
+                    }
+                }
+                Manager.WriteToConsole("Finished updating environment file");
+            }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+            }
+        }
+
         public void UpdateEconomyCore(EconomyCoreFile economyCoreFile, EconomyCoreFile templateEconomyCoreFile)
         {
             try
@@ -925,6 +961,8 @@ namespace DayZServerManager.Server.Classes.Helpers
                 {
                     string fileName = Path.GetFileName(file);
                     if (fileName != "cfgeconomycore.xml"
+                        || fileName != "cfgeventspawns.xml"
+                        || fileName != "cfgenvironment.xml"
                         || fileName != "customFilesRarities.json"
                         || fileName != "expansionRarities.json"
                         || fileName != "expansionTypesChanges.json"
