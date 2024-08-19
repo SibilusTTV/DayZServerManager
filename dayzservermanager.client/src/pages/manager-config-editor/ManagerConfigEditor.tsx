@@ -1,6 +1,7 @@
 import "./ManagerConfigEditor.css"
 import { useEffect, useState } from 'react';
 import { TextField, Box, Button } from '@mui/material';
+import { Dict } from "styled-components/dist/types";
 
 interface ManagerConfig {
     steamUsername: string;
@@ -28,11 +29,22 @@ interface ManagerConfig {
     autoStartServer: boolean;
     clientMods: Mod[];
     serverMods: Mod[];
+    customMessages: CustomMessage[];
 }
 
 interface Mod {
     workshopID: number;
     name: string;
+}
+
+interface CustomMessage {
+    IsTimeOfDay: boolean,
+    WaitTime: Dict,
+    Interval: Dict,
+    Title: string,
+    Message: string,
+    Icon: string,
+    Color: string
 }
 
 export default function ManagerConfigEditor() {
@@ -41,6 +53,17 @@ export default function ManagerConfigEditor() {
     useEffect(() => {
         populateManagerConfig();
     }, []);
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!(managerConfig === undefined)) {
+            setManagerConfig(
+                {
+                    ...managerConfig,
+                    [event.target.id]: event.target.value
+                }
+            );
+        }
+    }
 
     const createClientMod = (mod: Mod) => {
         if (!(managerConfig === undefined)) {
@@ -51,31 +74,6 @@ export default function ManagerConfigEditor() {
                         ...managerConfig.clientMods,
                         mod
                     ]
-                }
-            );
-        }
-    }
-
-    const createServerMod = (mod: Mod) => {
-        if (!(managerConfig === undefined)) {
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    serverMods: [
-                        ...managerConfig.serverMods,
-                        mod
-                    ]
-                }
-            );
-        }
-    }
-
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!(managerConfig === undefined)) {
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    [event.target.id]: event.target.value
                 }
             );
         }
@@ -113,6 +111,20 @@ export default function ManagerConfigEditor() {
         }
     }
 
+    const createServerMod = (mod: Mod) => {
+        if (!(managerConfig === undefined)) {
+            setManagerConfig(
+                {
+                    ...managerConfig,
+                    serverMods: [
+                        ...managerConfig.serverMods,
+                        mod
+                    ]
+                }
+            );
+        }
+    }
+
     const handleServerModChange = (event: React.ChangeEvent<HTMLInputElement>, i: number) => {
         if (!(managerConfig === undefined)) {
             let changedMod: Mod = managerConfig.serverMods[i];
@@ -145,9 +157,55 @@ export default function ManagerConfigEditor() {
         }
     }
 
+    const createCustomMessage = (message: CustomMessage) => {
+        if (!(managerConfig === undefined)) {
+            setManagerConfig(
+                {
+                    ...managerConfig,
+                    customMessages: [
+                        ...managerConfig.customMessages,
+                        message
+                    ]
+                }
+            );
+        }
+    }
+
+    const handleCustomMessagesChange = (event: React.ChangeEvent<HTMLInputElement>, i: number) => {
+        if (!(managerConfig === undefined)) {
+            let changedMessage: CustomMessage = managerConfig.customMessages[i];
+            setManagerConfig(
+                {
+                    ...managerConfig,
+                    customMessages: [
+                        ...managerConfig.customMessages.filter((_, index) => index < i),
+                        {
+                            ...changedMessage,
+                            [event.target.id]: event.target.value
+                        },
+                        ...managerConfig.customMessages.filter((_, index) => index > i)
+                    ]
+                }
+            )
+        }
+    }
+
+    const deleteCustomMessage = (i: number) => {
+        if (!(managerConfig === undefined)) {
+            setManagerConfig(
+                {
+                    ...managerConfig,
+                    serverMods: [
+                        ...managerConfig.serverMods.filter((_, index) => index !== i)
+                    ]
+                }
+            )
+        }
+    }
+
     let texts: JSX.Element[] = new Array;
     if (!(managerConfig === undefined)) {
-        Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods") && texts.push(<TextField key={key} id={key} variant="outlined" label={key} defaultValue={value} onChange={handleChange} />));
+        Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods" && key != "customMessages") && texts.push(<TextField key={key} id={key} variant="outlined" label={key} defaultValue={value} onChange={handleChange} />));
     }
 
     const contents = managerConfig === undefined

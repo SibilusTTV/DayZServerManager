@@ -118,7 +118,7 @@ namespace DayZServerManager.Server.Classes
             {
                 if (serverMod != null)
                 {
-                    serverModsToLoad += serverMod + ";";
+                    serverModsToLoad += serverMod.name + ";";
                 }
             }
             if (!string.IsNullOrEmpty(serverModsToLoad))
