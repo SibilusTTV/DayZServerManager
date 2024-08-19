@@ -23,22 +23,23 @@ namespace DayZServerManager.Server.Classes
         #region Constants
         public const string MANAGER_CONFIG_NAME = "Config.json";
         public const string SERVER_PATH = "Server";
+        public const string SERVER_DEPLOY = "ServerDeploy";
+        public static string SERVER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
         public const string STEAM_CMD_PATH = "SteamCMD";
-        public const string SCHEDULER_PATH = "Scheduler";
+        public static string STEAM_CMD_EXECUTABLE = OperatingSystem.IsWindows() ? "steamcmd.exe" : "steamcmd.sh";
+        public static string STEAM_CMD_ZIP_NAME = OperatingSystem.IsWindows() ? "steamcmd.zip" : "steamcmd.tar.gz";
+        public const string STEAMCMD_DOWNLOAD_URL = "https://steamcdn-a.akamaihd.net/client/installer/";
         public const string MODS_PATH = "Mods";
         public static string WORKSHOP_PATH = Path.Combine("steamapps", "workshop", "content", "221100");
         public const string PROFILE_NAME = "Profiles";
         public static string MISSION_PATH = Path.Combine(SERVER_PATH, "mpmissions");
         public static string EXPANSION_DOWNLOAD_PATH = Path.Combine(MISSION_PATH, "DayZ-Expansion-Missions");
-        public static string STEAM_CMD_EXECUTABLE = OperatingSystem.IsWindows() ? "steamcmd.exe" : "steamcmd.sh";
-        public static string STEAM_CMD_ZIP_NAME = OperatingSystem.IsWindows() ? "steamcmd.zip" : "steamcmd.tar.gz";
         public static string BATTLEYE_FOLDER_NAME = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
         public static string BATTLEYE_CONFIG_NAME = OperatingSystem.IsWindows() ? "BEServer_x64.cfg" : "beserver_x64.cfg";
-        public static string BATTLEYE_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
         public const string BATTLEYE_BANS_NAME = "Bans.txt";
         public const string SCHEDULER_DOWNLOAD_URL = "https://github.com/SibilusTTV/DayZScheduler/releases/latest/download/";
         public static string SCHEDULER_ZIP_NAME = OperatingSystem.IsWindows() ? "Windows.zip" : "Linux.zip";
-        public static string STEAMCMD_DOWNLOAD_URL = OperatingSystem.IsWindows() ? "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip" : "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz";
+        public const string SCHEDULER_PATH = "Scheduler";
         public const string SCHEDULER_CONFIG_FOLDER = "Config";
         public const string SCHEDULER_CONFIG_NAME = "Config.json";
         public const string SCHEDULER_CONFIG_UPDATE_NAME = "ConfigUpdate.json";
@@ -149,7 +150,7 @@ namespace DayZServerManager.Server.Classes
                         if (!dayZServer.CheckServer())
                         {
                             dayZServer.BackupServerData();
-                            dayZServer.UpdateServer(props);
+                            dayZServer.UpdateAndMoveServer(props, false, true);
                             dayZServer.UpdateAndMoveMods(props, false, true);
                             dayZServer.StartServer();
                         }
@@ -170,7 +171,8 @@ namespace DayZServerManager.Server.Classes
                         if (i % 4 == 0)
                         {
                             dayZServer.UpdateAndMoveMods(props, true, false);
-                            dayZServer.CheckForUpdatedMods();
+                            dayZServer.UpdateAndMoveServer(props, true, false);
+                            dayZServer.RestartForUpdates();
                         }
                         i++;
                         Thread.Sleep(60000);
@@ -224,7 +226,7 @@ namespace DayZServerManager.Server.Classes
             if (props != null)
             {
                 props._serverStatus = "Updating server";
-                server.UpdateServer(props);
+                server.UpdateAndMoveServer(props, true, true);
                 props._serverStatus = "Updating Scheduler";
                 server.UpdateScheduler();
                 props._serverStatus = "Updating mods";

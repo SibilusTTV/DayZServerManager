@@ -133,11 +133,11 @@ namespace DayZServerManager.Server.Classes
                 string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
                 procInf.WorkingDirectory = Manager.SERVER_PATH;
                 procInf.Arguments = startParameters;
-                procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_EXECUTABLE);
+                procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE);
                 serverProcess.StartInfo = procInf;
                 Manager.WriteToConsole($"Starting Server");
                 serverProcess.Start();
-                Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_EXECUTABLE)} with the parameters {startParameters}");
+                Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
             }
             catch (Exception ex)
             {
@@ -147,7 +147,7 @@ namespace DayZServerManager.Server.Classes
 
         private string GetServerStartParameters(string clientModsToLoad, string serverModsToLoad)
         {
-            string parameters = $"-instanceId={config.instanceId} \"-config={config.serverConfigName}\" \"-profiles={config.profileName}\" -port={config.port} {clientModsToLoad} {serverModsToLoad}-cpuCount={config.cpuCount}";
+            string parameters = $"-instanceId={config.instanceId} \"-config={config.serverConfigName}\" \"-profiles={config.profileName}\" -port={config.port} {clientModsToLoad} {serverModsToLoad} -cpuCount={config.cpuCount}";
 
             if (config.noFilePatching)
             {
@@ -408,7 +408,61 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        public void UpdateServer(ManagerProps props)
+        public void UpdateAndMoveServer(ManagerProps props, bool hasToUpdate, bool hasToMove)
+        {
+            if (hasToUpdate)
+            {
+                Manager.WriteToConsole("Updating server");
+                UpdateServer(props);
+                Manager.WriteToConsole("Server updated");
+            }
+            if (hasToMove)
+            {
+                Manager.WriteToConsole("Moving server");
+                MoveServer();
+                Manager.WriteToConsole("Server moved");
+
+                UpdateMission();
+            }
+        }
+
+        private void MoveServer()
+        {
+            if (updatedServer)
+            {
+                List<string> serverDeployDirectories = FileSystem.GetDirectories(Manager.SERVER_DEPLOY).ToList<string>();
+                List<string> serverDeployFiles = FileSystem.GetFiles(Manager.SERVER_DEPLOY).ToList<string>();
+
+                List<string> filteredDirectories = serverDeployDirectories.FindAll(x => Path.GetFileName(x) != "Profiles" && Path.GetFileName(x) != "battleye");
+                List<string> filteredFiles = serverDeployFiles.FindAll(x => Path.GetFileName(x) != "bans.txt" && Path.GetFileName(x) != "bans.txt" && Path.GetFileName(x) != "serverDZ.cfg" && Path.GetFileName(x) != "whitelist.txt" && Path.GetFileName(x) != "dayzsetting.xml");
+
+                foreach (string dir in serverDeployDirectories)
+                {
+                    try
+                    {
+                        FileSystem.CopyDirectory(dir, Path.Combine(Manager.SERVER_PATH, Path.GetFileName(dir)), true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Manager.WriteToConsole(ex.ToString());
+                    }
+                }
+
+                foreach (string file in serverDeployFiles)
+                {
+                    try
+                    {
+                        FileSystem.CopyFile(file, Path.Combine(Manager.SERVER_DEPLOY, Path.GetFileName(file)), true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Manager.WriteToConsole(ex.ToString());
+                    }
+                }
+            }
+        }
+
+        private void UpdateServer(ManagerProps props)
         {
             try
             {
@@ -436,20 +490,32 @@ namespace DayZServerManager.Server.Classes
 
             try
             {
-                DateTime dateBeforeUpdate = GetDateBeforeUpdate();
-
-                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_PATH)} \"+login {config.steamUsername} {config.steamPassword}\" \"+app_update {dayZServerBranch}\" +quit";
+                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)} \"+login {config.steamUsername} {config.steamPassword}\" \"+app_update {dayZServerBranch}\" +quit";
                 Manager.WriteToConsole("Updating the DayZ Server");
                 StartSteamCMD(props, serverUpdateArguments);
                 if (props._serverStatus == "Server downloaded")
                 {
-                    CheckForUpdatedServer(dateBeforeUpdate);
+                    CheckForUpdatedServer();
                 }
             }
             catch (System.Exception ex)
             {
                 Manager.WriteToConsole(ex.ToString());
                 props._serverStatus = "Error";
+            }
+        }
+
+        private void UpdateMission()
+        {
+            List<Mod> expansionMods = config.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
+
+            if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
+            {
+                updatedServer = false;
+                Manager.WriteToConsole($"Updating Mission folder");
+                MissionUpdater upd = new MissionUpdater(config);
+                upd.Update();
+                Manager.WriteToConsole($"Finished updating Mission folder");
             }
         }
 
@@ -551,36 +617,26 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        private DateTime GetDateBeforeUpdate()
+        private void CheckForUpdatedServer()
         {
             try
             {
-                List<string> serverDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
-                if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_EXECUTABLE) != null)
+                DateTime dateBeforeUpdate;
+                List<string> serverDeployDirectories = FileSystem.GetFiles(Manager.SERVER_PATH).ToList<string>();
+                if (serverDeployDirectories.Find(x => Path.GetFileName(x) == Manager.SERVER_EXECUTABLE) != null)
                 {
-                    return File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_EXECUTABLE));
+                    dateBeforeUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE));
                 }
                 else
                 {
-                    return DateTime.MinValue;
+                    dateBeforeUpdate = DateTime.MinValue;
                 }
-            }
-            catch (System.Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
-                return DateTime.MinValue;
-            }
-        }
 
-        private void CheckForUpdatedServer(DateTime dateBeforeUpdate)
-        {
-            try
-            {
                 DateTime dateAfterUpdate;
-                List<string> serverDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
-                if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_EXECUTABLE) != null)
+                List<string> serverDirectories = FileSystem.GetFiles(Manager.SERVER_DEPLOY).ToList<string>();
+                if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.SERVER_EXECUTABLE) != null)
                 {
-                    dateAfterUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_EXECUTABLE));
+                    dateAfterUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_DEPLOY, Manager.SERVER_EXECUTABLE));
                 }
                 else
                 {
@@ -627,17 +683,8 @@ namespace DayZServerManager.Server.Classes
                     Manager.WriteToConsole("Moving Mods");
                     MoveMods(mods);
                     Manager.WriteToConsole("Mods moved");
-                }
 
-                List<Mod> expansionMods = config.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
-
-                if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
-                {
-                    updatedServer = false;
-                    Manager.WriteToConsole($"Updating Mission folder");
-                    MissionUpdater upd = new MissionUpdater(config);
-                    upd.Update();
-                    Manager.WriteToConsole($"Finished updating Mission folder");
+                    UpdateMission();
                 }
             }
         }
@@ -726,7 +773,7 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        public bool CheckForUpdatedMods()
+        public bool RestartForUpdates()
         {
             if (config.restartOnUpdate && !restartingForUpdates && ((updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0) || updatedServer) && !(schedulerUpdateProcess != null && schedulerUpdateProcess.HasExited))
             {
@@ -869,7 +916,7 @@ namespace DayZServerManager.Server.Classes
                 using (HttpClient client = new HttpClient())
                 {
                     HttpResponseMessage response = new HttpResponseMessage();
-                    response = client.GetAsync(Manager.STEAMCMD_DOWNLOAD_URL).Result;
+                    response = client.GetAsync(Manager.STEAMCMD_DOWNLOAD_URL + Manager.STEAM_CMD_ZIP_NAME).Result;
 
                     if (response.IsSuccessStatusCode)
                     {
