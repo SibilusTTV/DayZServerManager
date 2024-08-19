@@ -434,7 +434,7 @@ namespace DayZServerManager.Server.Classes
                 List<string> serverDeployFiles = FileSystem.GetFiles(Manager.SERVER_DEPLOY).ToList<string>();
 
                 List<string> filteredDirectories = serverDeployDirectories.FindAll(x => Path.GetFileName(x) != "Profiles" && Path.GetFileName(x) != "battleye");
-                List<string> filteredFiles = serverDeployFiles.FindAll(x => Path.GetFileName(x) != "bans.txt" && Path.GetFileName(x) != "bans.txt" && Path.GetFileName(x) != "serverDZ.cfg" && Path.GetFileName(x) != "whitelist.txt" && Path.GetFileName(x) != "dayzsetting.xml");
+                List<string> filteredFiles = serverDeployFiles.FindAll(x => Path.GetFileName(x) != "bans.txt" && Path.GetFileName(x) != "ban.txt" && Path.GetFileName(x) != "bans.txt" && Path.GetFileName(x) != "serverDZ.cfg" && Path.GetFileName(x) != "whitelist.txt" && Path.GetFileName(x) != "dayzsetting.xml");
 
                 foreach (string dir in serverDeployDirectories)
                 {
@@ -448,11 +448,11 @@ namespace DayZServerManager.Server.Classes
                     }
                 }
 
-                foreach (string file in serverDeployFiles)
+                foreach (string file in filteredFiles)
                 {
                     try
                     {
-                        FileSystem.CopyFile(file, Path.Combine(Manager.SERVER_DEPLOY, Path.GetFileName(file)), true);
+                        FileSystem.CopyFile(file, Path.Combine(Manager.SERVER_PATH, Path.GetFileName(file)), true);
                     }
                     catch (Exception ex)
                     {
@@ -511,6 +511,7 @@ namespace DayZServerManager.Server.Classes
 
             if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
             {
+                updatedMods = false;
                 updatedServer = false;
                 Manager.WriteToConsole($"Updating Mission folder");
                 MissionUpdater upd = new MissionUpdater(config);
@@ -740,35 +741,38 @@ namespace DayZServerManager.Server.Classes
 
         public void MoveMods(List<Mod> mods)
         {
-            foreach (long key in updatedModsIDs)
+            if (updatedMods)
             {
-                try
+                foreach (long key in updatedModsIDs)
                 {
-                    Mod? mod = SearchForMod(key, mods);
-                    if (mod != null)
+                    try
                     {
-                        string steamModPath = Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString());
-                        string serverModPath = Path.Combine(Manager.SERVER_PATH, mod.name);
-
-                        Manager.WriteToConsole($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
-                        if (FileSystem.DirectoryExists(steamModPath))
+                        Mod? mod = SearchForMod(key, mods);
+                        if (mod != null)
                         {
-                            FileSystem.CopyDirectory(steamModPath, serverModPath, true);
+                            string steamModPath = Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString());
+                            string serverModPath = Path.Combine(Manager.SERVER_PATH, mod.name);
 
-                            string serverKeysPath = GetKeysFolder(Manager.SERVER_PATH);
-                            string modKeysPath = GetKeysFolder(serverModPath);
-
-                            if (modKeysPath != string.Empty && serverKeysPath != string.Empty && FileSystem.DirectoryExists(modKeysPath) && FileSystem.DirectoryExists(serverKeysPath))
+                            Manager.WriteToConsole($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
+                            if (FileSystem.DirectoryExists(steamModPath))
                             {
-                                FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
+                                FileSystem.CopyDirectory(steamModPath, serverModPath, true);
+
+                                string serverKeysPath = GetKeysFolder(Manager.SERVER_PATH);
+                                string modKeysPath = GetKeysFolder(serverModPath);
+
+                                if (modKeysPath != string.Empty && serverKeysPath != string.Empty && FileSystem.DirectoryExists(modKeysPath) && FileSystem.DirectoryExists(serverKeysPath))
+                                {
+                                    FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
                                 }
-                            Manager.WriteToConsole($"Mod was moved to {mod.name}");
+                                Manager.WriteToConsole($"Mod was moved to {mod.name}");
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Manager.WriteToConsole(ex.ToString());
+                    catch (Exception ex)
+                    {
+                        Manager.WriteToConsole(ex.ToString());
+                    }
                 }
             }
         }
@@ -777,8 +781,6 @@ namespace DayZServerManager.Server.Classes
         {
             if (config.restartOnUpdate && !restartingForUpdates && ((updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0) || updatedServer) && !(schedulerUpdateProcess != null && schedulerUpdateProcess.HasExited))
             {
-                updatedMods = false;
-                updatedServer = false;
                 try
                 {
                     if (IsTimeToRestart(config.restartInterval))

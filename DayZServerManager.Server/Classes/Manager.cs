@@ -21,17 +21,17 @@ namespace DayZServerManager.Server.Classes
         public static bool kill = false;
 
         #region Constants
-        public const string MANAGER_CONFIG_NAME = "Config.json";
-        public const string SERVER_PATH = "Server";
-        public const string SERVER_DEPLOY = "ServerDeploy";
+        public const string MANAGER_CONFIG_NAME = "config.json";
+        public const string SERVER_PATH = "server";
+        public const string SERVER_DEPLOY = "deploy";
         public static string SERVER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
-        public const string STEAM_CMD_PATH = "SteamCMD";
+        public const string STEAM_CMD_PATH = "steamcmd";
         public static string STEAM_CMD_EXECUTABLE = OperatingSystem.IsWindows() ? "steamcmd.exe" : "steamcmd.sh";
         public static string STEAM_CMD_ZIP_NAME = OperatingSystem.IsWindows() ? "steamcmd.zip" : "steamcmd.tar.gz";
         public const string STEAMCMD_DOWNLOAD_URL = "https://steamcdn-a.akamaihd.net/client/installer/";
-        public const string MODS_PATH = "Mods";
+        public const string MODS_PATH = "mods";
         public static string WORKSHOP_PATH = Path.Combine("steamapps", "workshop", "content", "221100");
-        public const string PROFILE_NAME = "Profiles";
+        public const string PROFILE_NAME = "profiles";
         public static string MISSION_PATH = Path.Combine(SERVER_PATH, "mpmissions");
         public static string EXPANSION_DOWNLOAD_PATH = Path.Combine(MISSION_PATH, "DayZ-Expansion-Missions");
         public static string BATTLEYE_FOLDER_NAME = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
@@ -39,12 +39,12 @@ namespace DayZServerManager.Server.Classes
         public const string BATTLEYE_BANS_NAME = "Bans.txt";
         public const string SCHEDULER_DOWNLOAD_URL = "https://github.com/SibilusTTV/DayZScheduler/releases/latest/download/";
         public static string SCHEDULER_ZIP_NAME = OperatingSystem.IsWindows() ? "Windows.zip" : "Linux.zip";
-        public const string SCHEDULER_PATH = "Scheduler";
-        public const string SCHEDULER_CONFIG_FOLDER = "Config";
-        public const string SCHEDULER_CONFIG_NAME = "Config.json";
-        public const string SCHEDULER_CONFIG_UPDATE_NAME = "ConfigUpdate.json";
-        public const string SCHEDULER_FILE_NAME = "Scheduler.json";
-        public const string SCHEDULER_FILE_UPDATE_NAME = "SchedulerUpdate.json";
+        public const string SCHEDULER_PATH = "scheduler";
+        public const string SCHEDULER_CONFIG_FOLDER = "config";
+        public const string SCHEDULER_CONFIG_NAME = "config.json";
+        public const string SCHEDULER_CONFIG_UPDATE_NAME = "config-update.json";
+        public const string SCHEDULER_FILE_NAME = "scheduler.json";
+        public const string SCHEDULER_FILE_UPDATE_NAME = "scheduler-update.json";
         public static string SCHEDULER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZScheduler.exe" : "DayZScheduler";
         #endregion Constants
 
@@ -140,9 +140,9 @@ namespace DayZServerManager.Server.Classes
             if (props != null)
             {
 
-                Thread.Sleep(60000);
+                Thread.Sleep(300000);
 
-                int i = 20;
+                int i = 5;
                 while (!kill)
                 {
                     if (dayZServer != null)

@@ -464,16 +464,13 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Searching for ce item");
                 foreach (CeItem item in cfg.ceItems)
                 {
                     if (item.folder.ToLower().Trim() == ceItem.folder.ToLower().Trim())
                     {
-                        Manager.WriteToConsole("Finished searching for ce item");
                         return item;
                     }
                 }
-                Manager.WriteToConsole("Finished searching for ce item");
                 return null;
             }
             catch (Exception ex)
@@ -488,16 +485,13 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Searching for file item");
                 foreach (FileItem item in ceItem.fileItems)
                 {
                     if (item.name.ToLower().Trim() == fileItem.name.ToLower().Trim())
                     {
-                        Manager.WriteToConsole("Finished searching for file item");
                         return true;
                     }
                 }
-                Manager.WriteToConsole("Finished searching for file item");
                 return false;
             }
             catch (Exception ex)
@@ -512,16 +506,13 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Searching for event item");
                 foreach (EventItem item in cfg.eventItems)
                 {
                     if (item.name.ToLower().Trim() == eventItem.name.ToLower().Trim())
                     {
-                        Manager.WriteToConsole("Finished searching for event item");
                         return item;
                     }
                 }
-                Manager.WriteToConsole("Finished searching for event item");
                 return null;
             }
             catch (Exception ex)
@@ -536,16 +527,13 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Searching for pos item");
                 foreach (PosItem item in eventItem.positions)
                 {
                     if (Int64.Parse(item.x) == Int64.Parse(posItem.x) && Int64.Parse(item.y) == Int64.Parse(posItem.y) && Int64.Parse(item.a) == Int64.Parse(posItem.a))
                     {
-                        Manager.WriteToConsole("Finished searching for pos item");
                         return true;
                     }
                 }
-                Manager.WriteToConsole("Finished searching for pos item");
                 return false;
             }
             catch (Exception ex)
@@ -560,16 +548,13 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Searching for types file");
                 foreach (TypesItem item in typesFile.typesItem)
                 {
                     if (item.name.ToLower().Trim() == name.ToLower().Trim())
                     {
-                        Manager.WriteToConsole("Finished searching for types file");
                         return item;
                     }
                 }
-                Manager.WriteToConsole("Finished searching for types file");
                 return null;
             }
             catch (Exception ex)
@@ -969,7 +954,9 @@ namespace DayZServerManager.Server.Classes.Helpers
                         || fileName != "init.c"
                         || fileName != "vanillaRarities.json"
                         || fileName != "vanillaTypesChanges.json")
-                    FileSystem.CopyDirectory(file, Path.Combine(missionPath, Path.GetFileName(file)));
+                    {
+                        FileSystem.CopyFile(file, Path.Combine(missionPath, Path.GetFileName(file)), true);
+                    }
                 }
                 Manager.WriteToConsole("Finshed moving mission template files and folders");
             }
