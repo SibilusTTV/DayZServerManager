@@ -946,14 +946,14 @@ namespace DayZServerManager.Server.Classes.Helpers
                 {
                     string fileName = Path.GetFileName(file);
                     if (fileName != "cfgeconomycore.xml"
-                        || fileName != "cfgeventspawns.xml"
-                        || fileName != "cfgenvironment.xml"
-                        || fileName != "customFilesRarities.json"
-                        || fileName != "expansionRarities.json"
-                        || fileName != "expansionTypesChanges.json"
-                        || fileName != "init.c"
-                        || fileName != "vanillaRarities.json"
-                        || fileName != "vanillaTypesChanges.json")
+                        && fileName != "cfgeventspawns.xml"
+                        && fileName != "cfgenvironment.xml"
+                        && fileName != "customFilesRarities.json"
+                        && fileName != "expansionRarities.json"
+                        && fileName != "expansionTypesChanges.json"
+                        && fileName != "init.c"
+                        && fileName != "vanillaRarities.json"
+                        && fileName != "vanillaTypesChanges.json")
                     {
                         FileSystem.CopyFile(file, Path.Combine(missionPath, Path.GetFileName(file)), true);
                     }
