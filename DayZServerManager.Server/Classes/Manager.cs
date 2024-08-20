@@ -368,9 +368,7 @@ namespace DayZServerManager.Server.Classes
 
         public static void LoadManagerConfig()
         {
-            string configName = "Config.json";
-
-            if (FileSystem.FileExists(configName))
+            if (FileSystem.FileExists(MANAGER_CONFIG_NAME))
             {
                 ManagerConfig? deserializedManagerConfig = JSONSerializer.DeserializeJSONFile<ManagerConfig>(MANAGER_CONFIG_NAME);
 
