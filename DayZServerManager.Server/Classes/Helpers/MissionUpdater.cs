@@ -15,18 +15,9 @@ namespace DayZServerManager.Server.Classes.Helpers
     public class MissionUpdater
     {
         ManagerConfig config;
-        private char folderSeperator;
         public MissionUpdater(ManagerConfig config) 
         {
             this.config = config;
-            if (OperatingSystem.IsWindows())
-            {
-                folderSeperator = '\\';
-            }
-            else
-            {
-                folderSeperator = '/';
-            }
         }
 
         public void Update()
@@ -128,7 +119,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         {
                             new CeItem()
                             {
-                                folder = Path.Combine("CustomFiles", customFilesDirectories[0].Remove(customFilesDirectories[0].LastIndexOf(folderSeperator) + 1)),
+                                folder = Path.Combine("CustomFiles", Path.GetFileName(customFilesDirectories[0])),
                                 fileItems = new List<FileItem>()
                                 {
                                     new FileItem()

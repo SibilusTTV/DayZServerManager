@@ -8,6 +8,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
 {
     public class Mod
     {
+        public long id {  get; set; }
         public string name { get; set; }
         public long workshopID { get; set; }
     }
