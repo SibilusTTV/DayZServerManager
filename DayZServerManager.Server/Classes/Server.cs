@@ -327,7 +327,7 @@ namespace DayZServerManager.Server.Classes
                 startInfo.RedirectStandardInput = true;
                 startInfo.RedirectStandardOutput = true;
                 startInfo.FileName = Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_EXECUTABLE);
-                startInfo.Arguments = $"-config Config.json";
+                startInfo.Arguments = $"-config {Manager.SCHEDULER_CONFIG_NAME}";
                 startInfo.WorkingDirectory = Manager.SCHEDULER_PATH;
                 schedulerProcess = new Process();
                 schedulerProcess.StartInfo = startInfo;
@@ -795,7 +795,7 @@ namespace DayZServerManager.Server.Classes
                         startInfo.CreateNoWindow = true;
                         startInfo.UseShellExecute = false;
                         startInfo.FileName = Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_EXECUTABLE);
-                        startInfo.Arguments = $"-config ConfigUpdate.cfg";
+                        startInfo.Arguments = $"-config {Manager.SCHEDULER_CONFIG_UPDATE_NAME}";
                         startInfo.WorkingDirectory = Manager.SCHEDULER_PATH;
                         schedulerUpdateProcess = new Process();
                         schedulerUpdateProcess.StartInfo = startInfo;
