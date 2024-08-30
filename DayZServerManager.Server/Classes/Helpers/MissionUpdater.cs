@@ -614,7 +614,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Updating types with rarity");
+                Manager.WriteToConsole("Added rarities to hardline file");
                 foreach (string key in newRarities.ItemRarity.Keys)
                 {
                     if (hardlineRarity.ItemRarity.ContainsKey(key.ToLower()))
@@ -630,7 +630,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         hardlineRarity.ItemRarity.Add(key, newRarities.ItemRarity[key]);
                     }
                 }
-                Manager.WriteToConsole("Finished updating types with rarity");
+                Manager.WriteToConsole("Finished adding rarities to hardline file");
             }
             catch (Exception ex)
             {

@@ -371,3 +371,4 @@ FodyWeavers.xsd
 /DayZServerManager.Server/Mods/steamapps/workshop
 /DayZServerManager.Server/steamcmd.tar.gz
 /DayZServerManager.Server/serverdeploy
+/DayZServerManager.Server/deploy

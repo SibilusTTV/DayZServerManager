@@ -140,15 +140,19 @@ namespace DayZServerManager.Server.Classes
             if (props != null)
             {
 
-                Thread.Sleep(300000);
+                Thread.Sleep(10000);
 
-                int i = 5;
+                int i = 10;
                 while (!kill)
                 {
                     if (dayZServer != null)
                     {
                         if (!dayZServer.CheckServer())
                         {
+                            Thread.Sleep(10000);
+                            i += 10;
+                            SaveServerConfig();
+
                             dayZServer.BackupServerData();
                             dayZServer.UpdateAndMoveServer(props, false, true);
                             dayZServer.UpdateAndMoveMods(props, false, true);
@@ -168,14 +172,14 @@ namespace DayZServerManager.Server.Classes
                             WriteToConsole("Scheduler is still running");
                         }
 
-                        if (i % 4 == 0)
+                        if (i % 120 == 0)
                         {
                             dayZServer.UpdateAndMoveMods(props, true, false);
                             dayZServer.UpdateAndMoveServer(props, true, false);
                             dayZServer.RestartForUpdates();
                         }
-                        i++;
-                        Thread.Sleep(60000);
+                        i += 10;
+                        Thread.Sleep(10000);
                     }
                 }
 

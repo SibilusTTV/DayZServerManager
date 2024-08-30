@@ -11,6 +11,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.R
 
     public class RarityFile
     {
+        public int m_Version { get; set; }
         public int PoorItemRequirement { get; set; }
         public int CommonItemRequirement { get; set; }
         public int UncommonItemRequirement { get; set; }
@@ -30,6 +31,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.R
         public int MaxReputation { get; set; }
         public int ReputationLossOnDeath { get; set; }
         public int DefaultItemRarity { get; set; }
+        public int ItemRarityParentSearch { get; set; }
         public Dictionary<string, int> EntityReputation { get; set; }
         public Dictionary<string, int> ItemRarity { get; set; }
     }

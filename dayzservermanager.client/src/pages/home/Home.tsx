@@ -26,6 +26,11 @@ export default function Home() {
             >
                 Stop the Server
             </Button>
+            <Button
+                onClick={() => { restartDayZServer(setOpen) } }
+            >
+                Restart the Server
+            </Button>
             <Dialog
                 open={open}
                 onClose={handleClose}
@@ -81,6 +86,17 @@ async function stopDayZServer() {
     const result = await response.text();
     if (result.toLocaleLowerCase() === "true") {
         alert("The server was stopped");
+    }
+    else {
+        alert("The server couldn't be stopped")
+    }
+}
+
+async function restartDayZServer(setOpen: Function) {
+    const response = await fetch('DayZServer/StopServer');
+    const result = await response.text();
+    if (result.toLocaleLowerCase() === "true") {
+        startDayZServer(setOpen);
     }
     else {
         alert("The server couldn't be stopped")
