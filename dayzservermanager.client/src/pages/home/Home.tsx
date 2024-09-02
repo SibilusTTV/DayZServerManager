@@ -1,13 +1,17 @@
 import { Button, DialogActions, DialogContent, DialogContentText, TextField } from "@mui/material";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 
 
 export default function Home() {
     const [open, setOpen] = useState(false);
     const [code, setCode] = useState("");
+    const [serverStatus, setServerStatus] = useState("Server not started");
+
+    useEffect(() => {
+        setInterval(() => { getServerStatus(setOpen, setServerStatus) }, 1000);
+    }, [])
 
     const handleClose = () => {
         setOpen(false);
@@ -17,7 +21,7 @@ export default function Home() {
     return (
         <div>
             <Button
-                onClick={() => { startDayZServer(setOpen) }}
+                onClick={() => { startDayZServer() }}
             >
                 Start the Server
             </Button>
@@ -27,10 +31,13 @@ export default function Home() {
                 Stop the Server
             </Button>
             <Button
-                onClick={() => { restartDayZServer(setOpen) } }
+                onClick={() => { restartDayZServer() } }
             >
                 Restart the Server
             </Button>
+            <p>
+                {serverStatus}
+            </p>
             <Dialog
                 open={open}
                 onClose={handleClose}
@@ -70,36 +77,75 @@ export default function Home() {
     )
 }
 
-async function startDayZServer(setOpen: Function) {
-    const response = await fetch('DayZServer/StartServer');
-    const result = await response.text()
-    if (result === "Steam Guard") {
-        setOpen(true);
+async function getServerStatus(setOpen: Function, setServerStatus: Function) {
+    try {
+        const response = await fetch('DayZServer/GetServerStatus');
+        const result = await response.text()
+        setServerStatus(result);
+        if (result === "Steam Guard") {
+            setOpen(true);
+        }
     }
-    else {
-        alert(result);
+    catch (ex) {
+        if (typeof ex === "string") {
+            alert(ex);
+        }
+        else if (ex instanceof Error) {
+            alert(ex.message);
+        }
+    }
+}
+
+async function startDayZServer() {
+    try {
+        const response = await fetch('DayZServer/StartServer');
+        const result = await response.text();
+        if (result.toLocaleLowerCase() === "true") {
+            alert("Server is starting");
+        }
+        else {
+            alert("The server couldn't be started");
+        }
+        return result;
+    }
+    catch (ex) {
+        if (typeof ex === "string") {
+            alert(ex);
+        }
+        else if (ex instanceof Error) {
+            alert(ex.message);
+        }
+        return "false";
     }
 }
 
 async function stopDayZServer() {
-    const response = await fetch('DayZServer/StopServer');
-    const result = await response.text();
-    if (result.toLocaleLowerCase() === "true") {
-        alert("The server was stopped");
+    try {
+        const response = await fetch('DayZServer/StopServer');
+        const result = await response.text();
+        if (result.toLocaleLowerCase() === "true") {
+            alert("Server was stopped");
+        }
+        else {
+            alert("The server couldn't be stopped");
+        }
+        return result;
     }
-    else {
-        alert("The server couldn't be stopped")
+    catch (ex) {
+        if (typeof ex === "string") {
+            alert(ex);
+        }
+        else if (ex instanceof Error) {
+            alert(ex.message);
+        }
+        return "false";
     }
 }
 
-async function restartDayZServer(setOpen: Function) {
-    const response = await fetch('DayZServer/StopServer');
-    const result = await response.text();
-    if (result.toLocaleLowerCase() === "true") {
-        startDayZServer(setOpen);
-    }
-    else {
-        alert("The server couldn't be stopped")
+async function restartDayZServer() {
+    const stopMessage = await stopDayZServer();
+    if (stopMessage.toLocaleLowerCase() === "true") {
+        startDayZServer();
     }
 }
 

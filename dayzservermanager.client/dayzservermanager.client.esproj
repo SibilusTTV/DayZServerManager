@@ -9,6 +9,7 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="src\common\use-interval\" />
     <Folder Include="src\pages\layout\" />
     <Folder Include="src\pages\home\" />
     <Folder Include="src\pages\manager-config-editor\components\" />

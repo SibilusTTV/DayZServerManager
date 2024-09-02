@@ -155,7 +155,7 @@ export default function ServerConfigEditor() {
                     serverConfig.motd.map((line, index) => {
                         return (
                             <div key={index}>
-                                <TextField id={"line" + index} variant="outlined" label={"Line " + (index + 1)} defaultValue={line} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleMOTDLineChange(event, index)} />
+                                <TextField multiline={true} id={"line" + index} variant="outlined" label={"Line " + (index + 1)} defaultValue={line} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleMOTDLineChange(event, index)} />
                                 <Button id="deleteButton" onClick={() => deleteMOTDLine(index)}>
                                     Delete
                                 </Button>

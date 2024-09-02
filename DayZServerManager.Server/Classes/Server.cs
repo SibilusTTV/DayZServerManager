@@ -12,11 +12,6 @@ namespace DayZServerManager.Server.Classes
 {
     internal class Server
     {
-        // Server Variables
-        private ManagerConfig config;
-        int dayZServerBranch;
-        int dayZGameBranch;
-
         // Other Variables
         private bool updatedMods;
         private bool restartingForUpdates;
@@ -28,11 +23,8 @@ namespace DayZServerManager.Server.Classes
         Process? schedulerUpdateProcess;
         Process? steamCMDProcess;
 
-        public Server(ManagerConfig config)
+        public Server()
         {
-            this.config = config;
-            dayZServerBranch = 223350;
-            dayZGameBranch = 221100;
             serverProcess = null;
             schedulerProcess = null;
             schedulerUpdateProcess = null;
@@ -96,82 +88,89 @@ namespace DayZServerManager.Server.Classes
 
         public void StartServer()
         {
-            updatedModsIDs = new List<long>();
-            updatedMods = false;
-            restartingForUpdates = false;
-            updatedServer = false;
-            string clientModsToLoad = string.Empty;
-            foreach (Mod clientMod in config.clientMods)
+            if (Manager.managerConfig != null)
             {
-                if (clientMod != null)
+                updatedModsIDs = new List<long>();
+                updatedMods = false;
+                restartingForUpdates = false;
+                updatedServer = false;
+                string clientModsToLoad = string.Empty;
+                foreach (Mod clientMod in Manager.managerConfig.clientMods)
                 {
-                    clientModsToLoad += clientMod.name + ";";
+                    if (clientMod != null)
+                    {
+                        clientModsToLoad += clientMod.name + ";";
+                    }
                 }
-            }
-            if (!string.IsNullOrEmpty(clientModsToLoad))
-            {
-                clientModsToLoad = $"\"-mod={clientModsToLoad.Remove(clientModsToLoad.Length - 1)}\"";
-            }
-
-            string serverModsToLoad = string.Empty;
-            foreach (Mod serverMod in config.serverMods)
-            {
-                if (serverMod != null)
+                if (!string.IsNullOrEmpty(clientModsToLoad))
                 {
-                    serverModsToLoad += serverMod.name + ";";
+                    clientModsToLoad = $"\"-mod={clientModsToLoad.Remove(clientModsToLoad.Length - 1)}\"";
                 }
-            }
-            if (!string.IsNullOrEmpty(serverModsToLoad))
-            {
-                serverModsToLoad = $"\"-serverMod={serverModsToLoad.Remove(serverModsToLoad.Length - 1)}\"";
-            }
 
-            try
-            {
-                serverProcess = new Process();
-                ProcessStartInfo procInf = new ProcessStartInfo();
-                string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
-                procInf.WorkingDirectory = Manager.SERVER_PATH;
-                procInf.Arguments = startParameters;
-                procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE);
-                serverProcess.StartInfo = procInf;
-                Manager.WriteToConsole($"Starting Server");
-                serverProcess.Start();
-                Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
-            }
-            catch (Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
+                string serverModsToLoad = string.Empty;
+                foreach (Mod serverMod in Manager.managerConfig.serverMods)
+                {
+                    if (serverMod != null)
+                    {
+                        serverModsToLoad += serverMod.name + ";";
+                    }
+                }
+                if (!string.IsNullOrEmpty(serverModsToLoad))
+                {
+                    serverModsToLoad = $"\"-serverMod={serverModsToLoad.Remove(serverModsToLoad.Length - 1)}\"";
+                }
+
+                try
+                {
+                    serverProcess = new Process();
+                    ProcessStartInfo procInf = new ProcessStartInfo();
+                    string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
+                    procInf.WorkingDirectory = Manager.SERVER_PATH;
+                    procInf.Arguments = startParameters;
+                    procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE);
+                    serverProcess.StartInfo = procInf;
+                    Manager.WriteToConsole($"Starting Server");
+                    serverProcess.Start();
+                    Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
+                }
+                catch (Exception ex)
+                {
+                    Manager.WriteToConsole(ex.ToString());
+                }
             }
         }
 
         private string GetServerStartParameters(string clientModsToLoad, string serverModsToLoad)
         {
-            string parameters = $"-instanceId={config.instanceId} \"-config={config.serverConfigName}\" \"-profiles={config.profileName}\" -port={config.port} {clientModsToLoad} {serverModsToLoad} -cpuCount={config.cpuCount}";
+            string parameters = "";
+            if (Manager.managerConfig != null)
+            {
+                parameters = $"-instanceId={Manager.managerConfig.instanceId} \"-config={Manager.managerConfig.serverConfigName}\" \"-profiles={Manager.managerConfig.profileName}\" -port={Manager.managerConfig.port} {clientModsToLoad} {serverModsToLoad} -cpuCount={Manager.managerConfig.cpuCount}";
 
-            if (config.noFilePatching)
-            {
-                parameters += " -noFilePatching";
-            }
-            if (config.doLogs)
-            {
-                parameters += " -doLogs";
-            }
-            if (config.adminLog)
-            {
-                parameters += " -adminLog";
-            }
-            if (config.freezeCheck)
-            {
-                parameters += " -freezeCheck";
-            }
-            if (config.netLog)
-            {
-                parameters += " -netLog";
-            }
-            if (config.limitFPS > 0)
-            {
-                parameters += $" -limitFPS={config.limitFPS}";
+                if (Manager.managerConfig.noFilePatching)
+                {
+                    parameters += " -noFilePatching";
+                }
+                if (Manager.managerConfig.doLogs)
+                {
+                    parameters += " -doLogs";
+                }
+                if (Manager.managerConfig.adminLog)
+                {
+                    parameters += " -adminLog";
+                }
+                if (Manager.managerConfig.freezeCheck)
+                {
+                    parameters += " -freezeCheck";
+                }
+                if (Manager.managerConfig.netLog)
+                {
+                    parameters += " -netLog";
+                }
+                if (Manager.managerConfig.limitFPS > 0)
+                {
+                    parameters += $" -limitFPS={Manager.managerConfig.limitFPS}";
+                }
             }
 
             return parameters;
@@ -179,140 +178,143 @@ namespace DayZServerManager.Server.Classes
 
         public void UpdateScheduler()
         {
-            try
+            if (Manager.managerConfig != null)
             {
-                if (!FileSystem.DirectoryExists(Manager.SCHEDULER_PATH))
+                try
                 {
-                    FileSystem.CreateDirectory(Manager.SCHEDULER_PATH);
+                    if (!FileSystem.DirectoryExists(Manager.SCHEDULER_PATH))
+                    {
+                        FileSystem.CreateDirectory(Manager.SCHEDULER_PATH);
+                    }
+
+                    HttpResponseMessage response;
+                    using (HttpClient client = new HttpClient())
+                    {
+                        response = client.GetAsync($"{Manager.SCHEDULER_DOWNLOAD_URL}{Manager.SCHEDULER_ZIP_NAME}").Result;
+                    }
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        byte[] content = response.Content.ReadAsByteArrayAsync().Result;
+                        string zipPath = Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_ZIP_NAME);
+                        File.WriteAllBytes(zipPath, content);
+                        ZipFile.ExtractToDirectory(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_ZIP_NAME), Manager.SCHEDULER_PATH, true);
+                    }
+
+                    if (OperatingSystem.IsLinux())
+                    {
+                        ProcessStartInfo procInf = new ProcessStartInfo("chmod", $"+x {Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_EXECUTABLE)}");
+                        Process chmodProcess = new Process();
+                        chmodProcess.StartInfo = procInf;
+                        Manager.WriteToConsole("Giving executable rights to the scheduler");
+                        chmodProcess.Start();
+                        chmodProcess.WaitForExit();
+                        Manager.WriteToConsole("Executable rights successfully given to the scheduler");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Manager.WriteToConsole(ex.ToString());
                 }
 
-                HttpResponseMessage response;
-                using (HttpClient client = new HttpClient())
+                try
                 {
-                    response = client.GetAsync($"{Manager.SCHEDULER_DOWNLOAD_URL}{Manager.SCHEDULER_ZIP_NAME}").Result;
-                }
+                    string battleyeParentFolder = "";
 
-                if (response.IsSuccessStatusCode)
-                {
-                    byte[] content = response.Content.ReadAsByteArrayAsync().Result;
-                    string zipPath = Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_ZIP_NAME);
-                    File.WriteAllBytes(zipPath, content);
-                    ZipFile.ExtractToDirectory(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_ZIP_NAME), Manager.SCHEDULER_PATH, true);
-                }
+                    if (OperatingSystem.IsWindows())
+                    {
+                        battleyeParentFolder = Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName);
+                    }
+                    else
+                    {
+                        battleyeParentFolder = Manager.SERVER_PATH;
+                    }
 
-                if (OperatingSystem.IsLinux())
-                {
-                    ProcessStartInfo procInf = new ProcessStartInfo("chmod", $"+x {Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_EXECUTABLE)}");
-                    Process chmodProcess = new Process();
-                    chmodProcess.StartInfo = procInf;
-                    Manager.WriteToConsole("Giving executable rights to the scheduler");
-                    chmodProcess.Start();
-                    chmodProcess.WaitForExit();
-                    Manager.WriteToConsole("Executable rights successfully given to the scheduler");
-                }
-            }
-            catch (Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
-            }
+                    List<string> schedulerDirectories = FileSystem.GetDirectories(Manager.SCHEDULER_PATH).ToList<string>();
+                    if (schedulerDirectories.Find(x => Path.GetFileName(x) == Manager.SCHEDULER_CONFIG_FOLDER) == null)
+                    {
+                        FileSystem.CreateDirectory(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER));
+                    }
 
-            try
-            {
-                string battleyeParentFolder = "";
+                    SchedulerConfig? schedulerConfig = JSONSerializer.DeserializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_NAME));
+                    if (schedulerConfig == null)
+                    {
+                        schedulerConfig = new SchedulerConfig();
+                        schedulerConfig.IP = "127.0.0.1";
+                        schedulerConfig.Port = Manager.managerConfig.RConPort;
+                        schedulerConfig.Password = Manager.managerConfig.RConPassword;
+                        schedulerConfig.Interval = Manager.managerConfig.restartInterval;
+                        schedulerConfig.OnlyRestarts = Manager.managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains("expansion")).Count > 0;
+                        schedulerConfig.Scheduler = Manager.SCHEDULER_FILE_NAME;
+                        schedulerConfig.IsOnUpdate = false;
+                        schedulerConfig.BePath = Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME);
+                        schedulerConfig.CustomMessages = new List<JobItem>();
+                        int id = 0;
+                        foreach (CustomMessage item in Manager.managerConfig.customMessages)
+                        {
+                            schedulerConfig.CustomMessages.Add(new JobItem(id, item.IsTimeOfDay, item.WaitTime, item.Interval, 0, item.Message));
+                            id++;
+                        }
+                    }
 
-                if (OperatingSystem.IsWindows())
-                {
-                    battleyeParentFolder = Path.Combine(Manager.SERVER_PATH, config.profileName);
-                }
-                else
-                {
-                    battleyeParentFolder = Manager.SERVER_PATH;
-                }
+                    JSONSerializer.SerializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_NAME), schedulerConfig);
 
-                List<string> schedulerDirectories = FileSystem.GetDirectories(Manager.SCHEDULER_PATH).ToList<string>();
-                if (schedulerDirectories.Find(x => Path.GetFileName(x) == Manager.SCHEDULER_CONFIG_FOLDER) == null)
-                {
-                    FileSystem.CreateDirectory(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER));
-                }
-
-                SchedulerConfig? schedulerConfig = JSONSerializer.DeserializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_NAME));
-                if (schedulerConfig == null)
-                {
-                    schedulerConfig = new SchedulerConfig();
-                    schedulerConfig.IP = "127.0.0.1";
-                    schedulerConfig.Port = config.RConPort;
-                    schedulerConfig.Password = config.RConPassword;
-                    schedulerConfig.Interval = config.restartInterval;
-                    schedulerConfig.OnlyRestarts = config.clientMods.FindAll(mod => mod.name.ToLower().Contains("expansion")).Count > 0;
-                    schedulerConfig.Scheduler = Manager.SCHEDULER_FILE_NAME;
-                    schedulerConfig.IsOnUpdate = false;
-                    schedulerConfig.BePath = Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME);
+                    schedulerConfig.Scheduler = Manager.SCHEDULER_FILE_UPDATE_NAME;
+                    schedulerConfig.IsOnUpdate = true;
                     schedulerConfig.CustomMessages = new List<JobItem>();
-                    int id = 0;
-                    foreach (CustomMessage item in config.customMessages)
+
+                    JSONSerializer.SerializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_UPDATE_NAME), schedulerConfig);
+
+                    if (Manager.managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains("expansion")).Count > 0)
                     {
-                        schedulerConfig.CustomMessages.Add(new JobItem(id, item.IsTimeOfDay, item.WaitTime, item.Interval, 0, item.Message));
-                        id++;
+                        List<string> serverRootDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
+                        if (serverRootDirectories.Find(x => Path.GetFileName(x) == Manager.managerConfig.profileName) == null)
+                        {
+                            FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName));
+                        }
+
+                        List<string> profileDirectories = FileSystem.GetDirectories(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName)).ToList<string>();
+                        if (profileDirectories.Find(x => Path.GetFileName(x) == "ExpansionMod") == null)
+                        {
+                            FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod"));
+                        }
+
+                        List<string> expansionDirectories = FileSystem.GetDirectories(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod")).ToList<string>();
+                        if (expansionDirectories.Find(x => Path.GetFileName(x) == "Settings") == null)
+                        {
+                            FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod", "Settings"));
+                        }
+
+                        NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
+                        if (notFile == null)
+                        {
+                            notFile = new NotificationSchedulerFile();
+                        }
+                        RestartUpdater.UpdateExpansionScheduler(Manager.managerConfig, notFile);
+                        JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), notFile);
+                    }
+
+                    List<string> serverDirectories = FileSystem.GetDirectories(battleyeParentFolder).ToList<string>();
+                    if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_FOLDER_NAME) == null)
+                    {
+                        FileSystem.CreateDirectory(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME));
+                    }
+
+                    List<string> battleyeDirectories = FileSystem.GetDirectories(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME)).ToList<string>();
+                    if (battleyeDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_CONFIG_NAME) == null)
+                    {
+                        CreateAndSaveNewBeConfig(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_CONFIG_NAME));
+                    }
+
+                    if (battleyeDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_BANS_NAME) == null)
+                    {
+                        CreateAndSaveNewBans(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_BANS_NAME));
                     }
                 }
-
-                JSONSerializer.SerializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_NAME), schedulerConfig);
-
-                schedulerConfig.Scheduler = Manager.SCHEDULER_FILE_UPDATE_NAME;
-                schedulerConfig.IsOnUpdate = true;
-                schedulerConfig.CustomMessages = new List<JobItem>();
-
-                JSONSerializer.SerializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_UPDATE_NAME), schedulerConfig);
-
-                if (config.clientMods.FindAll(mod => mod.name.ToLower().Contains("expansion")).Count > 0)
+                catch (Exception ex)
                 {
-                    List<string> serverRootDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
-                    if (serverRootDirectories.Find(x => Path.GetFileName(x) == config.profileName) == null)
-                    {
-                        FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, config.profileName));
-                    }
-
-                    List<string> profileDirectories = FileSystem.GetDirectories(Path.Combine(Manager.SERVER_PATH, config.profileName)).ToList<string>();
-                    if (profileDirectories.Find(x => Path.GetFileName(x) == "ExpansionMod") == null)
-                    {
-                        FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod"));
-                    }
-
-                    List<string> expansionDirectories = FileSystem.GetDirectories(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod")).ToList<string>();
-                    if (expansionDirectories.Find(x => Path.GetFileName(x) == "Settings") == null)
-                    {
-                        FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod", "Settings"));
-                    }
-
-                    NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
-                    if (notFile == null)
-                    {
-                        notFile = new NotificationSchedulerFile();
-                    }
-                    RestartUpdater.UpdateExpansionScheduler(config, notFile);
-                    JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SERVER_PATH, config.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), notFile);
+                    Manager.WriteToConsole(ex.ToString());
                 }
-
-                List<string> serverDirectories = FileSystem.GetDirectories(battleyeParentFolder).ToList<string>();
-                if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_FOLDER_NAME) == null)
-                {
-                    FileSystem.CreateDirectory(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME));
-                }
-
-                List<string> battleyeDirectories = FileSystem.GetDirectories(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME)).ToList<string>();
-                if (battleyeDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_CONFIG_NAME) == null)
-                {
-                    CreateAndSaveNewBeConfig(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_CONFIG_NAME));
-                }
-
-                if (battleyeDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_BANS_NAME) == null)
-                {
-                    CreateAndSaveNewBans(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_BANS_NAME));
-                }
-            }
-            catch (Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -464,59 +466,65 @@ namespace DayZServerManager.Server.Classes
 
         private void UpdateServer(ManagerProps props)
         {
-            try
+            if (Manager.managerConfig != null)
             {
-                if (!FileSystem.DirectoryExists(Manager.STEAM_CMD_PATH))
+                try
                 {
-                    FileSystem.CreateDirectory(Manager.STEAM_CMD_PATH);
+                    if (!FileSystem.DirectoryExists(Manager.STEAM_CMD_PATH))
+                    {
+                        FileSystem.CreateDirectory(Manager.STEAM_CMD_PATH);
+                    }
                 }
-            }
-            catch (System.Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
-            }
+                catch (System.Exception ex)
+                {
+                    Manager.WriteToConsole(ex.ToString());
+                }
 
-            try
-            {
-                if (!FileSystem.FileExists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE)))
+                try
                 {
-                    DownloadAndExctractSteamCMD(Manager.STEAM_CMD_ZIP_NAME);
+                    if (!FileSystem.FileExists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE)))
+                    {
+                        DownloadAndExctractSteamCMD(Manager.STEAM_CMD_ZIP_NAME);
+                    }
                 }
-            }
-            catch (System.Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
-            }
+                catch (System.Exception ex)
+                {
+                    Manager.WriteToConsole(ex.ToString());
+                }
 
-            try
-            {
-                string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)} \"+login {config.steamUsername} {config.steamPassword}\" \"+app_update {dayZServerBranch}\" +quit";
-                Manager.WriteToConsole("Updating the DayZ Server");
-                StartSteamCMD(props, serverUpdateArguments);
-                if (props._serverStatus == "Server downloaded")
+                try
                 {
-                    CheckForUpdatedServer();
+                    string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)} \"+login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" +quit";
+                    Manager.WriteToConsole("Updating the DayZ Server");
+                    StartSteamCMD(props, serverUpdateArguments);
+                    if (props._serverStatus == "Server downloaded")
+                    {
+                        CheckForUpdatedServer();
+                    }
                 }
-            }
-            catch (System.Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
-                props._serverStatus = "Error";
+                catch (System.Exception ex)
+                {
+                    Manager.WriteToConsole(ex.ToString());
+                    props._serverStatus = "Error";
+                }
             }
         }
 
         private void UpdateMission()
         {
-            List<Mod> expansionMods = config.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
-
-            if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
+            if (Manager.managerConfig != null)
             {
-                updatedMods = false;
-                updatedServer = false;
-                Manager.WriteToConsole($"Updating Mission folder");
-                MissionUpdater upd = new MissionUpdater(config);
-                upd.Update();
-                Manager.WriteToConsole($"Finished updating Mission folder");
+                List<Mod> expansionMods = Manager.managerConfig.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
+
+                if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
+                {
+                    updatedMods = false;
+                    updatedServer = false;
+                    Manager.WriteToConsole($"Updating Mission folder");
+                    MissionUpdater upd = new MissionUpdater(Manager.managerConfig);
+                    upd.Update();
+                    Manager.WriteToConsole($"Finished updating Mission folder");
+                }
             }
         }
 
@@ -668,74 +676,80 @@ namespace DayZServerManager.Server.Classes
 
         public void UpdateAndMoveMods(ManagerProps props, bool hasToUpdate, bool hasToMove)
         {
-            List<Mod> mods = new List<Mod>();
-            mods.AddRange(config.clientMods);
-            mods.AddRange(config.serverMods);
-            if (mods.Count > 0)
+            if (Manager.managerConfig != null)
             {
-                if (hasToUpdate)
+                List<Mod> mods = new List<Mod>();
+                mods.AddRange(Manager.managerConfig.clientMods);
+                mods.AddRange(Manager.managerConfig.serverMods);
+                if (mods.Count > 0)
                 {
-                    Manager.WriteToConsole("Updating Mods");
-                    UpdateMods(props, mods);
-                    Manager.WriteToConsole("Mods updated");
-                }
-                if (hasToMove)
-                {
-                    Manager.WriteToConsole("Moving Mods");
-                    MoveMods(mods);
-                    Manager.WriteToConsole("Mods moved");
+                    if (hasToUpdate)
+                    {
+                        Manager.WriteToConsole("Updating Mods");
+                        UpdateMods(props, mods);
+                        Manager.WriteToConsole("Mods updated");
+                    }
+                    if (hasToMove)
+                    {
+                        Manager.WriteToConsole("Moving Mods");
+                        MoveMods(mods);
+                        Manager.WriteToConsole("Mods moved");
 
-                    UpdateMission();
+                        UpdateMission();
+                    }
                 }
             }
         }
 
         public void UpdateMods(ManagerProps props, List<Mod> mods)
         {
-            try
+            if (Manager.managerConfig != null)
             {
-                string modUpdateArguments = string.Empty;
-                if (mods.Count > 0)
+                try
                 {
-                    foreach (Mod mod in mods)
+                    string modUpdateArguments = string.Empty;
+                    if (mods.Count > 0)
                     {
-                        modUpdateArguments += $" +workshop_download_item {dayZGameBranch} {mod.workshopID.ToString()}";
-                    }
-                    string arguments = $"+force_install_dir {Path.Combine("..", Manager.MODS_PATH)} +login {config.steamUsername} {config.steamPassword}{modUpdateArguments} +quit";
-
-                    StartSteamCMD(props, arguments);
-
-                    Manager.WriteToConsole($"All mods were downloaded");
-
-                    foreach (Mod mod in mods)
-                    {
-                        if (CompareForChanges(Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString()), Path.Combine(Manager.SERVER_PATH, mod.name)))
+                        foreach (Mod mod in mods)
                         {
-                            if (updatedModsIDs.Contains(mod.workshopID))
+                            modUpdateArguments += $" +workshop_download_item {Manager.DAYZ_GAME_BRANCH} {mod.workshopID.ToString()}";
+                        }
+                        string arguments = $"+force_install_dir {Path.Combine("..", Manager.MODS_PATH)} +login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}{modUpdateArguments} +quit";
+
+                        StartSteamCMD(props, arguments);
+
+                        Manager.WriteToConsole($"All mods were downloaded");
+
+                        foreach (Mod mod in mods)
+                        {
+                            if (CompareForChanges(Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString()), Path.Combine(Manager.SERVER_PATH, mod.name)))
                             {
-                                updatedMods = true;
-                            }
-                            else
-                            {
-                                updatedModsIDs.Add(mod.workshopID);
-                                updatedMods = true;
+                                if (updatedModsIDs.Contains(mod.workshopID))
+                                {
+                                    updatedMods = true;
+                                }
+                                else
+                                {
+                                    updatedModsIDs.Add(mod.workshopID);
+                                    updatedMods = true;
+                                }
                             }
                         }
-                    }
 
-                    foreach (long key in updatedModsIDs)
-                    {
-                        Mod? mod = SearchForMod(key, mods);
-                        if (mod != null)
+                        foreach (long key in updatedModsIDs)
                         {
-                            Manager.WriteToConsole($"{mod.name} was updated");
+                            Mod? mod = SearchForMod(key, mods);
+                            if (mod != null)
+                            {
+                                Manager.WriteToConsole($"{mod.name} was updated");
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
+                catch (Exception ex)
+                {
+                    Manager.WriteToConsole(ex.ToString());
+                }
             }
         }
 
@@ -779,11 +793,11 @@ namespace DayZServerManager.Server.Classes
 
         public bool RestartForUpdates()
         {
-            if (config.restartOnUpdate && !restartingForUpdates && ((updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0) || updatedServer) && !(schedulerUpdateProcess != null && schedulerUpdateProcess.HasExited))
+            if (Manager.managerConfig != null && Manager.managerConfig.restartOnUpdate && !restartingForUpdates && ((updatedMods && updatedModsIDs != null && updatedModsIDs.Count > 0) || updatedServer) && !(schedulerUpdateProcess != null && schedulerUpdateProcess.HasExited))
             {
                 try
                 {
-                    if (IsTimeToRestart(config.restartInterval))
+                    if (IsTimeToRestart(Manager.managerConfig.restartInterval))
                     {
                         restartingForUpdates = true;
                         if (schedulerProcess != null && !schedulerProcess.HasExited)
@@ -857,44 +871,13 @@ namespace DayZServerManager.Server.Classes
 
         public void BackupServerData()
         {
-            try
+            if (Manager.managerConfig != null)
             {
-                if (!FileSystem.DirectoryExists(config.backupPath))
+                BackupManager.MakeBackup(Manager.managerConfig.backupPath, Manager.managerConfig.profileName, Manager.managerConfig.missionName);
+                if (Manager.managerConfig.deleteBackups)
                 {
-                    FileSystem.CreateDirectory(config.backupPath);
+                    BackupManager.DeleteOldBackups(Manager.managerConfig.backupPath, Manager.managerConfig.maxKeepTime);
                 }
-            }
-            catch (Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
-            }
-
-            try
-            {
-                Manager.WriteToConsole($"Backing up the server data and moving all the logs!");
-                string newestBackupPath = Path.Combine(config.backupPath, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-                string dataPath = Path.Combine(Manager.MISSION_PATH, config.missionName, "storage_1");
-                string profilePath = Path.Combine(Manager.SERVER_PATH, config.profileName);
-                if (FileSystem.DirectoryExists(dataPath))
-                {
-                    FileSystem.CopyDirectory(dataPath, Path.Combine(newestBackupPath, "data"));
-                }
-                if (FileSystem.DirectoryExists(profilePath))
-                {
-                    string[] filePaths = FileSystem.GetFiles(profilePath).ToArray();
-                    foreach (string filePath in filePaths)
-                    {
-                        if (Path.GetExtension(filePath) == ".ADM" || Path.GetExtension(filePath) == ".RPT" || Path.GetExtension(filePath) == ".log" || Path.GetExtension(filePath) == ".mdmp")
-                        {
-                            FileSystem.MoveFile(filePath, Path.Combine(newestBackupPath, "logs", Path.GetFileName(filePath)));
-                        }
-                    }
-                }
-                Manager.WriteToConsole($"Server backup and moving of the logs done");
-            }
-            catch (Exception ex)
-            {
-                Manager.WriteToConsole(ex.ToString());
             }
         }
 
@@ -1084,14 +1067,17 @@ namespace DayZServerManager.Server.Classes
         {
             try
             {
-                string beConfig = $"RConPassword {config.RConPassword}";
-                beConfig += $"{Environment.NewLine}RConPort {config.RConPort}";
-                beConfig += $"{Environment.NewLine}RestrictRCon 0";
-
-                using (StreamWriter writer = new StreamWriter(path))
+                if (Manager.managerConfig != null)
                 {
-                    writer.Write(beConfig);
-                    writer.Close();
+                    string beConfig = $"RConPassword {Manager.managerConfig.RConPassword}";
+                    beConfig += $"{Environment.NewLine}RConPort {Manager.managerConfig.RConPort}";
+                    beConfig += $"{Environment.NewLine}RestrictRCon 0";
+
+                    using (StreamWriter writer = new StreamWriter(path))
+                    {
+                        writer.Write(beConfig);
+                        writer.Close();
+                    }
                 }
             }
             catch (Exception ex)

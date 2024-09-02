@@ -46,6 +46,8 @@ namespace DayZServerManager.Server.Classes
         public const string SCHEDULER_FILE_NAME = "scheduler.json";
         public const string SCHEDULER_FILE_UPDATE_NAME = "scheduler-update.json";
         public static string SCHEDULER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZScheduler.exe" : "DayZScheduler";
+        public const int DAYZ_SERVER_BRANCH = 223350;
+        public const int DAYZ_GAME_BRANCH = 221100;
         #endregion Constants
 
         public static void InitiateManager()
@@ -102,15 +104,7 @@ namespace DayZServerManager.Server.Classes
                     return;
                 }
 
-                if (dayZServer == null)
-                {
-                    dayZServer = new Server(managerConfig);
-                }
-                else
-                {
-                    props._serverStatus = "Server already running";
-                    return;
-                }
+                dayZServer ??= new Server();
 
                 if (serverConfig != null)
                 {
@@ -153,7 +147,10 @@ namespace DayZServerManager.Server.Classes
                             i += 10;
                             SaveServerConfig();
 
-                            dayZServer.BackupServerData();
+                            if (managerConfig != null && managerConfig.makeBackups)
+                            {
+                                dayZServer.BackupServerData();
+                            }
                             dayZServer.UpdateAndMoveServer(props, false, true);
                             dayZServer.UpdateAndMoveMods(props, false, true);
                             dayZServer.StartServer();
@@ -161,6 +158,7 @@ namespace DayZServerManager.Server.Classes
                         else
                         {
                             WriteToConsole("The Server is still running");
+                            props._serverStatus = "Server is running";
                         }
 
                         if (!dayZServer.CheckScheduler())
@@ -174,7 +172,9 @@ namespace DayZServerManager.Server.Classes
 
                         if (i % 120 == 0)
                         {
+                            props._serverStatus = "Updating Mods";
                             dayZServer.UpdateAndMoveMods(props, true, false);
+                            props._serverStatus = "Updating Server";
                             dayZServer.UpdateAndMoveServer(props, true, false);
                             dayZServer.RestartForUpdates();
                         }
@@ -199,6 +199,17 @@ namespace DayZServerManager.Server.Classes
 
         public static void StopServer()
         {
+            if (Manager.props != null)
+            {
+                if (dayZServer != null && serverLoop != null)
+                {
+                    props._serverStatus = "Stopping Server";
+                }
+                else
+                {
+                    props._serverStatus = "Server not running";
+                }
+            }
             kill = true;
         }
 
@@ -241,7 +252,7 @@ namespace DayZServerManager.Server.Classes
 
         private static void BackupServer(Server server)
         {
-            if (props != null)
+            if (props != null && managerConfig != null && managerConfig.makeBackups)
             {
                 props._serverStatus = "Backing up server";
                 server.BackupServerData();
@@ -334,14 +345,21 @@ namespace DayZServerManager.Server.Classes
 
         public static void SaveServerConfig()
         {
-            if (serverConfig != null && managerConfig != null)
+            try
             {
-                using (StreamWriter writer = new StreamWriter(Path.Combine(SERVER_PATH, managerConfig.serverConfigName)))
+                if (serverConfig != null && managerConfig != null)
                 {
-                    string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
-                    writer.Write(serverConfigText);
-                    writer.Close();
+                    using (StreamWriter writer = new StreamWriter(Path.Combine(SERVER_PATH, managerConfig.serverConfigName)))
+                    {
+                        string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
+                        writer.Write(serverConfigText);
+                        writer.Close();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
             }
         }
         #endregion ServerConfig

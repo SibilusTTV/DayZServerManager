@@ -17,17 +17,16 @@ namespace DayZServerManager.Server.Controllers
         }
 
         [HttpGet("GetServerStatus")]
-        public bool GetServerStatus()
+        public string GetServerStatus()
         {
-            if (Manager.dayZServer != null && Manager.dayZServer.CheckServer())
+            if (Manager.props != null)
             {
-                return true;
+                return Manager.props._serverStatus;
             }
             else
             {
-                return false;
+                return "Server not started";
             }
-
         }
 
         [HttpGet("GetSchedulerStatus")]
@@ -45,24 +44,16 @@ namespace DayZServerManager.Server.Controllers
         }
 
         [HttpGet("StartServer")]
-        public string StartDayZServer()
+        public bool StartDayZServer()
         {
-            Manager.props = new ManagerProps("Starting");
-            Task startTask = new Task(() => { Manager.StartServer(); });
-            startTask.Start();
-            if (startTask != null)
+            if (Manager.props == null || (Manager.props._serverStatus == "Server stopped" || Manager.props._serverStatus == "Waiting for Starting" || Manager.props._serverStatus == "Error" || Manager.props._serverStatus == "Waiting for Starting" || Manager.props._serverStatus == "Server not running" || Manager.props._serverStatus == "Please set Username and Password"))
             {
-                while (!startTask.IsCompleted && Manager.props._serverStatus != "Error" && Manager.props._serverStatus != "Please set Username and Password" && Manager.props._serverStatus != "Server Started" && Manager.props._serverStatus != "Steam Guard" && Manager.props._serverStatus != "Server Stopped")
-                {
-                    Thread.Sleep(5000);
-                }
+                Manager.props = new ManagerProps("Starting");
+                Task startTask = new Task(() => { Manager.StartServer(); });
+                startTask.Start();
+                return true;
             }
-            else
-            {
-                Manager.props._serverStatus = "Error";
-            }
-
-            return Manager.props._serverStatus;
+            return false;
         }
 
         [HttpGet("StopServer")]
@@ -71,16 +62,20 @@ namespace DayZServerManager.Server.Controllers
             Manager.StopServer();
             if (Manager.props != null)
             {
-                while (Manager.props._serverStatus != "Server stopped")
+                while (Manager.props._serverStatus == "Stopping Server")
                 {
-                    Thread.Sleep(5000);
+                    Thread.Sleep(1000);
                 }
-                return true;
+                if (Manager.props._serverStatus == "Server stopped")
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         [HttpPost("SendSteamGuard")]

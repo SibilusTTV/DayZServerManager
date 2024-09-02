@@ -477,7 +477,7 @@ export default function ManagerConfigEditor() {
                                 </div>
                                 <div className="subContainer">
                                     <TextField id="Title" variant="outlined" label="Title" defaultValue={message.title} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
-                                    <TextField id="Message" variant="outlined" label="Message" defaultValue={message.message} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
+                                    <TextField multiline={true} id="Message" variant="outlined" label="Message" defaultValue={message.message} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
                                     <TextField id="Icon" variant="outlined" label="Icon" defaultValue={message.icon} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
                                     <TextField id="Color" variant="outlined" label="Color" defaultValue={message.color} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
                                     <TextField id="IsTimeOfDay" variant="outlined" label="Is Time Of Day" defaultValue={message.isTimeOfDay} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />

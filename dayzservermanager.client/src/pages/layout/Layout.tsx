@@ -25,23 +25,5 @@ export default function Layout() {
             </Box>
             <Outlet />
         </>
-
-        //<>
-        //    <Toolbar>
-        //        <nav>
-        //            <ul>
-        //                <li>
-        //                    <Link to="/">Home</Link>
-        //                </li>
-        //                <li>
-        //                    <Link to="/manager-config">Manager Config Editor</Link>
-        //                </li>
-        //                <li>
-        //                     <Link to="/manager-config">Manager Config Editor</Link>
-        //                </li>
-        //            </ul>
-        //        </nav>
-        //    </Toolbar>
-        //</>
     )
 }

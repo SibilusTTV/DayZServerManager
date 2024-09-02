@@ -32,6 +32,9 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         public bool restartOnUpdate { get; set; }
         public int restartInterval { get; set; }
         public bool autoStartServer { get; set; }
+        public bool makeBackups { get; set; }
+        public bool deleteBackups { get; set; }
+        public int maxKeepTime { get; set; }
         public List<Mod> clientMods { get; set; }
         public List<Mod> serverMods { get; set; }
         public List<CustomMessage> customMessages { get; set; }
@@ -62,6 +65,9 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
             restartOnUpdate = true;
             restartInterval = 4;
             autoStartServer = false;
+            makeBackups = true;
+            deleteBackups = true;
+            maxKeepTime = 7;
             clientMods = new List<Mod>();
             serverMods = new List<Mod>();
             Mod mod1 = new Mod();
