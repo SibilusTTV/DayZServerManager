@@ -160,21 +160,38 @@ namespace DayZServerManager.Server.Classes.Helpers
                 if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "vanillaTypesChanges.json") == null)
                 {
                     TypesChangesFile vanillaTypesChanges = new TypesChangesFile();
-                    vanillaTypesChanges.types = new List<TypesChangesItem>
-                    {
-                        new TypesChangesItem()
+                    vanillaTypesChanges.types =
+                    [
+                        new()
                         {
                             name = "example1",
                             lifetime = 3888000,
-                            rarity = 3
+                            flags = new()
+                            {
+                                count_in_cargo = "0",
+                                count_in_hoarder = "0",
+                                count_in_map = "1",
+                                count_in_player = "0",
+                                crafted = "0",
+                                deloot = "0"
+                            },
+                            value =
+                            [
+                                "Tier3"
+                            ]
                         },
-                        new TypesChangesItem()
+                        new()
                         {
                             name = "example2",
                             lifetime = 3888000,
-                            rarity = 4
+                            value = []
+                        },
+                        new()
+                        {
+                            name = "example2",
+                            lifetime = 3888000
                         }
-                    };
+                    ];
 
                     JSONSerializer.SerializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json"), vanillaTypesChanges);
                 }
@@ -201,14 +218,12 @@ namespace DayZServerManager.Server.Classes.Helpers
                             new TypesChangesItem()
                             {
                                 name = "example1",
-                                lifetime = 3888000,
-                                rarity = 3
+                                lifetime = 3888000
                             },
                             new TypesChangesItem()
                             {
                                 name = "example2",
-                                lifetime = 3888000,
-                                rarity = 4
+                                lifetime = 3888000
                             }
                         };
 
@@ -403,7 +418,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         TypesChangesFile? changes = JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json"));
                         if (changes != null)
                         {
-                            UpdateLifetime(vanillaTypes, changes);
+                            UpdateTypesWithTypesChanges(vanillaTypes, changes);
                         }
 
                         XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(missionPath, "db", "types.xml"), vanillaTypes);
@@ -420,7 +435,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         TypesChangesFile? changes = JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, "expansionTypesChanges.json"));
                         if (changes != null)
                         {
-                            UpdateLifetime(expansionTypes, changes);
+                            UpdateTypesWithTypesChanges(expansionTypes, changes);
                         }
 
                         XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(missionPath, "expansion_ce", "expansion_types.xml"), expansionTypes);
@@ -763,7 +778,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         }
         
         // Updates the lifetime of items in the given TypesFile with the new spawns of another TypesFile
-        public void UpdateLifetime(TypesFile typesFile, TypesChangesFile changesFile)
+        public void UpdateTypesWithTypesChanges(TypesFile typesFile, TypesChangesFile changesFile)
         {
             try
             {
@@ -773,7 +788,75 @@ namespace DayZServerManager.Server.Classes.Helpers
                     TypesItem? item = SearchForTypesItem(change.name, typesFile);
                     if (item != null)
                     {
-                        item.lifetime = change.lifetime;
+                        if (change.nominal != null)
+                        {
+                            item.nominal = change.nominal.Value;
+                        }
+
+                        if (change.lifetime != null)
+                        {
+                            item.lifetime = change.lifetime.Value;
+                        }
+
+                        if (change.restock != null)
+                        {
+                            item.restock = change.restock.Value;
+                        }
+
+                        if (change.min != null)
+                        {
+                            item.min = change.min.Value;
+                        }
+
+                        if (change.quantmin != null)
+                        {
+                            item.quantmin = change.quantmin.Value;
+                        }
+
+                        if (change.quantmax != null)
+                        {
+                            item.quantmax = change.quantmax.Value;
+                        }
+
+                        if (change.cost != null)
+                        {
+                            item.cost = change.cost.Value;
+                        }
+
+                        if (change.flags != null)
+                        {
+                            item.flags.count_in_cargo = change.flags.count_in_cargo;
+                            item.flags.count_in_hoarder = change.flags.count_in_hoarder;
+                            item.flags.count_in_map = change.flags.count_in_map;
+                            item.flags.count_in_player = change.flags.count_in_player;
+                            item.flags.crafted = change.flags.crafted;
+                            item.flags.deloot = change.flags.deloot;
+                        }
+
+                        if (change.category != null)
+                        {
+                            item.category.name = change.category;
+                        }
+
+                        if (change.usage != null)
+                        {
+                            List<UsageItem> usages = new List<UsageItem>();
+                            foreach (string usageName in change.usage)
+                            {
+                                usages.Add(new UsageItem { name = usageName });
+                            }
+                            item.usage = usages;
+                        }
+
+                        if (change.value != null)
+                        {
+                            List<ValueItem> values = new List<ValueItem>();
+                            foreach (string valueName in change.value)
+                            {
+                                values.Add(new ValueItem { name = valueName });
+                            }
+                            item.value = values;
+                        }
                     }
                 }
                 Manager.WriteToConsole("Finished updating lifetimes");

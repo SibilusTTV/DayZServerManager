@@ -566,7 +566,7 @@ namespace DayZServerManager.Server.Classes
                 while (!task.IsCompleted)
                 {
                     Thread.Sleep(1000);
-                    if (outputTime > 15 && props._serverStatus != "Steam Guard")
+                    if (outputTime > 30 && props._serverStatus != "Steam Guard")
                     {
                         Manager.WriteToConsole("Steam Guard");
                         props._serverStatus = "Steam Guard";

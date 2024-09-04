@@ -79,15 +79,23 @@ namespace DayZServerManager.Server.Controllers
         }
 
         [HttpPost("SendSteamGuard")]
-        public string SendSteamGuard([FromBody] SteamGuard guard)
+        public bool SendSteamGuard([FromBody] SteamGuard guard)
         {
             if (guard != null && guard.code != null)
             {
-                return Manager.SetSteamGuard(guard.code);
+                string response = Manager.SetSteamGuard(guard.code);
+                if (response != null && (response == "Error" || response == "DayZServer not running"))
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
             }
             else
             {
-                return "Invalid input";
+                return false;
             }
         }
     }

@@ -8,9 +8,20 @@ export default function Home() {
     const [open, setOpen] = useState(false);
     const [code, setCode] = useState("");
     const [serverStatus, setServerStatus] = useState("Server not started");
+    const [codeSent, setCodeSent] = useState(false);
+    const [countdown, setCountdown] = useState(0);
 
     useEffect(() => {
-        setInterval(() => { getServerStatus(setOpen, setServerStatus) }, 1000);
+        setInterval(() => {
+            getServerStatus(setOpen, setServerStatus, codeSent);
+            if (countdown <= 0) {
+                setCodeSent(false);
+                setCountdown(0);
+            }
+            if (codeSent) {
+                setCountdown(countdown - 1);
+            }
+        }, 1000);
     }, [])
 
     const handleClose = () => {
@@ -45,7 +56,8 @@ export default function Home() {
                     component: 'form',
                     onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
                         event.preventDefault();
-                        sendSteamGuard(code, setOpen);
+                        setCodeSent(true);
+                        sendSteamGuard(code);
                         setOpen(false);
                     },
                 }}
@@ -77,12 +89,12 @@ export default function Home() {
     )
 }
 
-async function getServerStatus(setOpen: Function, setServerStatus: Function) {
+async function getServerStatus(setOpen: Function, setServerStatus: Function, codeSent: boolean) {
     try {
         const response = await fetch('DayZServer/GetServerStatus');
         const result = await response.text()
         setServerStatus(result);
-        if (result === "Steam Guard") {
+        if (codeSent && result === "Steam Guard") {
             setOpen(true);
         }
     }
@@ -149,7 +161,7 @@ async function restartDayZServer() {
     }
 }
 
-async function sendSteamGuard(_code: string, setOpen: Function) {
+async function sendSteamGuard(_code: string) {
     const response = await fetch('DayZServer/SendSteamGuard', {
         method: "POST",
         mode: "cors",
@@ -162,10 +174,10 @@ async function sendSteamGuard(_code: string, setOpen: Function) {
     });
     const result = await response.text();
 
-    if (result == "Steam guard") {
-        setOpen(true);
+    if (result.toLocaleLowerCase() === "true") {
+        alert("Steam Guard was sent");
     }
     else {
-        alert(result);
+        alert("Steam Guard couldn't be sent");
     }
 }
