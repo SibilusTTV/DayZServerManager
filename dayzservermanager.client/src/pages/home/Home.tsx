@@ -13,14 +13,14 @@ export default function Home() {
 
     useEffect(() => {
         setInterval(() => {
-            getServerStatus(setOpen, setServerStatus, codeSent);
-            if (countdown <= 0) {
-                setCodeSent(false);
-                setCountdown(0);
-            }
             if (codeSent) {
+                if (countdown <= 0) {
+                    setCodeSent(false);
+                    setCountdown(30);
+                }
                 setCountdown(countdown - 1);
             }
+            getServerStatus(setOpen, setServerStatus, codeSent);
         }, 1000);
     }, [])
 
@@ -56,9 +56,9 @@ export default function Home() {
                     component: 'form',
                     onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
                         event.preventDefault();
+                        setOpen(false);
                         setCodeSent(true);
                         sendSteamGuard(code);
-                        setOpen(false);
                     },
                 }}
             >
@@ -94,7 +94,7 @@ async function getServerStatus(setOpen: Function, setServerStatus: Function, cod
         const response = await fetch('DayZServer/GetServerStatus');
         const result = await response.text()
         setServerStatus(result);
-        if (codeSent && result === "Steam Guard") {
+        if (!codeSent && result === "Steam Guard") {
             setOpen(true);
         }
     }

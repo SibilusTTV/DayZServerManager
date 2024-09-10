@@ -548,12 +548,13 @@ namespace DayZServerManager.Server.Classes
                     if (s != null)
                     {
                         Manager.WriteToConsole(s);
-                        if ( outputTime != -1 && s.Contains("Steam Guard"))
+                        if (s.Contains("Steam Guard"))
                         {
                             props._serverStatus = "Steam Guard";
                         }
-                        if (s.Contains("Waiting for client config"))
+                        else if (s.Contains("Waiting for client config"))
                         {
+                            props._serverStatus = "Client Config";
                             outputTime = -1;
                         }
                         else if (outputTime != -1)
@@ -566,16 +567,15 @@ namespace DayZServerManager.Server.Classes
                 while (!task.IsCompleted)
                 {
                     Thread.Sleep(1000);
-                    if (outputTime > 30 && props._serverStatus != "Steam Guard")
+                    if (outputTime > 30)
                     {
                         Manager.WriteToConsole("Steam Guard");
                         props._serverStatus = "Steam Guard";
-                        outputTime = -1;
+                        outputTime = 0;
                     }
-                    if (outputTime != -1)
+                    else if (outputTime != -1)
                     {
                         outputTime++;
-
                     }
                 }
 
