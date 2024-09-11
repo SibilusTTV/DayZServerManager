@@ -7,6 +7,7 @@ using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
+using System.Text.RegularExpressions;
 
 namespace DayZServerManager.Server.Classes
 {
@@ -37,16 +38,28 @@ namespace DayZServerManager.Server.Classes
             {
                 if (serverProcess != null && !serverProcess.HasExited)
                 {
+                    if (Manager.props != null)
+                    {
+                        Manager.props.dayzServerStatus = "Running";
+                    }
                     return true;
                 }
                 else
                 {
+                    if (Manager.props != null)
+                    {
+                        Manager.props.dayzServerStatus = "Not Running";
+                    }
                     serverProcess = null;
                     return false;
                 }
             }
             catch (Exception ex)
             {
+                if (Manager.props != null)
+                {
+                    Manager.props.dayzServerStatus = "Not Running";
+                }
                 Manager.WriteToConsole(ex.ToString());
                 serverProcess = null;
                 return false;
@@ -88,7 +101,7 @@ namespace DayZServerManager.Server.Classes
 
         public void StartServer()
         {
-            if (Manager.managerConfig != null)
+            if (Manager.managerConfig != null && Manager.props != null)
             {
                 updatedModsIDs = new List<long>();
                 updatedMods = false;
@@ -125,13 +138,32 @@ namespace DayZServerManager.Server.Classes
                     serverProcess = new Process();
                     ProcessStartInfo procInf = new ProcessStartInfo();
                     string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
+                    procInf.UseShellExecute = false;
+                    procInf.CreateNoWindow = true;
                     procInf.WorkingDirectory = Manager.SERVER_PATH;
                     procInf.Arguments = startParameters;
                     procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE);
+                    procInf.RedirectStandardError = true;
+                    procInf.RedirectStandardInput = true;
+                    procInf.RedirectStandardOutput = true;
                     serverProcess.StartInfo = procInf;
                     Manager.WriteToConsole($"Starting Server");
                     serverProcess.Start();
-                    Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
+                    Manager.props.dayzServerStatus = "Running";
+                    Task task = ConsumeOutput(serverProcess.StandardOutput, s =>
+                    {
+                        if (s != null)
+                        {
+                            Manager.WriteToConsole(s);
+                            Regex reg = new Regex("Players: ([0-9]+)");
+                            Match regMatch = reg.Match(s);
+                            if (regMatch.Success)
+                            {
+                                if (Manager.props != null) Manager.props.players = Convert.ToInt32(regMatch.Value[1]);
+                            }
+                        }
+                    });
+                    Manager.WriteToConsole($"Server started at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
                 }
                 catch (Exception ex)
                 {
@@ -355,10 +387,11 @@ namespace DayZServerManager.Server.Classes
         {
             try
             {
-                if (serverProcess != null)
+                if (serverProcess != null && Manager.props != null)
                 {
                     serverProcess.Kill();
                     serverProcess = null;
+                    Manager.props.dayzServerStatus = "Not Running";
                 }
             }
             catch (Exception ex)
@@ -397,10 +430,11 @@ namespace DayZServerManager.Server.Classes
 
             try
             {
-                if (steamCMDProcess != null)
+                if (steamCMDProcess != null && Manager.props != null)
                 {
                     steamCMDProcess.Kill();
                     steamCMDProcess = null;
+                    Manager.props.steamCMDStatus = "Not Running";
                 }
             }
             catch (Exception ex)
@@ -412,19 +446,27 @@ namespace DayZServerManager.Server.Classes
 
         public void UpdateAndMoveServer(ManagerProps props, bool hasToUpdate, bool hasToMove)
         {
-            if (hasToUpdate)
+            if (Manager.props != null)
             {
-                Manager.WriteToConsole("Updating server");
-                UpdateServer(props);
-                Manager.WriteToConsole("Server updated");
-            }
-            if (hasToMove)
-            {
-                Manager.WriteToConsole("Moving server");
-                MoveServer();
-                Manager.WriteToConsole("Server moved");
+                if (hasToUpdate)
+                {
+                    Manager.props.managerStatus = "Updating Server";
+                    Manager.WriteToConsole("Updating Server");
+                    UpdateServer(props);
+                    Manager.props.managerStatus = "Server Updated";
+                    Manager.WriteToConsole("Server Updated");
+                }
 
-                UpdateMission();
+                if (hasToMove)
+                {
+                    Manager.props.managerStatus = "Moving Server";
+                    Manager.WriteToConsole("Moving Server");
+                    MoveServer();
+                    Manager.props.managerStatus = "Server Moved";
+                    Manager.WriteToConsole("Server Moved");
+
+                    UpdateMission();
+                }
             }
         }
 
@@ -497,7 +539,7 @@ namespace DayZServerManager.Server.Classes
                     string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)} \"+login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" +quit";
                     Manager.WriteToConsole("Updating the DayZ Server");
                     StartSteamCMD(props, serverUpdateArguments);
-                    if (props._serverStatus == "Server downloaded")
+                    if (props.steamCMDStatus == "Not Running")
                     {
                         CheckForUpdatedServer();
                     }
@@ -505,14 +547,14 @@ namespace DayZServerManager.Server.Classes
                 catch (System.Exception ex)
                 {
                     Manager.WriteToConsole(ex.ToString());
-                    props._serverStatus = "Error";
+                    props.managerStatus = "Error";
                 }
             }
         }
 
         private void UpdateMission()
         {
-            if (Manager.managerConfig != null)
+            if (Manager.managerConfig != null && Manager.props != null)
             {
                 List<Mod> expansionMods = Manager.managerConfig.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
 
@@ -521,9 +563,11 @@ namespace DayZServerManager.Server.Classes
                     updatedMods = false;
                     updatedServer = false;
                     Manager.WriteToConsole($"Updating Mission folder");
+                    Manager.props.managerStatus = "Updating Mission";
                     MissionUpdater upd = new MissionUpdater(Manager.managerConfig);
                     upd.Update();
                     Manager.WriteToConsole($"Finished updating Mission folder");
+                    Manager.props.managerStatus = "Updated Mission";
                 }
             }
         }
@@ -542,6 +586,8 @@ namespace DayZServerManager.Server.Classes
                 steamCMDProcess.StartInfo.FileName = Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE);
                 steamCMDProcess.Start();
 
+                props.steamCMDStatus = "Running";
+
                 int outputTime = 0;
                 Task task = ConsumeOutput(steamCMDProcess.StandardOutput, s =>
                 {
@@ -550,11 +596,11 @@ namespace DayZServerManager.Server.Classes
                         Manager.WriteToConsole(s);
                         if (s.Contains("Steam Guard"))
                         {
-                            props._serverStatus = "Steam Guard";
+                            props.steamCMDStatus = "Steam Guard";
                         }
                         else if (s.Contains("Waiting for client config"))
                         {
-                            props._serverStatus = "Client Config";
+                            props.steamCMDStatus = "Client Config";
                             outputTime = -1;
                         }
                         else if (outputTime != -1)
@@ -570,7 +616,7 @@ namespace DayZServerManager.Server.Classes
                     if (outputTime > 30)
                     {
                         Manager.WriteToConsole("Steam Guard");
-                        props._serverStatus = "Steam Guard";
+                        props.steamCMDStatus = "Steam Guard";
                         outputTime = 0;
                     }
                     else if (outputTime != -1)
@@ -580,12 +626,13 @@ namespace DayZServerManager.Server.Classes
                 }
 
                 steamCMDProcess.WaitForExit();
-                props._serverStatus = "Server downloaded";
+
+                props.steamCMDStatus = "Not Running";
             }
             catch (System.Exception ex)
             {
                 Manager.WriteToConsole(ex.ToString());
-                props._serverStatus = "Error";
+                props.dayzServerStatus = "Error";
             }
         }
 
@@ -681,19 +728,23 @@ namespace DayZServerManager.Server.Classes
                 List<Mod> mods = new List<Mod>();
                 mods.AddRange(Manager.managerConfig.clientMods);
                 mods.AddRange(Manager.managerConfig.serverMods);
-                if (mods.Count > 0)
+                if (mods.Count > 0 && Manager.props != null)
                 {
                     if (hasToUpdate)
                     {
+                        Manager.props.managerStatus = "Updating Mods";
                         Manager.WriteToConsole("Updating Mods");
                         UpdateMods(props, mods);
-                        Manager.WriteToConsole("Mods updated");
+                        Manager.props.managerStatus = "Mods Updated";
+                        Manager.WriteToConsole("Mods Updated");
                     }
                     if (hasToMove)
                     {
+                        Manager.props.managerStatus = "Moving Mods";
                         Manager.WriteToConsole("Moving Mods");
                         MoveMods(mods);
-                        Manager.WriteToConsole("Mods moved");
+                        Manager.props.managerStatus = "Mods Moved";
+                        Manager.WriteToConsole("Mods Moved");
 
                         UpdateMission();
                     }
@@ -869,8 +920,9 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        public void BackupServerData()
+        public void BackupServerData(ManagerProps props)
         {
+            props.managerStatus = "Backing up Server";
             if (Manager.managerConfig != null)
             {
                 BackupManager.MakeBackup(Manager.managerConfig.backupPath, Manager.managerConfig.profileName, Manager.managerConfig.missionName);
@@ -879,6 +931,7 @@ namespace DayZServerManager.Server.Classes
                     BackupManager.DeleteOldBackups(Manager.managerConfig.backupPath, Manager.managerConfig.maxKeepTime);
                 }
             }
+            props.managerStatus = "Backed up Server";
         }
 
         private Mod? SearchForMod(long key, List<Mod> mods)

@@ -52,15 +52,14 @@ namespace DayZServerManager.Server.Classes
 
         public static void InitiateManager()
         {
-            Manager.LoadManagerConfig();
+            LoadManagerConfig();
+            props = new ManagerProps("Listening", "Not Running", "Not Running", 0);
 
             if (managerConfig != null)
             {
-                props = new ManagerProps("Waiting for Starting");
-
                 if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
                 {
-                    props._serverStatus = "Please set Username and Password";
+                    props.managerStatus = "Credentials";
                     return;
                 }
 
@@ -100,7 +99,7 @@ namespace DayZServerManager.Server.Classes
             {
                 if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
                 {
-                    props._serverStatus = "Please set Username and Password";
+                    props.managerStatus = "Credentials";
                     return;
                 }
 
@@ -111,21 +110,20 @@ namespace DayZServerManager.Server.Classes
                     SaveServerConfig();
                 }
 
-                BackupServer(dayZServer);
-                UpdateServer(dayZServer);
+                UpdateAndBackupServer(dayZServer, true, true);
 
                 kill = false;
+                props.managerStatus = "Starting Server";
                 dayZServer.StartServer();
+
+                props.managerStatus = "Starting Scheduler";
                 dayZServer.StartScheduler();
 
-                props._serverStatus = "Server started";
+                props.managerStatus = "Listening";
+                props.dayzServerStatus = "Started";
 
                 serverLoop = new Task(() => { StartServerLoop(); });
                 serverLoop.Start();
-            }
-            else
-            {
-                props = new ManagerProps("No Manager Config");
             }
         }
 
@@ -136,7 +134,7 @@ namespace DayZServerManager.Server.Classes
 
                 Thread.Sleep(10000);
 
-                int i = 10;
+                double i = 10;
                 while (!kill)
                 {
                     if (dayZServer != null)
@@ -147,18 +145,11 @@ namespace DayZServerManager.Server.Classes
                             i += 10;
                             SaveServerConfig();
 
-                            if (managerConfig != null && managerConfig.makeBackups)
-                            {
-                                dayZServer.BackupServerData();
-                            }
-                            dayZServer.UpdateAndMoveServer(props, false, true);
-                            dayZServer.UpdateAndMoveMods(props, false, true);
-                            dayZServer.StartServer();
+                            UpdateAndBackupServer(dayZServer, false, true);
                         }
                         else
                         {
                             WriteToConsole("The Server is still running");
-                            props._serverStatus = "Server is running";
                         }
 
                         if (!dayZServer.CheckScheduler())
@@ -172,13 +163,12 @@ namespace DayZServerManager.Server.Classes
 
                         if (i % 120 == 0)
                         {
-                            props._serverStatus = "Updating Mods";
-                            dayZServer.UpdateAndMoveMods(props, true, false);
-                            props._serverStatus = "Updating Server";
-                            dayZServer.UpdateAndMoveServer(props, true, false);
+                            UpdateAndBackupServer(dayZServer, true, false);
+
                             dayZServer.RestartForUpdates();
                         }
                         i += 10;
+                        props.managerStatus = "Listening";
                         Thread.Sleep(10000);
                     }
                 }
@@ -191,7 +181,7 @@ namespace DayZServerManager.Server.Classes
 
                 SaveServerConfig();
 
-                props._serverStatus = "Server stopped";
+                props.managerStatus = "Listening";
 
                 WriteToConsole("Server was stopped");
             }
@@ -199,18 +189,18 @@ namespace DayZServerManager.Server.Classes
 
         public static void StopServer()
         {
-            if (Manager.props != null)
+            if (props != null)
             {
                 if (dayZServer != null && serverLoop != null)
                 {
-                    props._serverStatus = "Stopping Server";
+                    kill = true;
+                    props.managerStatus = "Stopping Server";
                 }
                 else
                 {
-                    props._serverStatus = "Server not running";
+                    KillServerProcesses();
                 }
             }
-            kill = true;
         }
 
         public static void KillServerProcesses()
@@ -218,8 +208,13 @@ namespace DayZServerManager.Server.Classes
             if (dayZServer != null)
             {
                 dayZServer.KillServerProcesses();
-                Thread.Sleep(5000);
+                Thread.Sleep(10000);
                 dayZServer = null;
+
+                if (serverConfig != null)
+                {
+                    SaveServerConfig();
+                }
             }
         }
 
@@ -236,29 +231,23 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        private static void UpdateServer(Server server)
+        private static void UpdateAndBackupServer(Server server, bool hasToUpdate, bool hasToMove)
         {
             if (props != null)
             {
-                props._serverStatus = "Updating server";
-                server.UpdateAndMoveServer(props, true, true);
-                props._serverStatus = "Updating Scheduler";
-                server.UpdateScheduler();
-                props._serverStatus = "Updating mods";
-                server.UpdateAndMoveMods(props, true, true);
-                props._serverStatus = "Server, Mods and Scheduler updated";
-            }
-        }
+                if (hasToMove)
+                {
+                    server.UpdateScheduler();
+                    if (managerConfig != null && managerConfig.makeBackups)
+                    {
+                        server.BackupServerData(props);
+                    }
+                }
 
-        private static void BackupServer(Server server)
-        {
-            if (props != null && managerConfig != null && managerConfig.makeBackups)
-            {
-                props._serverStatus = "Backing up server";
-                server.BackupServerData();
-                props._serverStatus = "Backed up server";
+                server.UpdateAndMoveServer(props, hasToUpdate, hasToMove);
+                
+                server.UpdateAndMoveMods(props, hasToUpdate, hasToMove);
             }
-
         }
 
         public static string SetSteamGuard(string code)

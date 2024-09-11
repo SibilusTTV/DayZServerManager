@@ -3,11 +3,17 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useEffect, useState } from "react";
 
+interface ServerInfo{
+    managerStatus: string;
+    dayzServerStatus: string;
+    steamCMDStatus: string;
+    players: number;
+}
 
 export default function Home() {
     const [open, setOpen] = useState(false);
     const [code, setCode] = useState("");
-    const [serverStatus, setServerStatus] = useState("Server not started");
+    const [serverStatus, setServerStatus] = useState<ServerInfo>();
     const [codeSent, setCodeSent] = useState(false);
     const [countdown, setCountdown] = useState(0);
 
@@ -20,7 +26,7 @@ export default function Home() {
                 }
                 setCountdown(countdown - 1);
             }
-            getServerStatus(setOpen, setServerStatus, codeSent);
+            getServerStatus(setOpen, setServerStatus, codeSent, open);
         }, 1000);
     }, [])
 
@@ -34,21 +40,19 @@ export default function Home() {
             <Button
                 onClick={() => { startDayZServer() }}
             >
-                Start the Server
+                Start Server
             </Button>
             <Button
                 onClick={stopDayZServer}
             >
-                Stop the Server
+                Stop Server
             </Button>
             <Button
                 onClick={() => { restartDayZServer() } }
             >
-                Restart the Server
+                Restart Server
             </Button>
-            <p>
-                {serverStatus}
-            </p>
+            {serverStatus && Object.entries(serverStatus!).map(([key, value]) => (<p>{key}: {String(value)}</p>))}
             <Dialog
                 open={open}
                 onClose={handleClose}
@@ -92,9 +96,9 @@ export default function Home() {
 async function getServerStatus(setOpen: Function, setServerStatus: Function, codeSent: boolean, open: boolean) {
     try {
         const response = await fetch('DayZServer/GetServerStatus');
-        const result = await response.text()
+        const result = (await response.json()) as ServerInfo;
         setServerStatus(result);
-        if (!codeSent && !open && result === "Steam Guard") {
+        if (!codeSent && !open && result.steamCMDStatus === "Steam Guard") {
             setOpen(true);
         }
     }

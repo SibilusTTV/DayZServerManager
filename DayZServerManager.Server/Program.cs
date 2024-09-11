@@ -29,6 +29,7 @@ app.MapFallbackToFile("/index.html");
 
 AppDomain.CurrentDomain.ProcessExit += new EventHandler((s, e) => { Manager.KillServerOnClose(); });
 
-Manager.InitiateManager();
+Task task = new Task(() => { Manager.InitiateManager(); });
+task.Start();
 
 app.Run("http://0.0.0.0:5172");

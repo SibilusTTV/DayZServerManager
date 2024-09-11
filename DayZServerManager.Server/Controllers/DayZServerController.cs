@@ -17,38 +17,23 @@ namespace DayZServerManager.Server.Controllers
         }
 
         [HttpGet("GetServerStatus")]
-        public string GetServerStatus()
+        public ManagerProps GetServerStatus()
         {
             if (Manager.props != null)
             {
-                return Manager.props._serverStatus;
+                return Manager.props;
             }
             else
             {
-                return "Server not started";
+                return new ManagerProps("Listening", "Not Running", "Not Running", 0);
             }
-        }
-
-        [HttpGet("GetSchedulerStatus")]
-        public bool GetSchedulerStatus()
-        {
-            if (Manager.dayZServer != null && Manager.dayZServer.CheckScheduler())
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-
         }
 
         [HttpGet("StartServer")]
         public bool StartDayZServer()
         {
-            if (Manager.props == null || (Manager.props._serverStatus == "Server stopped" || Manager.props._serverStatus == "Waiting for Starting" || Manager.props._serverStatus == "Error" || Manager.props._serverStatus == "Waiting for Starting" || Manager.props._serverStatus == "Server not running" || Manager.props._serverStatus == "Please set Username and Password"))
+            if (Manager.props != null && (Manager.props.managerStatus == "Listening" || Manager.props.managerStatus == "Server Stopped") && Manager.props.dayzServerStatus == "Not Running")
             {
-                Manager.props = new ManagerProps("Starting");
                 Task startTask = new Task(() => { Manager.StartServer(); });
                 startTask.Start();
                 return true;
@@ -62,11 +47,11 @@ namespace DayZServerManager.Server.Controllers
             Manager.StopServer();
             if (Manager.props != null)
             {
-                while (Manager.props._serverStatus == "Stopping Server")
+                while (Manager.props.dayzServerStatus == "Stopping Server")
                 {
                     Thread.Sleep(1000);
                 }
-                if (Manager.props._serverStatus == "Server stopped")
+                if (Manager.props.dayzServerStatus == "Server Stopped")
                 {
                     return true;
                 }
