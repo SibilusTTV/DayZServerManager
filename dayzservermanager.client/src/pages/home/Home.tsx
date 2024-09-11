@@ -56,8 +56,8 @@ export default function Home() {
                     component: 'form',
                     onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
                         event.preventDefault();
-                        setOpen(false);
                         setCodeSent(true);
+                        setOpen(false);
                         sendSteamGuard(code);
                     },
                 }}
@@ -89,12 +89,12 @@ export default function Home() {
     )
 }
 
-async function getServerStatus(setOpen: Function, setServerStatus: Function, codeSent: boolean) {
+async function getServerStatus(setOpen: Function, setServerStatus: Function, codeSent: boolean, open: boolean) {
     try {
         const response = await fetch('DayZServer/GetServerStatus');
         const result = await response.text()
         setServerStatus(result);
-        if (!codeSent && result === "Steam Guard") {
+        if (!codeSent && !open && result === "Steam Guard") {
             setOpen(true);
         }
     }
