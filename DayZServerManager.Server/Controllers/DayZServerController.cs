@@ -47,12 +47,11 @@ namespace DayZServerManager.Server.Controllers
             Manager.StopServer();
             if (Manager.props != null)
             {
-
                 while (Manager.props.managerStatus == "Stopping Server")
                 {
                     Thread.Sleep(1000);
                 }
-                if (Manager.props.managerStatus == "Server Stopped")
+                if (Manager.props.managerStatus == "Listening")
                 {
                     return true;
                 }

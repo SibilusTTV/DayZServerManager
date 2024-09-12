@@ -159,7 +159,7 @@ namespace DayZServerManager.Server.Classes
             string parameters = "";
             if (Manager.managerConfig != null)
             {
-                parameters = $"-instanceId={Manager.managerConfig.instanceId} \"-config={Manager.managerConfig.serverConfigName}\" \"-profiles={Manager.managerConfig.profileName}\" -port={Manager.managerConfig.port} {clientModsToLoad} {serverModsToLoad} -cpuCount={Manager.managerConfig.cpuCount}";
+                parameters = $"-instanceId={Manager.managerConfig.instanceId} \"-config={Manager.managerConfig.serverConfigName}\" \"-profiles={Manager.managerConfig.profileName}\" -port={Manager.managerConfig.serverPort} {clientModsToLoad} {serverModsToLoad} -cpuCount={Manager.managerConfig.cpuCount}";
 
                 if (Manager.managerConfig.noFilePatching)
                 {
@@ -586,15 +586,15 @@ namespace DayZServerManager.Server.Classes
                 {
                     if (s != null)
                     {
-                        Manager.WriteToConsole(s);
-                        if (s.Contains("Steam Guard"))
-                        {
-                            props.steamCMDStatus = "Steam Guard";
-                        }
-                        else if (s.Contains("Waiting for client config"))
+                        Manager.WriteToConsole(s); 
+                        if (s.Contains("client config"))
                         {
                             props.steamCMDStatus = "Client Config";
                             outputTime = -1;
+                        }
+                        else if (s.Contains("Steam Guard"))
+                        {
+                            props.steamCMDStatus = "Steam Guard";
                         }
                         else if (outputTime != -1)
                         {

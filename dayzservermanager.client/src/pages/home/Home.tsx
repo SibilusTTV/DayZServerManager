@@ -31,7 +31,6 @@ export default function Home() {
     const handleClose = () => {
         setOpenDialog(false);
         setDialogTimeout(30);
-        stopDayZServer();
     };
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

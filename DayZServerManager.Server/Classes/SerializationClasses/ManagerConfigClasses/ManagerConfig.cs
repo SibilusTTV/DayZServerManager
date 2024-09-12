@@ -8,6 +8,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
 {
     public class ManagerConfig
     {
+        public int managerPort {  get; set; }
         public string steamUsername { get; set; }
         public string steamPassword { get; set; }
         public string backupPath { get; set; }
@@ -17,7 +18,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
         public int instanceId { get; set; }
         public string serverConfigName { get; set; }
         public string profileName { get; set; }
-        public int port { get; set; }
+        public int serverPort { get; set; }
         public int steamQueryPort { get; set; }
         public int RConPort { get; set; }
         public string RConPassword { get; set; }
@@ -41,6 +42,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
 
         public ManagerConfig()
         {
+            managerPort = 5172;
             steamUsername = "";
             steamPassword = "";
             backupPath = "Backup";
@@ -48,7 +50,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigCla
             instanceId = 1;
             serverConfigName = "serverDZ.cfg";
             profileName = "Profiles";
-            port = 2302;
+            serverPort = 2302;
             steamQueryPort = 2305;
             RConPort = 2306;
             RConPassword = "YouRConPassword";

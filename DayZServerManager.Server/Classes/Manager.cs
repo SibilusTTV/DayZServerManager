@@ -31,7 +31,6 @@ namespace DayZServerManager.Server.Classes
         public const string STEAMCMD_DOWNLOAD_URL = "https://steamcdn-a.akamaihd.net/client/installer/";
         public const string MODS_PATH = "mods";
         public static string WORKSHOP_PATH = Path.Combine("steamapps", "workshop", "content", "221100");
-        public const string PROFILE_NAME = "Profiles";
         public static string MISSION_PATH = Path.Combine(SERVER_PATH, "mpmissions");
         public static string EXPANSION_DOWNLOAD_PATH = Path.Combine(MISSION_PATH, "DayZ-Expansion-Missions");
         public static string BATTLEYE_FOLDER_NAME = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
@@ -80,6 +79,10 @@ namespace DayZServerManager.Server.Classes
                 {
                     FileSystem.CreateDirectory(SCHEDULER_PATH);
                 }
+                if (!directories.Contains(SERVER_DEPLOY))
+                {
+                    FileSystem.CreateDirectory(SERVER_DEPLOY);
+                }
 
                 List<string> serverDirectories = FileSystem.GetDirectories(SERVER_PATH).ToList<string>();
                 if (serverDirectories.Find(x => Path.GetFileName(x) == managerConfig.profileName) == null)
@@ -94,7 +97,8 @@ namespace DayZServerManager.Server.Classes
 
                 if (managerConfig.autoStartServer)
                 {
-                    StartServer();
+                    Task task = new Task(() => { StartServer(); });
+                    task.Start();
                 }
             }
         }
@@ -152,6 +156,8 @@ namespace DayZServerManager.Server.Classes
                             SaveServerConfig();
 
                             UpdateAndBackupServer(dayZServer, false, true);
+
+                            dayZServer.StartServer();
                         }
                         else
                         {
