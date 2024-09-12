@@ -540,7 +540,7 @@ namespace DayZServerManager.Server.Classes
             {
                 List<Mod> expansionMods = Manager.managerConfig.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
 
-                if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => upodatedModsIDs.Contains(mod.workshopID)).Count > 0))
+                if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
                 {
                     updatedMods = false;
                     updatedServer = false;
