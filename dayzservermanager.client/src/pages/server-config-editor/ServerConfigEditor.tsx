@@ -73,12 +73,12 @@ export default function ServerConfigEditor() {
         populateServerConfig();
     }, []);
     
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
         if (!(serverConfig === undefined)) {
             setServerConfig(
                 {
                     ...serverConfig,
-                    [event.target.id]: event.target.value
+                    [event.target.id]: (event.target.value.toLowerCase() == "true") ? true : (event.target.value.toLowerCase() == "false" ? false : event.target.value)
                 }
             );
         }
@@ -131,7 +131,7 @@ export default function ServerConfigEditor() {
 
     let texts: JSX.Element[] = new Array;
     if (!(serverConfig === undefined)) {
-        Object.entries(serverConfig).map(([key, value]) => (key != "motd" && key != "template") && texts.push(<TextField key={key} id={key} variant="outlined" label={key} defaultValue={value} onChange={handleChange} />));
+        Object.entries(serverConfig).map(([key, value]) => (key != "motd" && key != "template") && texts.push(<TextField key={key} id={key} variant="outlined" label={key} defaultValue={value} onBlur={handleBlur} />));
     }
 
     const contents = serverConfig === undefined

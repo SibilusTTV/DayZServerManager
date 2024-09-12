@@ -58,12 +58,12 @@ export default function ManagerConfigEditor() {
         populateManagerConfig();
     }, []);
 
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
         if (!(managerConfig === undefined)) {
             setManagerConfig(
                 {
                     ...managerConfig,
-                    [event.target.id]: event.target.value
+                    [event.target.id]: (event.target.value.toLowerCase() == "true") ? true : (event.target.value.toLowerCase() == "false" ? false : event.target.value)
                 }
             );
         }
@@ -393,7 +393,7 @@ export default function ManagerConfigEditor() {
 
     let texts: JSX.Element[] = new Array;
     if (managerConfig != null) {
-        Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods" && key != "customMessages") && texts.push(<TextField key={key} id={key} variant="outlined" label={key} defaultValue={value} onChange={handleChange} />));
+        Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods" && key != "customMessages") && texts.push(<TextField key={key} id={key} variant="outlined" label={key} defaultValue={value} onBlur={handleBlur} />));
     }
 
     const contents = managerConfig === undefined
