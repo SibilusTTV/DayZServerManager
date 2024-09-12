@@ -392,7 +392,7 @@ export default function ManagerConfigEditor() {
     }
 
     let texts: JSX.Element[] = new Array;
-    if (!(managerConfig === undefined)) {
+    if (managerConfig != null) {
         Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods" && key != "customMessages") && texts.push(<TextField key={key} id={key} variant="outlined" label={key} defaultValue={value} onChange={handleChange} />));
     }
 
@@ -420,7 +420,7 @@ export default function ManagerConfigEditor() {
                                 <Button onClick={() => { moveClientModUp(index) }}><KeyboardArrowUpIcon/></Button>
                                 <Button onClick={() => { moveClientModDown(index) }}><KeyboardArrowDownIcon/></Button>
                                 <TextField id="workshopID" variant="outlined" label="Workshop ID" defaultValue={mod.workshopID} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleClientModChange(event, index)} />
-                                <TextField id="name" variant="outlined" label="Name" defaultValue={mod.name} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleClientModChange(event, index)} />
+                                <TextField fullWidth id="name" variant="outlined" label="Name" defaultValue={mod.name} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleClientModChange(event, index)} />
                                 <Button id="deleteButton" onClick={() => deleteClientMod(mod.id)}>
                                     Delete
                                 </Button>
@@ -441,7 +441,7 @@ export default function ManagerConfigEditor() {
                                 <Button onClick={() => { moveServerModUp(index) }}><KeyboardArrowUpIcon/></Button>
                                 <Button onClick={() => { moveServerModDown(index) }}><KeyboardArrowDownIcon /></Button>
                                 <TextField id="workshopID" variant="outlined" label="Workshop ID" defaultValue={mod.workshopID} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleServerModChange(event, index)} />
-                                <TextField id="name" variant="outlined" label="Name" defaultValue={mod.name} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleServerModChange(event, index)} />
+                                <TextField fullWidth id="name" variant="outlined" label="Name" defaultValue={mod.name} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleServerModChange(event, index)} />
                                 <Button id="deleteButton" onClick={() => deleteServerMod(mod.id)}>
                                     Delete
                                 </Button>
@@ -477,7 +477,7 @@ export default function ManagerConfigEditor() {
                                 </div>
                                 <div className="subContainer">
                                     <TextField id="Title" variant="outlined" label="Title" defaultValue={message.title} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
-                                    <TextField multiline={true} id="Message" variant="outlined" label="Message" defaultValue={message.message} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
+                                    <TextField fullWidth multiline={true} id="Message" variant="outlined" label="Message" defaultValue={message.message} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
                                     <TextField id="Icon" variant="outlined" label="Icon" defaultValue={message.icon} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
                                     <TextField id="Color" variant="outlined" label="Color" defaultValue={message.color} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
                                     <TextField id="IsTimeOfDay" variant="outlined" label="Is Time Of Day" defaultValue={message.isTimeOfDay} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
