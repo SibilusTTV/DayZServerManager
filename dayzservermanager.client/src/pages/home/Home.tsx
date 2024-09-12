@@ -22,11 +22,14 @@ export default function Home() {
             if (codeSent) {
                 if (countdown <= 0) {
                     setCodeSent(false);
-                    setCountdown(30);
                 }
-                setCountdown(countdown - 1);
+                else {
+                    setCountdown(countdown - 1);
+                }
             }
-            getServerStatus(setOpen, setServerStatus, codeSent, open);
+            if (!open) {
+                getServerStatus(setOpen, setServerStatus, codeSent, open);
+            }
         }, 1000);
     }, [])
 
@@ -60,6 +63,7 @@ export default function Home() {
                     component: 'form',
                     onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
                         event.preventDefault();
+                        setCountdown(30);
                         setCodeSent(true);
                         setOpen(false);
                         sendSteamGuard(code);

@@ -138,32 +138,14 @@ namespace DayZServerManager.Server.Classes
                     serverProcess = new Process();
                     ProcessStartInfo procInf = new ProcessStartInfo();
                     string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
-                    procInf.UseShellExecute = false;
-                    procInf.CreateNoWindow = true;
                     procInf.WorkingDirectory = Manager.SERVER_PATH;
                     procInf.Arguments = startParameters;
                     procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE);
-                    procInf.RedirectStandardError = true;
-                    procInf.RedirectStandardInput = true;
-                    procInf.RedirectStandardOutput = true;
                     serverProcess.StartInfo = procInf;
                     Manager.WriteToConsole($"Starting Server");
                     serverProcess.Start();
                     Manager.props.dayzServerStatus = "Running";
-                    Task task = ConsumeOutput(serverProcess.StandardOutput, s =>
-                    {
-                        if (s != null)
-                        {
-                            Manager.WriteToConsole(s);
-                            Regex reg = new Regex("Players: ([0-9]+)");
-                            Match regMatch = reg.Match(s);
-                            if (regMatch.Success)
-                            {
-                                if (Manager.props != null) Manager.props.players = Convert.ToInt32(regMatch.Value[1]);
-                            }
-                        }
-                    });
-                    Manager.WriteToConsole($"Server started at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
+                    Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
                 }
                 catch (Exception ex)
                 {
@@ -558,7 +540,7 @@ namespace DayZServerManager.Server.Classes
             {
                 List<Mod> expansionMods = Manager.managerConfig.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
 
-                if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
+                if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => upodatedModsIDs.Contains(mod.workshopID)).Count > 0))
                 {
                     updatedMods = false;
                     updatedServer = false;
