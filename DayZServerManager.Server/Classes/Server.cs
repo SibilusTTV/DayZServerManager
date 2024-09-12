@@ -196,17 +196,24 @@ namespace DayZServerManager.Server.Classes
             {
                 try
                 {
+                    if (Manager.props != null) Manager.props.managerStatus = "Updating Scheduler";
+                    Manager.WriteToConsole("Updating Scheduler");
+
                     if (!FileSystem.DirectoryExists(Manager.SCHEDULER_PATH))
                     {
                         FileSystem.CreateDirectory(Manager.SCHEDULER_PATH);
                     }
 
+
+                    Manager.WriteToConsole("Downloading Scheduler");
                     HttpResponseMessage response;
                     using (HttpClient client = new HttpClient())
                     {
                         response = client.GetAsync($"{Manager.SCHEDULER_DOWNLOAD_URL}{Manager.SCHEDULER_ZIP_NAME}").Result;
                     }
+                    Manager.WriteToConsole("Scheduler Downloaded");
 
+                    Manager.WriteToConsole("Unpacking Zip");
                     if (response.IsSuccessStatusCode)
                     {
                         byte[] content = response.Content.ReadAsByteArrayAsync().Result;
@@ -214,6 +221,7 @@ namespace DayZServerManager.Server.Classes
                         File.WriteAllBytes(zipPath, content);
                         ZipFile.ExtractToDirectory(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_ZIP_NAME), Manager.SCHEDULER_PATH, true);
                     }
+                    Manager.WriteToConsole("Zip Unpacked");
 
                     if (OperatingSystem.IsLinux())
                     {
@@ -324,6 +332,9 @@ namespace DayZServerManager.Server.Classes
                     {
                         CreateAndSaveNewBans(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_BANS_NAME));
                     }
+
+                    Manager.WriteToConsole("Scheduler Updated");
+                    if (Manager.props != null) Manager.props.managerStatus = "Scheduler Updated";
                 }
                 catch (Exception ex)
                 {
@@ -643,6 +654,7 @@ namespace DayZServerManager.Server.Classes
                 }
                 else
                 {
+                    if (Manager.props != null) Manager.props.steamCMDStatus = "Not Running";
                     return "No SteamCMD Process";
                 }
 
@@ -905,6 +917,7 @@ namespace DayZServerManager.Server.Classes
         public void BackupServerData(ManagerProps props)
         {
             props.managerStatus = "Backing up Server";
+            Manager.WriteToConsole("Backing up Server");
             if (Manager.managerConfig != null)
             {
                 BackupManager.MakeBackup(Manager.managerConfig.backupPath, Manager.managerConfig.profileName, Manager.managerConfig.missionName);
@@ -913,6 +926,7 @@ namespace DayZServerManager.Server.Classes
                     BackupManager.DeleteOldBackups(Manager.managerConfig.backupPath, Manager.managerConfig.maxKeepTime);
                 }
             }
+            Manager.WriteToConsole("Backed up Server");
             props.managerStatus = "Backed up Server";
         }
 

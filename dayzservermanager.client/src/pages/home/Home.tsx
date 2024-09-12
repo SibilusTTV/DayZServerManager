@@ -11,31 +11,34 @@ interface ServerInfo{
 }
 
 export default function Home() {
-    const [open, setOpen] = useState(false);
-    const [code, setCode] = useState("");
+    const [openDialog, setOpenDialog] = useState(false);
+    const [steamGuardCode, setSteamGuardCode] = useState("");
     const [serverStatus, setServerStatus] = useState<ServerInfo>();
-    const [codeSent, setCodeSent] = useState(false);
-    const [countdown, setCountdown] = useState(0);
+    const [dialogTimeout, setDialogTimeout] = useState(0);
 
     useEffect(() => {
-        setInterval(() => {
-            if (codeSent) {
-                if (countdown <= 0) {
-                    setCodeSent(false);
+        const timer = setInterval(() => {
+            if (!openDialog) {
+                if (dialogTimeout > 0) {
+                    setDialogTimeout(dialogTimeout - 1);
                 }
-                else {
-                    setCountdown(countdown - 1);
-                }
-            }
-            if (!open) {
-                getServerStatus(setOpen, setServerStatus, codeSent, open);
+                getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog);
             }
         }, 1000);
-    }, [])
+        return () => clearInterval(timer);
+    })
 
     const handleClose = () => {
-        setOpen(false);
+        setOpenDialog(false);
+        setDialogTimeout(30);
         stopDayZServer();
+    };
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setOpenDialog(false);
+        setDialogTimeout(30);
+        sendSteamGuard(steamGuardCode);
     };
 
     return (
@@ -57,17 +60,11 @@ export default function Home() {
             </Button>
             {serverStatus && Object.entries(serverStatus!).map(([key, value]) => (<p>{key}: {String(value)}</p>))}
             <Dialog
-                open={open}
+                open={openDialog}
                 onClose={handleClose}
                 PaperProps={{
                     component: 'form',
-                    onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-                        event.preventDefault();
-                        setCountdown(30);
-                        setCodeSent(true);
-                        setOpen(false);
-                        sendSteamGuard(code);
-                    },
+                    onSubmit: handleSubmit
                 }}
             >
                 <DialogTitle>Steam Guard</DialogTitle>
@@ -85,7 +82,7 @@ export default function Home() {
                         type="password"
                         fullWidth
                         variant="standard"
-                        onChange={(event) => { setCode(event.target.value) }}
+                        onChange={(event) => { setSteamGuardCode(event.target.value) }}
                     />
                 </DialogContent>
                 <DialogActions>
@@ -97,12 +94,12 @@ export default function Home() {
     )
 }
 
-async function getServerStatus(setOpen: Function, setServerStatus: Function, codeSent: boolean, open: boolean) {
+async function getServerStatus(setOpen: Function, setServerStatus: Function, dialogTimeout: number, open: boolean) {
     try {
         const response = await fetch('DayZServer/GetServerStatus');
         const result = (await response.json()) as ServerInfo;
         setServerStatus(result);
-        if (!codeSent && !open && result.steamCMDStatus === "Steam Guard") {
+        if (dialogTimeout <= 0 && !open && result.steamCMDStatus === "Steam Guard") {
             setOpen(true);
         }
     }

@@ -81,6 +81,12 @@ namespace DayZServerManager.Server.Classes
                     FileSystem.CreateDirectory(SCHEDULER_PATH);
                 }
 
+                List<string> serverDirectories = FileSystem.GetDirectories(SERVER_PATH).ToList<string>();
+                if (serverDirectories.Find(x => Path.GetFileName(x) == managerConfig.profileName) == null)
+                {
+                    FileSystem.CreateDirectory(Path.Combine(SERVER_PATH, managerConfig.profileName));
+                }
+
                 LoadServerConfig();
                 AdjustServerConfig();
                 SaveManagerConfig();
@@ -238,6 +244,7 @@ namespace DayZServerManager.Server.Classes
                 if (hasToMove)
                 {
                     server.UpdateScheduler();
+
                     if (managerConfig != null && managerConfig.makeBackups)
                     {
                         server.BackupServerData(props);
