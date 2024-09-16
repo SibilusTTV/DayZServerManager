@@ -195,7 +195,9 @@ export default function ServerConfigEditor() {
     async function populateServerConfig() {
         const response = await fetch('ServerConfig/GetServerConfig');
         const result = (await response.json()) as ServerConfig;
-        setServerConfig(result);
+        if (result != null) {
+            setServerConfig(result);
+        }
     }
 
     async function postServerConfig() {
@@ -206,13 +208,17 @@ export default function ServerConfigEditor() {
             body: JSON.stringify(serverConfig)
         });
         const result = await response.text()
-        alert(result);
+        if (result != null) {
+            alert(result);
+        }
     }
 
     async function saveServerConfig() {
         const response = await fetch('ServerConfig/SaveServerConfig');
-        const result = await response.text()
-        alert(result);
+        const result = await response.text();
+        if (result != null) {
+            alert(result);
+        }
     }
 
 

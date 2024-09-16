@@ -173,7 +173,7 @@ async function sendSteamGuard(_code: string) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            code: _code
+            value: _code
         })
     });
     const result = await response.text();

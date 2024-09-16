@@ -1,4 +1,4 @@
-﻿using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
+﻿using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;

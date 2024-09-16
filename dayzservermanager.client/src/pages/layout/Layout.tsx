@@ -21,6 +21,7 @@ export default function Layout() {
                     </Link>
                     <Button color="inherit"><Link to="/manager-config">Manager Config Editor</Link></Button>
                     <Button color="inherit"><Link to="/server-config">Server Config Editor</Link></Button>
+                    <Button color="inherit"><Link to="/rarity-editor">Rarity Editor</Link></Button>
                 </Toolbar>
             </Box>
             <Outlet />

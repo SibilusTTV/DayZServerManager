@@ -516,7 +516,9 @@ export default function ManagerConfigEditor() {
     async function populateManagerConfig() {
         const response = await fetch('ManagerConfig/GetManagerConfig');
         const result = (await response.json()) as ManagerConfig;
-        setManagerConfig(result);
+        if (result != null) {
+            setManagerConfig(result);
+        }
     }
 
     async function postManagerConfig() {
@@ -527,7 +529,9 @@ export default function ManagerConfigEditor() {
             headers: { 'Content-Type': 'application/json' },
             body: json
         });
-        const result = await response.text()
-        alert(result);
+        const result = await response.text();
+        if (result != null) {
+            alert(result);
+        }
     }
 }

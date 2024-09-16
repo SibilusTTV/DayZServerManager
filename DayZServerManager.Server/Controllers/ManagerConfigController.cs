@@ -1,5 +1,5 @@
 ﻿using DayZServerManager.Server.Classes;
-using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.Xml.Linq;

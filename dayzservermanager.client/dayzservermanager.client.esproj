@@ -13,6 +13,9 @@
     <Folder Include="src\pages\home\" />
     <Folder Include="src\pages\manager-config-editor\components\" />
     <Folder Include="src\pages\no-page\" />
+    <Folder Include="src\pages\rarity-editor\components\expansion-rarities-editor\" />
+    <Folder Include="src\pages\rarity-editor\components\custom-files-rarities-editor\" />
+    <Folder Include="src\pages\rarity-editor\components\vanilla-rarities-editor\" />
     <Folder Include="src\pages\server-config-editor\" />
   </ItemGroup>
 </Project>

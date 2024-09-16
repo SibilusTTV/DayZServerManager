@@ -54,6 +54,10 @@ export default defineConfig({
             '/ServerConfig': {
                 target,
                 secure: false
+            },
+            '/RarityEditor': {
+                target,
+                secure: false
             }
         },
         port: 5173,

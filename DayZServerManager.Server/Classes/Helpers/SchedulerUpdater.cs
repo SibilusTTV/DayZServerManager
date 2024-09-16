@@ -1,4 +1,4 @@
-﻿using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
+﻿using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 
 namespace DayZServerManager.Server.Classes.Helpers
