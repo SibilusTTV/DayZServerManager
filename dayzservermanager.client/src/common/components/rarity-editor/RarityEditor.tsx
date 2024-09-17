@@ -1,6 +1,8 @@
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
 import { ChangeEvent, useEffect, useState } from "react";
 import { Dict } from "styled-components/dist/types";
+import { MarqueeSelection } from '@fluentui/react/lib/MarqueeSelection';
+import { DetailsList, IColumn, Selection } from '@fluentui/react/lib/DetailsList';
 import "./RarityEditor.css";
 
 interface RarityFile {
@@ -133,29 +135,55 @@ export default function RarityEditor(props: RarityEditorProps) {
         }
     }
 
-    let texts: JSX.Element[] = new Array;
-    if (rarities?.itemRarity != null) {
-        for (let key in rarities.itemRarity) {
-            texts.push(
-                <div key={key} id={key} className="rarityElement">
-                    <input type="checkbox" id={key} onChange={onCheckedChanged} />
-                    <div className="rarityName">{String(key)}</div>
-                    <input id={key}
-                        value={rarities?.itemRarity[key]}
-                        onChange={(event) => { onChange(event) }}
-                    />
-                    <button className="rarityDeleteButton" onClick={() => deleteRarity(key)}>Delete</button>
-                </div>
-            )
+    const columns: IColumn[] = [
+        {
+            key: 'Column0',
+            name: 'Name',
+            ariaLabel: 'Name',
+            fieldName: 'Name',
+            minWidth: 360,
+            maxWidth: 800,
+            isRowHeader: true,
+            isResizable: true,
+            data: 'string',
+            onColumnClick: () => { },
+            onRender: (item: [string, number]) => { return <span>{item[0]}</span>; }
+        },
+        {
+            key: 'Column1',
+            name: 'Rarity',
+            ariaLabel: 'Rarity',
+            fieldName: 'Rarity',
+            minWidth: 40,
+            maxWidth: 800,
+            isRowHeader: true,
+            isResizable: true,
+            data: 'number',
+            onColumnClick: () => { },
+            onRender: (item: [string, number]) => { return <span>{item[1]}</span>; }
         }
-    }
+    ];
+
+    const _selection = new Selection();
+    
 
     const contents = rarities == null
         ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
         :
-        <>
-            {texts != null && texts.map(x => { return x; })}
-        </>
+        <div>
+            <MarqueeSelection selection={_selection}>
+                <DetailsList
+                    setKey="items"
+                    items={Object.entries(rarities.itemRarity)}
+                    columns={columns}
+                    selection={_selection}
+                    selectionPreservedOnEmptyClick={true}
+                    ariaLabelForSelectionColumn="Toggle selection"
+                    ariaLabelForSelectAllCheckbox="Toggle selection for all items"
+                    checkButtonAriaLabel="select row"
+                />
+            </MarqueeSelection>
+        </div>
 
     const rarityButtons: JSX.Element[] = new Array;
     for (let key in rarityDefinitions) {
