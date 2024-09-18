@@ -29,8 +29,8 @@ namespace DayZServerManager.Server.Classes.Helpers
             {
                 Manager.WriteToConsole("Updating Rarity, Hardline and Types");
 
-                UpdateHardlineAndTypes(Manager.MISSION_PATH, name, rarityFile);
                 UpdateRarities(Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionTemplateName), name, rarityFile);
+                UpdateHardlineAndTypes(Manager.MISSION_PATH, name, rarityFile);
 
                 Manager.WriteToConsole("Rarity, Hardline and Types updated");
             }
@@ -58,35 +58,46 @@ namespace DayZServerManager.Server.Classes.Helpers
                     if (Manager.managerConfig != null)
                     {
                         UpdateCustomTypes(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), rarityFile);
+                        UpdateCustomTypes(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName), rarityFile);
                     }
                     break;
             }
             if (Manager.managerConfig != null)
             {
-                UpdateHardline(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), rarityFile);
+                UpdateHardline(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName), rarityFile);
             }
             Manager.WriteToConsole("Hardline and Types updated");
         }
 
-        private static void UpdateHardline(string folderPath, RarityFile rarityFile)
+        private static void UpdateHardline(string missionPath, string missionTemplatePath, RarityFile rarityFile)
         {
-            List<string> missionFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
-            if (missionFolders.Find(x => Path.GetFileName(x) == "expansion") != null)
+            try
             {
-                List<string> missionExpansionFolders = FileSystem.GetDirectories(Path.Combine(folderPath, "expansion")).ToList<string>();
-                if (missionFolders.Find(x => Path.GetFileName(x) == "settings") != null)
+                HardlineFile? hardlineFile = JSONSerializer.DeserializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, "expansion", "settings", "HardlineSettings.json"));
+                RarityFile? vanillaRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "vanillaRarities.json"));
+                RarityFile? expansionRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "expansionRarities.json"));
+                RarityFile? customFilesRarityFile = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "customFilesRarities.json"));
+
+                if (hardlineFile != null)
                 {
-                    List<string> missionExpansionSettingsFiles = FileSystem.GetFiles(Path.Combine(folderPath, "expansion", "settings")).ToList<string>();
-                    if (missionExpansionSettingsFiles.Find(x => Path.GetFileName(x) == "HardlineSettings.json") != null)
+                    if (vanillaRarity != null)
                     {
-                        HardlineFile? hardlineFile = JSONSerializer.DeserializeJSONFile<HardlineFile>(Path.Combine(folderPath, "expansion", "settings", "HardlineSettings.json"));
-                        if (hardlineFile != null)
-                        {
-                            MissionUpdater.UpdateHardlineRarity(hardlineFile, rarityFile);
-                            JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(folderPath, "expansion", "settings", "HardlineSettings.json"), hardlineFile);
-                        }
+                        MissionUpdater.UpdateHardlineRarity(hardlineFile, vanillaRarity);
                     }
+                    if (expansionRarity != null)
+                    {
+                        MissionUpdater.UpdateHardlineRarity(hardlineFile, expansionRarity);
+                    }
+                    if (customFilesRarityFile != null)
+                    {
+                        MissionUpdater.UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
+                    }
+                    JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json"), hardlineFile);
                 }
+            }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
             }
         }
 

@@ -296,7 +296,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                                 EnableFactionPersistence = 0,
                                 EnableItemRarity = 1,
                                 UseItemRarityOnInventoryIcons = 1,
-                                UseItemRarityForMarketPurchase = 0,
+                                UseItemRarityForMarketPurchase = 1,
                                 UseItemRarityForMarketSell = 0,
                                 MaxReputation = 5000,
                                 ReputationLossOnDeath = 1000,
