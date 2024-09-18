@@ -66,5 +66,8 @@ export default defineConfig({
             cert: fs.readFileSync(certFilePath),
         },
         host: true
+    },
+    optimizeDeps: {
+        exclude: ['mui_x-data-grid.js']
     }
 })

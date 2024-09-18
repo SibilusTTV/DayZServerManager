@@ -28,6 +28,10 @@ namespace DayZServerManager.Server.Controllers
         {
             Manager.managerConfig = config;
             Manager.SaveManagerConfig();
+            if (Manager.props != null)
+            {
+                Manager.props.managerStatus = "Listening";
+            }
             return true;
         }
     }

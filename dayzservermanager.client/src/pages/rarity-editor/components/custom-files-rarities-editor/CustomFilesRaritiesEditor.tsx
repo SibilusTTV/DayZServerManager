@@ -1,4 +1,4 @@
-import RarityEditor from "../../../../common/components/rarity-editor/RarityEditor";
+import RarityEditor from "../../../../common/components/rarity-editor-component/RarityEditorComponent";
 
 
 export default function CustomFilesRaritiesEditor() {

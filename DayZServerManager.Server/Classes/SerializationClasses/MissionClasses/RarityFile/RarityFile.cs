@@ -2,6 +2,6 @@
 {
     public class RarityFile
     {
-        public Dictionary<string, int>? ItemRarity { get; set; }
+        public List<RarityItem> ItemRarity { get; set; }
     }
 }

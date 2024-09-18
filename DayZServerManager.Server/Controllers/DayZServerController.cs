@@ -20,14 +20,11 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetServerStatus")]
         public ManagerProps GetServerStatus()
         {
-            if (Manager.props != null)
+            if (Manager.props == null)
             {
-                return Manager.props;
+                Manager.props = new ManagerProps("Listening", "Not Running", "Not Running", 0);
             }
-            else
-            {
-                return new ManagerProps("Listening", "Not Running", "Not Running", 0);
-            }
+            return Manager.props;
         }
 
         [HttpGet("StartServer")]

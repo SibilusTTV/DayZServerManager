@@ -136,21 +136,45 @@ namespace DayZServerManager.Server.Classes.Helpers
                     //Creating customFilesRarities.json file
                     if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "customFilesRarities.json") == null)
                     {
-                        HardlineFile customFilesRarities = new HardlineFile();
-                        customFilesRarities.ItemRarity = new Dictionary<string, int>();
-                        customFilesRarities.ItemRarity.Add("example1", 3);
-                        customFilesRarities.ItemRarity.Add("example2", 5);
-                        JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, "customFilesRarities.json"), customFilesRarities);
+                        RarityFile customFilesRarities = new RarityFile();
+                        customFilesRarities.ItemRarity = new List<RarityItem>()
+                        {
+                            new RarityItem()
+                            {
+                                id = 0,
+                                name = "example1",
+                                rarity = 3
+                            },
+                            new RarityItem()
+                            {
+                                id = 1,
+                                name = "example2",
+                                rarity = 5
+                            }
+                        };
+                        JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "customFilesRarities.json"), customFilesRarities);
                     }
 
                     //Creating vanillaRarities.json
                     if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "vanillaRarities.json") == null)
                     {
-                        HardlineFile vanillaRarities = new HardlineFile();
-                        vanillaRarities.ItemRarity = new Dictionary<string, int>();
-                        vanillaRarities.ItemRarity.Add("example1", 3);
-                        vanillaRarities.ItemRarity.Add("example2", 5);
-                        JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, "vanillaRarities.json"), vanillaRarities);
+                        RarityFile vanillaRarities = new RarityFile();
+                        vanillaRarities.ItemRarity = new List<RarityItem>()
+                        {
+                            new RarityItem()
+                            {
+                                id = 0,
+                                name = "example1",
+                                rarity = 3
+                            },
+                            new RarityItem()
+                            {
+                                id = 1,
+                                name = "example2",
+                                rarity = 5
+                            }
+                        };
+                        JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "vanillaRarities.json"), vanillaRarities);
                     }
 
                     //Creating vanillaTypesChanges.json
@@ -199,11 +223,23 @@ namespace DayZServerManager.Server.Classes.Helpers
                         //Creating expansionRarities.json
                         if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "expansionRarities.json") == null)
                         {
-                            HardlineFile expansionRarityFile = new HardlineFile();
-                            expansionRarityFile.ItemRarity = new Dictionary<string, int>();
-                            expansionRarityFile.ItemRarity.Add("example1", 3);
-                            expansionRarityFile.ItemRarity.Add("example2", 5);
-                            JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, "expansionRarities.json"), expansionRarityFile);
+                            RarityFile expansionRarityFile = new RarityFile();
+                            expansionRarityFile.ItemRarity = new List<RarityItem>()
+                            {
+                                new RarityItem()
+                                {
+                                    id = 0,
+                                    name = "example1",
+                                    rarity = 3
+                                },
+                                new RarityItem()
+                                {
+                                    id = 1,
+                                    name = "example2",
+                                    rarity = 5
+                                }
+                            };
+                            JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "expansionRarities.json"), expansionRarityFile);
                         }
 
                         //Creating expansionTypesChanges.json
@@ -630,19 +666,19 @@ namespace DayZServerManager.Server.Classes.Helpers
                 if (newRarities.ItemRarity != null && hardlineFile.ItemRarity != null)
                 {
                     Manager.WriteToConsole("Added rarities to hardline file");
-                    foreach (string key in newRarities.ItemRarity.Keys)
+                    foreach (RarityItem item in newRarities.ItemRarity)
                     {
-                        if (hardlineFile.ItemRarity.ContainsKey(key.ToLower()))
+                        if (hardlineFile.ItemRarity.ContainsKey(item.name.ToLower()))
                         {
-                            hardlineFile.ItemRarity[key.ToLower()] = newRarities.ItemRarity[key];
+                            hardlineFile.ItemRarity[item.name.ToLower()] = item.rarity;
                         }
-                        else if (hardlineFile.ItemRarity.ContainsKey(key))
+                        else if (hardlineFile.ItemRarity.ContainsKey(item.name))
                         {
-                            hardlineFile.ItemRarity[key] = newRarities.ItemRarity[key];
+                            hardlineFile.ItemRarity[item.name] = item.rarity;
                         }
                         else
                         {
-                            hardlineFile.ItemRarity.Add(key, newRarities.ItemRarity[key]);
+                            hardlineFile.ItemRarity.Add(item.name, item.rarity);
                         }
                     }
                     Manager.WriteToConsole("Finished adding rarities to hardline file");
@@ -662,12 +698,12 @@ namespace DayZServerManager.Server.Classes.Helpers
                 if (rarityFile.ItemRarity != null)
                 {
                     Manager.WriteToConsole("Updating types with rarity");
-                    foreach (string key in rarityFile.ItemRarity.Keys)
+                    foreach (RarityItem rarityitem in rarityFile.ItemRarity)
                     {
-                        TypesItem? item = SearchForTypesItem(key, typesFile);
+                        TypesItem? item = SearchForTypesItem(rarityitem.name, typesFile);
                         if (item != null)
                         {
-                            switch (rarityFile.ItemRarity[key])
+                            switch (rarityitem.rarity)
                             {
                                 case 0:
                                     item.nominal = 0;

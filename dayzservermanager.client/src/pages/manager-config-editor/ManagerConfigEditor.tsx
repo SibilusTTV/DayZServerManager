@@ -74,8 +74,8 @@ export default function ManagerConfigEditor() {
         let modIds: number[] = new Array<number>();
         modList.map((mod) => { modIds.push(mod.id) });
 
-        for (let i: number = 0; i < modList.length; i++) {
-            if (modIds.find(id => id == i) === undefined) {
+        for (let i: number = 0; i < modIds.length; i++) {
+            if (modIds.find(id => id === i) === undefined) {
                 return i;
             }
             else {
