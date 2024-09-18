@@ -62,7 +62,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                     {
                         TypesFile exampleTypesFile = new TypesFile()
                         {
-                            typesItems = new List<TypesItem>()
+                            typesItem = new List<TypesItem>()
                         {
                             new TypesItem()
                             {
@@ -588,7 +588,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                foreach (TypesItem item in typesFile.typesItems)
+                foreach (TypesItem item in typesFile.typesItem)
                 {
                     if (item.name.ToLower().Trim() == name.ToLower().Trim())
                     {
