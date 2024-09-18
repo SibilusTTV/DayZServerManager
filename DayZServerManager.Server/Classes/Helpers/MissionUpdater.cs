@@ -62,23 +62,23 @@ namespace DayZServerManager.Server.Classes.Helpers
                     {
                         TypesFile exampleTypesFile = new TypesFile()
                         {
-                            typesItem = new List<TypesItem>()
-                        {
-                            new TypesItem()
+                            typesItems = new List<TypesItem>()
                             {
-                                name = "ExampleItem",
-                                lifetime = 2000,
-                                nominal = 10,
-                                min = 5
-                            },
-                            new TypesItem()
-                            {
-                                name = "ExampleItem2",
-                                lifetime = 20000,
-                                nominal = 20,
-                                min = 10
+                                new TypesItem()
+                                {
+                                    name = "ExampleItem",
+                                    lifetime = 2000,
+                                    nominal = 10,
+                                    min = 5
+                                },
+                                new TypesItem()
+                                {
+                                    name = "ExampleItem2",
+                                    lifetime = 20000,
+                                    nominal = 20,
+                                    min = 10
+                                }
                             }
-                        }
                         };
                         XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(customFilesDirectories[0], "exampleTypesFile.xml"), exampleTypesFile);
                     }
@@ -588,7 +588,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                foreach (TypesItem item in typesFile.typesItem)
+                foreach (TypesItem item in typesFile.typesItems)
                 {
                     if (item.name.ToLower().Trim() == name.ToLower().Trim())
                     {
