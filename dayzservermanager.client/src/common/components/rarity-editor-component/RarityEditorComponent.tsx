@@ -114,17 +114,6 @@ export default function RarityEditor(props: RarityEditorProps) {
         PopulateRarityFile();
     }, []);
 
-    const processRowUpdate = (newRow: RarityItem) => {
-        const updatedRow = { ...newRow};
-        if (rarities) {
-            setRarities({
-                itemRarity: rarities.itemRarity.map((row) => (row.name === newRow.name ? updatedRow : row))
-            }
-            );
-        }
-        return updatedRow;
-    };
-
     const columns: GridColDef[] = [
         {
             field: 'name',
@@ -162,6 +151,18 @@ export default function RarityEditor(props: RarityEditorProps) {
             }
         }
     ];
+
+    const processRowUpdate = (newRow: RarityItem) => {
+        const updatedRow = { ...newRow };
+        if (rarities) {
+            setRarities(
+                {
+                    itemRarity: rarities.itemRarity.map((row) => (row.id === newRow.id ? updatedRow : row))
+                }
+            );
+        }
+        return updatedRow;
+    };
 
     const deleteRarity = (id: number) => {
         if (rarities != null) {
