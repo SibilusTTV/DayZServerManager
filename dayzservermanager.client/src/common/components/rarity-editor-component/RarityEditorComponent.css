@@ -1,0 +1,14 @@
+body {
+}
+.rarityElement{
+    display: flex;
+    flex-direction: row;
+    height: 20px;
+    margin: 5px 0px 5px 0px;
+}
+.rarityName {
+    width: 320px;
+}
+.rarityDeleteButton {
+    font-size: 8px;
+}

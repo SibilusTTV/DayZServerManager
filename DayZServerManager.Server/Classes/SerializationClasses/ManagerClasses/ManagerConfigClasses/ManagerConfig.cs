@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses
+namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses
 {
     public class ManagerConfig
     {
-        public int managerPort {  get; set; }
+        public int managerPort { get; set; }
         public string steamUsername { get; set; }
         public string steamPassword { get; set; }
         public string backupPath { get; set; }

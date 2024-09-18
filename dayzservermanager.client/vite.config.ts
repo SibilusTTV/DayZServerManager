@@ -54,6 +54,10 @@ export default defineConfig({
             '/ServerConfig': {
                 target,
                 secure: false
+            },
+            '/RarityEditor': {
+                target,
+                secure: false
             }
         },
         port: 5173,
@@ -62,5 +66,8 @@ export default defineConfig({
             cert: fs.readFileSync(certFilePath),
         },
         host: true
+    },
+    optimizeDeps: {
+        exclude: ['mui_x-data-grid.js']
     }
 })

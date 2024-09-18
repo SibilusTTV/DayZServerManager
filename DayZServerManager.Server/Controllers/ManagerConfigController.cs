@@ -1,5 +1,5 @@
 ﻿using DayZServerManager.Server.Classes;
-using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -28,6 +28,10 @@ namespace DayZServerManager.Server.Controllers
         {
             Manager.managerConfig = config;
             Manager.SaveManagerConfig();
+            if (Manager.props != null)
+            {
+                Manager.props.managerStatus = "Listening";
+            }
             return true;
         }
     }

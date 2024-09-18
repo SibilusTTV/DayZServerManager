@@ -1,6 +1,6 @@
 ﻿using DayZScheduler.Classes.SerializationClasses.SchedulerConfigClasses;
 using DayZServerManager.Server.Classes.Helpers;
-using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using Microsoft.VisualBasic.FileIO;
@@ -557,8 +557,7 @@ namespace DayZServerManager.Server.Classes
                     updatedServer = false;
                     Manager.WriteToConsole($"Updating Mission folder");
                     Manager.props.managerStatus = "Updating Mission";
-                    MissionUpdater upd = new MissionUpdater(Manager.managerConfig);
-                    upd.Update();
+                    MissionUpdater.Update();
                     Manager.WriteToConsole($"Finished updating Mission folder");
                     Manager.props.managerStatus = "Updated Mission";
                 }

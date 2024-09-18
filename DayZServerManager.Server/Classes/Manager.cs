@@ -1,5 +1,4 @@
 ﻿using DayZServerManager.Server.Classes.Helpers;
-using DayZServerManager.Server.Classes.SerializationClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
 using System.Text.Json;
@@ -8,6 +7,8 @@ using Microsoft.VisualBasic.FileIO;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Hosting.Server;
+using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.RarityFile;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 
 namespace DayZServerManager.Server.Classes
 {
@@ -47,6 +48,23 @@ namespace DayZServerManager.Server.Classes
         public static string SCHEDULER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZScheduler.exe" : "DayZScheduler";
         public const int DAYZ_SERVER_BRANCH = 223350;
         public const int DAYZ_GAME_BRANCH = 221100;
+        // Mission rarity to numbers
+        public const int EXOTIC_NOMINAL = 1;
+        public const int EXOTIC_MINIMAL = 1;
+        public const int MYTHIC_NOMINAL = 2;
+        public const int MYTHIC_MINIMAL = 1;
+        public const int LEGENDARY_NOMINAL = 5;
+        public const int LEGENDARY_MINIMAL = 2;
+        public const int EPIC_NOMINAL = 10;
+        public const int EPIC_MINIMAL = 5;
+        public const int RARE_NOMINAL = 20;
+        public const int RARE_MINIMAL = 10;
+        public const int UNCOMMON_NOMINAL = 40;
+        public const int UNCOMMON_MINIMAL = 20;
+        public const int COMMON_NOMINAL = 80;
+        public const int COMMON_MINIMAL = 40;
+        public const int POOR_NOMINAL = 160;
+        public const int POOR_MINIMAL = 80;
         #endregion Constants
 
         public static void InitiateManager()
@@ -56,12 +74,6 @@ namespace DayZServerManager.Server.Classes
 
             if (managerConfig != null)
             {
-                if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
-                {
-                    props.managerStatus = "Credentials";
-                    return;
-                }
-
                 List<string> directories = FileSystem.GetDirectories(Environment.CurrentDirectory).ToList<string>();
                 if (!directories.Contains(SERVER_PATH))
                 {
@@ -94,6 +106,12 @@ namespace DayZServerManager.Server.Classes
                 AdjustServerConfig();
                 SaveManagerConfig();
                 SaveServerConfig();
+
+                if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
+                {
+                    props.managerStatus = "Credentials";
+                    return;
+                }
 
                 if (managerConfig.autoStartServer)
                 {

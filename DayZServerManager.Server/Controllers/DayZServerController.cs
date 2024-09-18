@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using DayZServerManager.Server.Classes;
 using DayZServerManager.Server.Classes.Helpers;
 using System.Numerics;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.StringInput;
 
 namespace DayZServerManager.Server.Controllers
 {
@@ -19,14 +20,11 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetServerStatus")]
         public ManagerProps GetServerStatus()
         {
-            if (Manager.props != null)
+            if (Manager.props == null)
             {
-                return Manager.props;
+                Manager.props = new ManagerProps("Listening", "Not Running", "Not Running", 0);
             }
-            else
-            {
-                return new ManagerProps("Listening", "Not Running", "Not Running", 0);
-            }
+            return Manager.props;
         }
 
         [HttpGet("StartServer")]
@@ -64,11 +62,11 @@ namespace DayZServerManager.Server.Controllers
         }
 
         [HttpPost("SendSteamGuard")]
-        public bool SendSteamGuard([FromBody] SteamGuard guard)
+        public bool SendSteamGuard([FromBody] StringInput guard)
         {
-            if (guard != null && guard.code != null)
+            if (guard != null && guard.value != null)
             {
-                string response = Manager.SetSteamGuard(guard.code);
+                string response = Manager.SetSteamGuard(guard.value);
                 if (response != null && (response == "Error" || response == "DayZServer not running"))
                 {
                     return false;

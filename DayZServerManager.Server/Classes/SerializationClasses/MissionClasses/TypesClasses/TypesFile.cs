@@ -11,6 +11,6 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.T
     public class TypesFile
     {
         [XmlElement("type")]
-        public List<TypesItem> typesItem;
+        public List<TypesItem> typesItems;
     }
 }
