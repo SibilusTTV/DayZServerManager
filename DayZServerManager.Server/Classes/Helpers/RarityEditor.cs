@@ -27,32 +27,45 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             if (Manager.managerConfig != null)
             {
-                UpdateHardlineAndTypes(Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionName), name, rarityFile);
-                UpdateRarities(Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionName), name, rarityFile);
-                UpdateRarities(Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionTemplateName),name, rarityFile);
+                Manager.WriteToConsole("Updating Rarity, Hardline and Types");
+
+                UpdateHardlineAndTypes(Manager.MISSION_PATH, name, rarityFile);
+                UpdateRarities(Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionTemplateName), name, rarityFile);
+
+                Manager.WriteToConsole("Rarity, Hardline and Types updated");
             }
         }
 
-        private static void UpdateRarities(string folderPath, string name, RarityFile rarityFile)
+        private static void UpdateRarities(string missionFolder, string name, RarityFile rarityFile)
         {
-            JSONSerializer.SerializeJSONFile(Path.Combine(folderPath, name), rarityFile);
+            Manager.WriteToConsole("Updating Rarities");
+            JSONSerializer.SerializeJSONFile(Path.Combine(missionFolder, name), rarityFile);
+            Manager.WriteToConsole("Rarities Updated");
         }
 
-        private static void UpdateHardlineAndTypes(string folderPath, string name, RarityFile rarityFile)
+        private static void UpdateHardlineAndTypes(string mpmissionsFolder, string name, RarityFile rarityFile)
         {
+            Manager.WriteToConsole("Updating Hardline and Types");
             switch (name)
             {
                 case "vanillaRarities.json":
-                    UpdateVanillaTypes(folderPath, rarityFile);
-                    break;
-                case "customFilesRarities.json":
-                    UpdateCustomTypes(folderPath, rarityFile);
+                    UpdateVanillaTypes(mpmissionsFolder, rarityFile);
                     break;
                 case "expansionRarities.json":
-                    UpdateExpansionTypes(folderPath, rarityFile);
+                    UpdateExpansionTypes(mpmissionsFolder, rarityFile);
+                    break;
+                case "customFilesRarities.json":
+                    if (Manager.managerConfig != null)
+                    {
+                        UpdateCustomTypes(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), rarityFile);
+                    }
                     break;
             }
-            UpdateHardline(folderPath, rarityFile);
+            if (Manager.managerConfig != null)
+            {
+                UpdateHardline(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), rarityFile);
+            }
+            Manager.WriteToConsole("Hardline and Types updated");
         }
 
         private static void UpdateHardline(string folderPath, RarityFile rarityFile)
@@ -70,6 +83,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         if (hardlineFile != null)
                         {
                             MissionUpdater.UpdateHardlineRarity(hardlineFile, rarityFile);
+                            JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(folderPath, "expansion", "settings", "HardlineSettings.json"), hardlineFile);
                         }
                     }
                 }
@@ -77,33 +91,45 @@ namespace DayZServerManager.Server.Classes.Helpers
         }
 
         #region UpdateTypes
-        private static void UpdateVanillaTypes(string folderPath, RarityFile rarityFile)
+        private static void UpdateVanillaTypes(string mpmissionsPath, RarityFile rarityFile)
         {
-            TypesFile? typesFile = GetVanillaTypesFile(folderPath);
-            if (typesFile != null && Manager.managerConfig != null)
+            if (Manager.managerConfig != null)
             {
-                MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
-            }
+                string typesPath = GetVanillaTypesPath(Path.Combine(mpmissionsPath, Manager.managerConfig.missionName));
+                TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesPath);
+                if (typesFile != null)
+                {
+                    MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
 
-            TypesChangesFile? typesChangesFile = GetVanillaTypesChangesFile(folderPath);
-            if (typesChangesFile != null && typesFile != null)
-            {
-                MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
+                    TypesChangesFile? typesChangesFile = GetVanillaTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
+                    if (typesChangesFile != null)
+                    {
+                        MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
+                    }
+
+                    XMLSerializer.SerializeXMLFile<TypesFile>(typesPath, typesFile);
+                }
             }
         }
 
-        private static void UpdateExpansionTypes(string folderPath, RarityFile rarityFile)
+        private static void UpdateExpansionTypes(string mpmissionsPath, RarityFile rarityFile)
         {
-            TypesFile? typesFile = GetExpansionTypesFile(folderPath);
-            if (typesFile != null)
+            if (Manager.managerConfig != null)
             {
-                MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
-            }
+                string typesPath = GetExpansionTypesPath(Path.Combine(mpmissionsPath, Manager.managerConfig.missionName));
+                TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesPath);
+                if (typesFile != null)
+                {
+                    MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
 
-            TypesChangesFile? typesChangesFile = GetExpansionTypesChangesFile(folderPath);
-            if (typesChangesFile != null && typesFile != null)
-            {
-                MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
+                    TypesChangesFile? typesChangesFile = GetExpansionTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
+                    if (typesChangesFile != null)
+                    {
+                        MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
+                    }
+
+                    XMLSerializer.SerializeXMLFile<TypesFile>(typesPath, typesFile);
+                }
             }
         }
 
@@ -116,12 +142,43 @@ namespace DayZServerManager.Server.Classes.Helpers
                 if (typesFile != null)
                 {
                     MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
+                    XMLSerializer.SerializeXMLFile<TypesFile>(filePath, typesFile);
                 }
             }
         }
         #endregion UpdateTypes
 
         #region GetTypesFiles
+        private static string GetVanillaTypesPath(string folderPath)
+        {
+            List<string> missionFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
+            if (missionFolders.Find(x => Path.GetFileName(x) == "db") != null)
+            {
+                List<string> missionDbFiles = FileSystem.GetFiles(Path.Combine(folderPath, "db")).ToList<string>();
+                string? typesPath = missionDbFiles.Find(x => Path.GetFileName(x) == "types.xml");
+                if (typesPath != null)
+                {
+                    return typesPath;
+                }
+            }
+            return string.Empty;
+        }
+
+        private static string GetExpansionTypesPath(string folderPath)
+        {
+            List<string> missionFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
+            if (missionFolders.Find(x => Path.GetFileName(x) == "expansion_ce") != null)
+            {
+                List<string> missionExpansionFiles = FileSystem.GetFiles(Path.Combine(folderPath, "expansion_ce")).ToList<string>();
+                string? expansionTypesPath = missionExpansionFiles.Find(x => Path.GetFileName(x) == "expansion_types.xml");
+                if (expansionTypesPath != null)
+                {
+                    return expansionTypesPath;
+                }
+            }
+            return string.Empty;
+        }
+
         private static List<string> GetAllCustomTypesFiles(string folderPath)
         {
             List<string> typesFiles = new List<string>();
@@ -145,34 +202,6 @@ namespace DayZServerManager.Server.Classes.Helpers
                 }
             }
             return typesFiles;
-        }
-
-        private static TypesFile? GetVanillaTypesFile(string folderPath)
-        {
-            List<string> missionFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
-            if (missionFolders.Find(x => Path.GetFileName(x) == "db") != null)
-            {
-                List<string> missionExpansionFolders = FileSystem.GetFiles(Path.Combine(folderPath, "db")).ToList<string>();
-                if (missionExpansionFolders.Find(x => Path.GetFileName(x) == "types.xml") != null)
-                {
-                    return JSONSerializer.DeserializeJSONFile<TypesFile>(Path.Combine(folderPath, "db", "types.xml"));
-                }
-            }
-            return null;
-        }
-
-        private static TypesFile? GetExpansionTypesFile(string folderPath)
-        {
-            List<string> missionFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
-            if (missionFolders.Find(x => Path.GetFileName(x) == "expansion_ce") != null)
-            {
-                List<string> missionDbFiles = FileSystem.GetFiles(Path.Combine(folderPath, "expansion_ce")).ToList<string>();
-                if (missionDbFiles.Find(x => Path.GetFileName(x) == "expansion_types.xml") != null)
-                {
-                    return XMLSerializer.DeserializeXMLFile<TypesFile>(Path.Combine(folderPath, "expansion_ce", "expansion_types.xml"));
-                }
-            }
-            return null;
         }
         #endregion GetTypesFiles
 

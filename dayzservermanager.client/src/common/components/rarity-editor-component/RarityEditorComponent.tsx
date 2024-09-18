@@ -1,7 +1,6 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef, GridRenderCellParams, GridRowSelectionModel, GridRowsProp, GridSlots, GridToolbarContainer } from '@mui/x-data-grid';
-import { ChangeEvent, useEffect, useState } from "react";
-import { Dict } from "styled-components/dist/types";
+import {  Button, Paper } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef, GridRenderCellParams, GridRowSelectionModel, GridSlots, GridToolbarContainer } from '@mui/x-data-grid';
+import { useEffect, useState } from "react";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import "./RarityEditorComponent.css";
