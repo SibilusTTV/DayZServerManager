@@ -40,7 +40,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     if (Manager.props != null)
                     {
-                        Manager.props.dayzServerStatus = "Running";
+                        Manager.props.dayzServerStatus = Manager.STATUS_RUNNING;
                     }
                     return true;
                 }
@@ -48,7 +48,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     if (Manager.props != null)
                     {
-                        Manager.props.dayzServerStatus = "Not Running";
+                        Manager.props.dayzServerStatus = Manager.STATUS_NOT_RUNNING;
                     }
                     serverProcess = null;
                     return false;
@@ -58,7 +58,7 @@ namespace DayZServerManager.Server.Classes
             {
                 if (Manager.props != null)
                 {
-                    Manager.props.dayzServerStatus = "Not Running";
+                    Manager.props.dayzServerStatus = Manager.STATUS_NOT_RUNNING;
                 }
                 Manager.WriteToConsole(ex.ToString());
                 serverProcess = null;
@@ -142,9 +142,9 @@ namespace DayZServerManager.Server.Classes
                     procInf.Arguments = startParameters;
                     procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE);
                     serverProcess.StartInfo = procInf;
-                    Manager.WriteToConsole($"Starting Server");
+                    Manager.WriteToConsole(Manager.STATUS_STARTING_SERVER);
                     serverProcess.Start();
-                    Manager.props.dayzServerStatus = "Running";
+                    Manager.props.dayzServerStatus = Manager.STATUS_RUNNING;
                     Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
                 }
                 catch (Exception ex)
@@ -196,12 +196,12 @@ namespace DayZServerManager.Server.Classes
             {
                 try
                 {
-                    if (Manager.props != null) Manager.props.managerStatus = "Updating Scheduler";
-                    Manager.WriteToConsole("Updating Scheduler");
+                    if (Manager.props != null) Manager.props.managerStatus = Manager.STATUS_UPDATING_SCHEDULER;
+                    Manager.WriteToConsole(Manager.STATUS_UPDATING_SCHEDULER);
 
-                    if (!FileSystem.DirectoryExists(Manager.SCHEDULER_PATH))
+                    if (!Directory.Exists(Manager.SCHEDULER_PATH))
                     {
-                        FileSystem.CreateDirectory(Manager.SCHEDULER_PATH);
+                        Directory.CreateDirectory(Manager.SCHEDULER_PATH);
                     }
 
 
@@ -252,10 +252,9 @@ namespace DayZServerManager.Server.Classes
                         battleyeParentFolder = Manager.SERVER_PATH;
                     }
 
-                    List<string> schedulerDirectories = FileSystem.GetDirectories(Manager.SCHEDULER_PATH).ToList<string>();
-                    if (schedulerDirectories.Find(x => Path.GetFileName(x) == Manager.SCHEDULER_CONFIG_FOLDER) == null)
+                    if (!Directory.Exists(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER)))
                     {
-                        FileSystem.CreateDirectory(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER));
+                        Directory.CreateDirectory(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER));
                     }
 
                     SchedulerConfig? schedulerConfig = JSONSerializer.DeserializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_NAME));
@@ -266,7 +265,7 @@ namespace DayZServerManager.Server.Classes
                         schedulerConfig.Port = Manager.managerConfig.RConPort;
                         schedulerConfig.Password = Manager.managerConfig.RConPassword;
                         schedulerConfig.Interval = Manager.managerConfig.restartInterval;
-                        schedulerConfig.OnlyRestarts = Manager.managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains("expansion")).Count > 0;
+                        schedulerConfig.OnlyRestarts = Manager.managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH)).Count > 0;
                         schedulerConfig.Scheduler = Manager.SCHEDULER_FILE_NAME;
                         schedulerConfig.IsOnUpdate = false;
                         schedulerConfig.BePath = Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME);
@@ -287,54 +286,49 @@ namespace DayZServerManager.Server.Classes
 
                     JSONSerializer.SerializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_FOLDER, Manager.SCHEDULER_CONFIG_UPDATE_NAME), schedulerConfig);
 
-                    if (Manager.managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains("expansion")).Count > 0)
+                    if (Manager.managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH)).Count > 0)
                     {
-                        List<string> serverRootDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
-                        if (serverRootDirectories.Find(x => Path.GetFileName(x) == Manager.managerConfig.profileName) == null)
+                        if (!Directory.Exists(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName)))
                         {
-                            FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName));
+                            Directory.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName));
                         }
 
-                        List<string> profileDirectories = FileSystem.GetDirectories(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName)).ToList<string>();
-                        if (profileDirectories.Find(x => Path.GetFileName(x) == "ExpansionMod") == null)
+                        if (!Directory.Exists(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME)))
                         {
-                            FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod"));
+                            Directory.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME));
                         }
 
-                        List<string> expansionDirectories = FileSystem.GetDirectories(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod")).ToList<string>();
-                        if (expansionDirectories.Find(x => Path.GetFileName(x) == "Settings") == null)
+                        if (!Directory.Exists(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME, Manager.PROFILE_EXPANSION_SETTINGS_FOLDER_NAME)))
                         {
-                            FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod", "Settings"));
+                            Directory.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME, Manager.PROFILE_EXPANSION_SETTINGS_FOLDER_NAME));
                         }
 
-                        NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"));
+                        NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME, Manager.PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, Manager.PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME));
                         if (notFile == null)
                         {
                             notFile = new NotificationSchedulerFile();
                         }
                         RestartUpdater.UpdateExpansionScheduler(Manager.managerConfig, notFile);
-                        JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, "ExpansionMod", "Settings", "NotificationSchedulerSettings.json"), notFile);
+                        JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME, Manager.PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, Manager.PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME), notFile);
                     }
 
-                    List<string> serverDirectories = FileSystem.GetDirectories(battleyeParentFolder).ToList<string>();
-                    if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_FOLDER_NAME) == null)
+                    if (!Directory.Exists(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME)))
                     {
-                        FileSystem.CreateDirectory(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME));
+                        Directory.CreateDirectory(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME));
                     }
 
-                    List<string> battleyeDirectories = FileSystem.GetDirectories(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME)).ToList<string>();
-                    if (battleyeDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_CONFIG_NAME) == null)
+                    if (!File.Exists(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_CONFIG_NAME)))
                     {
                         CreateAndSaveNewBeConfig(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_CONFIG_NAME));
                     }
 
-                    if (battleyeDirectories.Find(x => Path.GetFileName(x) == Manager.BATTLEYE_BANS_NAME) == null)
+                    if (File.Exists(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_BANS_NAME)))
                     {
                         CreateAndSaveNewBans(Path.Combine(battleyeParentFolder, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_BANS_NAME));
                     }
 
-                    Manager.WriteToConsole("Scheduler Updated");
-                    if (Manager.props != null) Manager.props.managerStatus = "Scheduler Updated";
+                    Manager.WriteToConsole(Manager.STATUS_SCHEDULER_UPDATED);
+                    if (Manager.props != null) Manager.props.managerStatus = Manager.STATUS_SCHEDULER_UPDATED;
                 }
                 catch (Exception ex)
                 {
@@ -358,7 +352,7 @@ namespace DayZServerManager.Server.Classes
                 startInfo.WorkingDirectory = Manager.SCHEDULER_PATH;
                 schedulerProcess = new Process();
                 schedulerProcess.StartInfo = startInfo;
-                Manager.WriteToConsole("Starting Scheduler");
+                Manager.WriteToConsole(Manager.STATUS_STARTING_SCHEDULER);
                 schedulerProcess.Start();
                 Manager.WriteToConsole("Scheduler started");
 
@@ -384,7 +378,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     serverProcess.Kill();
                     serverProcess = null;
-                    Manager.props.dayzServerStatus = "Not Running";
+                    Manager.props.dayzServerStatus = Manager.STATUS_NOT_RUNNING;
                 }
             }
             catch (Exception ex)
@@ -427,7 +421,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     steamCMDProcess.Kill();
                     steamCMDProcess = null;
-                    Manager.props.steamCMDStatus = "Not Running";
+                    Manager.props.steamCMDStatus = Manager.STEAMCMD_STATUS_NOT_RUNNING;
                 }
             }
             catch (Exception ex)
@@ -443,20 +437,20 @@ namespace DayZServerManager.Server.Classes
             {
                 if (hasToUpdate)
                 {
-                    Manager.props.managerStatus = "Updating Server";
-                    Manager.WriteToConsole("Updating Server");
+                    Manager.props.managerStatus = Manager.STATUS_UPDATING_SERVER;
+                    Manager.WriteToConsole(Manager.STATUS_UPDATING_SERVER);
                     UpdateServer(props);
-                    Manager.props.managerStatus = "Server Updated";
-                    Manager.WriteToConsole("Server Updated");
+                    Manager.props.managerStatus = Manager.STATUS_SERVER_UPDATED;
+                    Manager.WriteToConsole(Manager.STATUS_SERVER_UPDATED);
                 }
 
                 if (hasToMove)
                 {
-                    Manager.props.managerStatus = "Moving Server";
-                    Manager.WriteToConsole("Moving Server");
+                    Manager.props.managerStatus = Manager.STATUS_MOVING_SERVER;
+                    Manager.WriteToConsole(Manager.STATUS_MOVING_SERVER);
                     MoveServer();
-                    Manager.props.managerStatus = "Server Moved";
-                    Manager.WriteToConsole("Server Moved");
+                    Manager.props.managerStatus = Manager.STATUS_SERVER_MOVED;
+                    Manager.WriteToConsole(Manager.STATUS_SERVER_MOVED);
 
                     UpdateMission();
                 }
@@ -465,13 +459,13 @@ namespace DayZServerManager.Server.Classes
 
         private void MoveServer()
         {
-            if (updatedServer)
+            if (updatedServer && Manager.managerConfig != null)
             {
-                List<string> serverDeployDirectories = FileSystem.GetDirectories(Manager.SERVER_DEPLOY).ToList<string>();
-                List<string> serverDeployFiles = FileSystem.GetFiles(Manager.SERVER_DEPLOY).ToList<string>();
+                List<string> serverDeployDirectories = Directory.GetDirectories(Manager.SERVER_DEPLOY).ToList<string>();
+                List<string> serverDeployFiles = Directory.GetFiles(Manager.SERVER_DEPLOY).ToList<string>();
 
-                List<string> filteredDirectories = serverDeployDirectories.FindAll(x => Path.GetFileName(x) != "Profiles" && Path.GetFileName(x) != "battleye");
-                List<string> filteredFiles = serverDeployFiles.FindAll(x => Path.GetFileName(x) != "bans.txt" && Path.GetFileName(x) != "ban.txt" && Path.GetFileName(x) != "bans.txt" && Path.GetFileName(x) != "serverDZ.cfg" && Path.GetFileName(x) != "whitelist.txt" && Path.GetFileName(x) != "dayzsetting.xml");
+                List<string> filteredDirectories = serverDeployDirectories.FindAll(x => Path.GetFileName(x) != Manager.managerConfig.profileName && Path.GetFileName(x) != Manager.BATTLEYE_FOLDER_NAME);
+                List<string> filteredFiles = serverDeployFiles.FindAll(x => Path.GetFileName(x).ToLower() != Manager.BANS_FILE_NAME && Path.GetFileName(x).ToLower() != Manager.BAN_FILE_NAME && Path.GetFileName(x) != Manager.managerConfig.serverConfigName && Path.GetFileName(x).ToLower() != Manager.WHITELIST_FILE_NAME && Path.GetFileName(x).ToLower() != Manager.DAYZ_SETTINGS_FILE_NAME);
 
                 foreach (string dir in serverDeployDirectories)
                 {
@@ -489,7 +483,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     try
                     {
-                        FileSystem.CopyFile(file, Path.Combine(Manager.SERVER_PATH, Path.GetFileName(file)), true);
+                        File.Copy(file, Path.Combine(Manager.SERVER_PATH, Path.GetFileName(file)), true);
                     }
                     catch (Exception ex)
                     {
@@ -505,9 +499,9 @@ namespace DayZServerManager.Server.Classes
             {
                 try
                 {
-                    if (!FileSystem.DirectoryExists(Manager.STEAM_CMD_PATH))
+                    if (!Directory.Exists(Manager.STEAM_CMD_PATH))
                     {
-                        FileSystem.CreateDirectory(Manager.STEAM_CMD_PATH);
+                        Directory.CreateDirectory(Manager.STEAM_CMD_PATH);
                     }
                 }
                 catch (System.Exception ex)
@@ -517,7 +511,7 @@ namespace DayZServerManager.Server.Classes
 
                 try
                 {
-                    if (!FileSystem.FileExists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE)))
+                    if (!File.Exists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE)))
                     {
                         DownloadAndExctractSteamCMD(Manager.STEAM_CMD_ZIP_NAME);
                     }
@@ -532,7 +526,7 @@ namespace DayZServerManager.Server.Classes
                     string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)} \"+login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" +quit";
                     Manager.WriteToConsole("Updating the DayZ Server");
                     StartSteamCMD(props, serverUpdateArguments);
-                    if (props.steamCMDStatus == "Not Running")
+                    if (props.steamCMDStatus == Manager.STEAMCMD_STATUS_NOT_RUNNING)
                     {
                         CheckForUpdatedServer();
                     }
@@ -540,7 +534,7 @@ namespace DayZServerManager.Server.Classes
                 catch (System.Exception ex)
                 {
                     Manager.WriteToConsole(ex.ToString());
-                    props.managerStatus = "Error";
+                    props.managerStatus = Manager.STATUS_ERROR;
                 }
             }
         }
@@ -549,17 +543,17 @@ namespace DayZServerManager.Server.Classes
         {
             if (Manager.managerConfig != null && Manager.props != null)
             {
-                List<Mod> expansionMods = Manager.managerConfig.clientMods.FindAll(x => x.name.ToLower().Contains("expansion"));
+                List<Mod> expansionMods = Manager.managerConfig.clientMods.FindAll(x => x.name.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH));
 
                 if (updatedServer || (expansionMods.Count > 0 && expansionMods.FindAll(mod => updatedModsIDs.Contains(mod.workshopID)).Count > 0))
                 {
                     updatedMods = false;
                     updatedServer = false;
-                    Manager.WriteToConsole($"Updating Mission folder");
-                    Manager.props.managerStatus = "Updating Mission";
+                    Manager.WriteToConsole(Manager.STATUS_UPDATING_MISSION);
+                    Manager.props.managerStatus = Manager.STATUS_UPDATING_MISSION;
                     MissionUpdater.Update();
-                    Manager.WriteToConsole($"Finished updating Mission folder");
-                    Manager.props.managerStatus = "Updated Mission";
+                    Manager.WriteToConsole(Manager.STATUS_MISSION_UPDATED);
+                    Manager.props.managerStatus = Manager.STATUS_MISSION_UPDATED;
                 }
             }
         }
@@ -578,7 +572,7 @@ namespace DayZServerManager.Server.Classes
                 steamCMDProcess.StartInfo.FileName = Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE);
                 steamCMDProcess.Start();
 
-                props.steamCMDStatus = "Running";
+                props.steamCMDStatus = Manager.STATUS_RUNNING;
 
                 int outputTime = 0;
                 Task task = ConsumeOutput(steamCMDProcess.StandardOutput, s =>
@@ -588,12 +582,12 @@ namespace DayZServerManager.Server.Classes
                         Manager.WriteToConsole(s); 
                         if (s.Contains("client config"))
                         {
-                            props.steamCMDStatus = "Client Config";
+                            props.steamCMDStatus = Manager.STATUS_CLIENT_CONFIG;
                             outputTime = -1;
                         }
                         else if (s.Contains("Steam Guard"))
                         {
-                            props.steamCMDStatus = "Steam Guard";
+                            props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
                         }
                         else if (outputTime != -1)
                         {
@@ -608,7 +602,7 @@ namespace DayZServerManager.Server.Classes
                     if (outputTime > 30)
                     {
                         Manager.WriteToConsole("Steam Guard");
-                        props.steamCMDStatus = "Steam Guard";
+                        props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
                         outputTime = 0;
                     }
                     else if (outputTime != -1)
@@ -619,12 +613,12 @@ namespace DayZServerManager.Server.Classes
 
                 steamCMDProcess.WaitForExit();
 
-                props.steamCMDStatus = "Not Running";
+                props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
             }
             catch (System.Exception ex)
             {
                 Manager.WriteToConsole(ex.ToString());
-                props.dayzServerStatus = "Error";
+                props.dayzServerStatus = Manager.STATUS_ERROR;
             }
         }
 
@@ -653,7 +647,7 @@ namespace DayZServerManager.Server.Classes
                 }
                 else
                 {
-                    if (Manager.props != null) Manager.props.steamCMDStatus = "Not Running";
+                    if (Manager.props != null) Manager.props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
                     return "No SteamCMD Process";
                 }
 
@@ -671,8 +665,7 @@ namespace DayZServerManager.Server.Classes
             try
             {
                 DateTime dateBeforeUpdate;
-                List<string> serverDeployDirectories = FileSystem.GetFiles(Manager.SERVER_PATH).ToList<string>();
-                if (serverDeployDirectories.Find(x => Path.GetFileName(x) == Manager.SERVER_EXECUTABLE) != null)
+                if (!File.Exists(Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)))
                 {
                     dateBeforeUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE));
                 }
@@ -682,8 +675,7 @@ namespace DayZServerManager.Server.Classes
                 }
 
                 DateTime dateAfterUpdate;
-                List<string> serverDirectories = FileSystem.GetFiles(Manager.SERVER_DEPLOY).ToList<string>();
-                if (serverDirectories.Find(x => Path.GetFileName(x) == Manager.SERVER_EXECUTABLE) != null)
+                if (!File.Exists(Path.Combine(Manager.SERVER_DEPLOY, Manager.SERVER_EXECUTABLE)))
                 {
                     dateAfterUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_DEPLOY, Manager.SERVER_EXECUTABLE));
                 }
@@ -725,19 +717,19 @@ namespace DayZServerManager.Server.Classes
                 {
                     if (hasToUpdate)
                     {
-                        Manager.props.managerStatus = "Updating Mods";
-                        Manager.WriteToConsole("Updating Mods");
+                        Manager.props.managerStatus = Manager.STATUS_UPDATING_MODS;
+                        Manager.WriteToConsole(Manager.STATUS_UPDATING_MODS);
                         UpdateMods(props, mods);
-                        Manager.props.managerStatus = "Mods Updated";
-                        Manager.WriteToConsole("Mods Updated");
+                        Manager.props.managerStatus = Manager.STATUS_MODS_UPDATED;
+                        Manager.WriteToConsole(Manager.STATUS_MODS_UPDATED);
                     }
                     if (hasToMove)
                     {
-                        Manager.props.managerStatus = "Moving Mods";
-                        Manager.WriteToConsole("Moving Mods");
+                        Manager.props.managerStatus = Manager.STATUS_MOVING_MODS;
+                        Manager.WriteToConsole(Manager.STATUS_MOVING_MODS);
                         MoveMods(mods);
-                        Manager.props.managerStatus = "Mods Moved";
-                        Manager.WriteToConsole("Mods Moved");
+                        Manager.props.managerStatus = Manager.STATUS_MODS_MOVED;
+                        Manager.WriteToConsole(Manager.STATUS_MODS_MOVED);
 
                         UpdateMission();
                     }
@@ -812,14 +804,14 @@ namespace DayZServerManager.Server.Classes
                             string serverModPath = Path.Combine(Manager.SERVER_PATH, mod.name);
 
                             Manager.WriteToConsole($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
-                            if (FileSystem.DirectoryExists(steamModPath))
+                            if (Directory.Exists(steamModPath))
                             {
                                 FileSystem.CopyDirectory(steamModPath, serverModPath, true);
 
                                 string serverKeysPath = GetKeysFolder(Manager.SERVER_PATH);
                                 string modKeysPath = GetKeysFolder(serverModPath);
 
-                                if (modKeysPath != string.Empty && serverKeysPath != string.Empty && FileSystem.DirectoryExists(modKeysPath) && FileSystem.DirectoryExists(serverKeysPath))
+                                if (modKeysPath != string.Empty && serverKeysPath != string.Empty && Directory.Exists(modKeysPath) && Directory.Exists(serverKeysPath))
                                 {
                                     FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
                                 }
@@ -915,8 +907,8 @@ namespace DayZServerManager.Server.Classes
 
         public void BackupServerData(ManagerProps props)
         {
-            props.managerStatus = "Backing up Server";
-            Manager.WriteToConsole("Backing up Server");
+            props.managerStatus = Manager.STATUS_BACKING_UP_SERVER;
+            Manager.WriteToConsole(Manager.STATUS_BACKING_UP_SERVER);
             if (Manager.managerConfig != null)
             {
                 BackupManager.MakeBackup(Manager.managerConfig.backupPath, Manager.managerConfig.profileName, Manager.managerConfig.missionName);
@@ -925,8 +917,8 @@ namespace DayZServerManager.Server.Classes
                     BackupManager.DeleteOldBackups(Manager.managerConfig.backupPath, Manager.managerConfig.maxKeepTime);
                 }
             }
-            Manager.WriteToConsole("Backed up Server");
-            props.managerStatus = "Backed up Server";
+            Manager.WriteToConsole(Manager.STATUS_SERVER_BACKED_UP);
+            props.managerStatus = Manager.STATUS_SERVER_BACKED_UP;
         }
 
         private Mod? SearchForMod(long key, List<Mod> mods)
@@ -963,7 +955,7 @@ namespace DayZServerManager.Server.Classes
                         {
                             using (FileStream compressedFileStream = File.Open(Path.Combine(Manager.STEAM_CMD_PATH, zipName), FileMode.Open))
                             {
-                                using (FileStream outputFileStream = File.Create(Path.Combine(Manager.STEAM_CMD_PATH, "steamcmd.tar")))
+                                using (FileStream outputFileStream = File.Create(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_TAR_FILE_NAME)))
                                 {
                                     using (var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress))
                                     {
@@ -971,10 +963,9 @@ namespace DayZServerManager.Server.Classes
                                     }
                                 }
                             }
-                            List<string> steamCMDDirectories = FileSystem.GetFiles(Manager.STEAM_CMD_PATH).ToList<string>();
-                            if (steamCMDDirectories.Find(x => Path.GetFileName(x) == "steamcmd.tar") != null)
+                            if (File.Exists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_TAR_FILE_NAME)))
                             {
-                                TarFile.ExtractToDirectory(Path.Combine(Manager.STEAM_CMD_PATH, "steamcmd.tar"), Manager.STEAM_CMD_PATH, true);
+                                TarFile.ExtractToDirectory(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_TAR_FILE_NAME), Manager.STEAM_CMD_PATH, true);
                             }
                         }
                     }
@@ -992,7 +983,7 @@ namespace DayZServerManager.Server.Classes
             {
                 if (Directory.Exists(folderPath))
                 {
-                    List<string> subFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
+                    List<string> subFolders = Directory.GetDirectories(folderPath).ToList<string>();
                     foreach (string subFolder in subFolders)
                     {
                         string folderName = Path.GetFileName(subFolder);
@@ -1013,7 +1004,7 @@ namespace DayZServerManager.Server.Classes
 
         private bool CompareForChanges(string steamModPath, string serverModPath)
         {
-            List<string> steamModFilePaths = FileSystem.GetFiles(steamModPath).ToList<string>();
+            List<string> steamModFilePaths = Directory.GetFiles(steamModPath).ToList<string>();
             foreach (string filePath in steamModFilePaths)
             {
                 if (CheckFile(filePath, serverModPath))
@@ -1022,7 +1013,7 @@ namespace DayZServerManager.Server.Classes
                 }
             }
 
-            List<string> steamModDirectoryPaths = FileSystem.GetDirectories(steamModPath).ToList<string>();
+            List<string> steamModDirectoryPaths = Directory.GetDirectories(steamModPath).ToList<string>();
             foreach (string directoryPath in steamModDirectoryPaths)
             {
                 if (CheckDirectories(directoryPath, serverModPath))
@@ -1039,9 +1030,9 @@ namespace DayZServerManager.Server.Classes
             try
             {
                 string serverDirectoryPath = Path.Combine(serverModPath, Path.GetFileName(steamDirectoryPath));
-                if (FileSystem.DirectoryExists(serverModPath) && FileSystem.DirectoryExists(serverDirectoryPath))
+                if (Directory.Exists(serverModPath) && Directory.Exists(serverDirectoryPath))
                 {
-                    List<string> steamModFilePaths = FileSystem.GetFiles(steamDirectoryPath).ToList<string>();
+                    List<string> steamModFilePaths = Directory.GetFiles(steamDirectoryPath).ToList<string>();
                     foreach (string filePath in steamModFilePaths)
                     {
                         if (CheckFile(filePath, serverDirectoryPath))
@@ -1050,7 +1041,7 @@ namespace DayZServerManager.Server.Classes
                         }
                     }
 
-                    List<string> steamModDirectoryPaths = FileSystem.GetDirectories(steamDirectoryPath).ToList<string>();
+                    List<string> steamModDirectoryPaths = Directory.GetDirectories(steamDirectoryPath).ToList<string>();
                     foreach (string directoryPath in steamModDirectoryPaths)
                     {
                         if (CheckDirectories(directoryPath, serverDirectoryPath))
@@ -1061,7 +1052,7 @@ namespace DayZServerManager.Server.Classes
 
                     return false;
                 }
-                else if (FileSystem.DirectoryExists(serverModPath))
+                else if (Directory.Exists(serverModPath))
                 {
                     return true;
                 }
@@ -1082,7 +1073,7 @@ namespace DayZServerManager.Server.Classes
             try
             {
                 string serverFilePath = Path.Combine(serverModPath, Path.GetFileName(steamFilePath));
-                if (FileSystem.FileExists(steamFilePath) && FileSystem.FileExists(serverFilePath))
+                if (File.Exists(steamFilePath) && File.Exists(serverFilePath))
                 {
                     DateTime steamModChangingDate = File.GetLastWriteTimeUtc(steamFilePath);
                     DateTime serverModChangingDate = File.GetLastWriteTimeUtc(serverFilePath);
@@ -1095,7 +1086,7 @@ namespace DayZServerManager.Server.Classes
                         return false;
                     }
                 }
-                else if (FileSystem.FileExists(steamFilePath))
+                else if (File.Exists(steamFilePath))
                 {
                     return true;
                 }

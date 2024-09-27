@@ -14,10 +14,9 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             if (Manager.managerConfig != null)
             {
-                List<string> missionFiles = FileSystem.GetFiles(Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionTemplateName)).ToList<string>();
-                if (missionFiles.Find(x => Path.GetFileName(x) == name) != null)
+                if (File.Exists(Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionTemplateName, name)))
                 {
-                    return JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionTemplateName, name));
+                    return JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionTemplateName, name));
                 }
             }
             return null;
@@ -29,8 +28,8 @@ namespace DayZServerManager.Server.Classes.Helpers
             {
                 Manager.WriteToConsole("Updating Rarity, Hardline and Types");
 
-                UpdateRarities(Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionTemplateName), name, rarityFile);
-                UpdateHardlineAndTypes(Manager.MISSION_PATH, name, rarityFile);
+                UpdateRarities(Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionTemplateName), name, rarityFile);
+                UpdateHardlineAndTypes(Manager.MPMISSIONS_PATH, name, rarityFile);
 
                 Manager.WriteToConsole("Rarity, Hardline and Types updated");
             }
@@ -51,7 +50,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                 case "vanillaRarities.json":
                     UpdateVanillaTypes(mpmissionsFolder, rarityFile);
                     break;
-                case "expansionRarities.json":
+                case Manager.MISSION_EXPANSION_RARITIES_FILE_NAME:
                     UpdateExpansionTypes(mpmissionsFolder, rarityFile);
                     break;
                 case "customFilesRarities.json":
@@ -73,10 +72,10 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                HardlineFile? hardlineFile = JSONSerializer.DeserializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, "expansion", "settings", "HardlineSettings.json"));
-                RarityFile? vanillaRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "vanillaRarities.json"));
-                RarityFile? expansionRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "expansionRarities.json"));
-                RarityFile? customFilesRarityFile = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "customFilesRarities.json"));
+                HardlineFile? hardlineFile = JSONSerializer.DeserializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME));
+                RarityFile? vanillaRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME));
+                RarityFile? expansionRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_RARITIES_FILE_NAME));
+                RarityFile? customFilesRarityFile = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME));
 
                 if (hardlineFile != null)
                 {
@@ -92,7 +91,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                     {
                         MissionUpdater.UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
                     }
-                    JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json"), hardlineFile);
+                    JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), hardlineFile);
                 }
             }
             catch (Exception ex)
@@ -106,19 +105,22 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             if (Manager.managerConfig != null)
             {
-                string typesPath = GetVanillaTypesPath(Path.Combine(mpmissionsPath, Manager.managerConfig.missionName));
-                TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesPath);
-                if (typesFile != null)
+                if (File.Exists(Path.Combine(mpmissionsPath, Manager.managerConfig.missionName, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME)))
                 {
-                    MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
-
-                    TypesChangesFile? typesChangesFile = GetVanillaTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
-                    if (typesChangesFile != null)
+                    string typesPath = Path.Combine(mpmissionsPath, Manager.managerConfig.missionName, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME);
+                    TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesPath);
+                    if (typesFile != null)
                     {
-                        MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
-                    }
+                        MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
 
-                    XMLSerializer.SerializeXMLFile<TypesFile>(typesPath, typesFile);
+                        TypesChangesFile? typesChangesFile = GetVanillaTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
+                        if (typesChangesFile != null)
+                        {
+                            MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
+                        }
+
+                        XMLSerializer.SerializeXMLFile<TypesFile>(typesPath, typesFile);
+                    }
                 }
             }
         }
@@ -127,19 +129,22 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             if (Manager.managerConfig != null)
             {
-                string typesPath = GetExpansionTypesPath(Path.Combine(mpmissionsPath, Manager.managerConfig.missionName));
-                TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesPath);
-                if (typesFile != null)
+                if (File.Exists(Path.Combine(mpmissionsPath, Manager.managerConfig.missionName, Manager.MISSION_EXPANSIONCE_FOLDER_NAME, Manager.MISSION_EXPANSION_TYPES_FILE_NAME)))
                 {
-                    MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
-
-                    TypesChangesFile? typesChangesFile = GetExpansionTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
-                    if (typesChangesFile != null)
+                    string typesPath = Path.Combine(mpmissionsPath, Manager.managerConfig.missionName, Manager.MISSION_EXPANSIONCE_FOLDER_NAME, Manager.MISSION_EXPANSION_TYPES_FILE_NAME);
+                    TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesPath);
+                    if (typesFile != null)
                     {
-                        MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
-                    }
+                        MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
 
-                    XMLSerializer.SerializeXMLFile<TypesFile>(typesPath, typesFile);
+                        TypesChangesFile? typesChangesFile = GetExpansionTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
+                        if (typesChangesFile != null)
+                        {
+                            MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
+                        }
+
+                        XMLSerializer.SerializeXMLFile<TypesFile>(typesPath, typesFile);
+                    }
                 }
             }
         }
@@ -160,43 +165,12 @@ namespace DayZServerManager.Server.Classes.Helpers
         #endregion UpdateTypes
 
         #region GetTypesFiles
-        private static string GetVanillaTypesPath(string folderPath)
-        {
-            List<string> missionFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
-            if (missionFolders.Find(x => Path.GetFileName(x) == "db") != null)
-            {
-                List<string> missionDbFiles = FileSystem.GetFiles(Path.Combine(folderPath, "db")).ToList<string>();
-                string? typesPath = missionDbFiles.Find(x => Path.GetFileName(x) == "types.xml");
-                if (typesPath != null)
-                {
-                    return typesPath;
-                }
-            }
-            return string.Empty;
-        }
-
-        private static string GetExpansionTypesPath(string folderPath)
-        {
-            List<string> missionFolders = FileSystem.GetDirectories(folderPath).ToList<string>();
-            if (missionFolders.Find(x => Path.GetFileName(x) == "expansion_ce") != null)
-            {
-                List<string> missionExpansionFiles = FileSystem.GetFiles(Path.Combine(folderPath, "expansion_ce")).ToList<string>();
-                string? expansionTypesPath = missionExpansionFiles.Find(x => Path.GetFileName(x) == "expansion_types.xml");
-                if (expansionTypesPath != null)
-                {
-                    return expansionTypesPath;
-                }
-            }
-            return string.Empty;
-        }
-
         private static List<string> GetAllCustomTypesFiles(string folderPath)
         {
             List<string> typesFiles = new List<string>();
-            List<string> missionFiles = FileSystem.GetFiles(folderPath).ToList<string>();
-            if (missionFiles.Find(x => Path.GetFileName(x) == "cfgeconomycore.xml") != null)
+            if (File.Exists(Path.Combine(folderPath, Manager.MISSION_ECONOMYCORE_FILE_NAME)))
             {
-                string economyCoreFilePath = Path.Combine(folderPath, "cfgeconomycore.xml");
+                string economyCoreFilePath = Path.Combine(folderPath, Manager.MISSION_ECONOMYCORE_FILE_NAME);
                 EconomyCoreFile? economyCoreFile = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(economyCoreFilePath);
                 if (economyCoreFile != null)
                 {
@@ -219,20 +193,18 @@ namespace DayZServerManager.Server.Classes.Helpers
         #region GetTypesChanges
         private static TypesChangesFile? GetExpansionTypesChangesFile(string folderPath)
         {
-            List<string> missionFiles = FileSystem.GetFiles(folderPath).ToList<string>();
-            if (missionFiles.Find(x => Path.GetFileName(x) == "expansionTypesChanges.json") != null)
+            if (File.Exists(Path.Combine(folderPath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME)))
             {
-                return JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(folderPath, "expansionTypesChanges.json"));
+                return JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(folderPath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME));
             }
             return null;
         }
 
         private static TypesChangesFile? GetVanillaTypesChangesFile(string folderPath)
         {
-            List<string> missionFiles = FileSystem.GetFiles(folderPath).ToList<string>();
-            if (missionFiles.Find(x => Path.GetFileName(x) == "vanillaTypesChanges.json") != null)
+            if (File.Exists(Path.Combine(folderPath, Manager.MISSION_VANILLA_TYPES_CHANGES_FILE_NAME)))
             {
-                return JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(folderPath, "vanillaTypesChanges.json"));
+                return JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(folderPath, Manager.MISSION_VANILLA_TYPES_CHANGES_FILE_NAME));
             }
             return null;
         }

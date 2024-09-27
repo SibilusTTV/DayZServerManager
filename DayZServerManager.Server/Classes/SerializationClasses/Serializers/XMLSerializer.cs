@@ -32,7 +32,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
         {
             try
             {
-                if (FileSystem.FileExists(path))
+                if (File.Exists(path))
                 {
                     using (StreamReader reader = new StreamReader(path))
                     {

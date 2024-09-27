@@ -31,6 +31,6 @@ AppDomain.CurrentDomain.ProcessExit += new EventHandler((s, e) => { Manager.Kill
 
 Manager.WriteToConsole("Initializing Manager");
 Manager.InitiateManager();
-Manager.WriteToConsole("Listening");
+Manager.WriteToConsole(Manager.STATUS_LISTENING);
 
 app.Run("http://0.0.0.0:" + (Manager.managerConfig != null ? Manager.managerConfig.managerPort : 5172));

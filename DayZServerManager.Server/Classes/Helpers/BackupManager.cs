@@ -9,9 +9,9 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                if (!FileSystem.DirectoryExists(backupPath))
+                if (!Directory.Exists(backupPath))
                 {
-                    FileSystem.CreateDirectory(backupPath);
+                    Directory.CreateDirectory(backupPath);
                 }
             }
             catch (Exception ex)
@@ -23,20 +23,20 @@ namespace DayZServerManager.Server.Classes.Helpers
             {
                 Manager.WriteToConsole($"Backing up the server data and moving all the logs!");
                 string newestBackupPath = Path.Combine(backupPath, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-                string dataPath = Path.Combine(Manager.MISSION_PATH, missionName, "storage_1");
+                string dataPath = Path.Combine(Manager.MPMISSIONS_PATH, missionName, Manager.PERSISTANCE_FOLDER_NAME);
                 string profilePath = Path.Combine(Manager.SERVER_PATH, profileName);
-                if (FileSystem.DirectoryExists(dataPath))
+                if (Directory.Exists(dataPath))
                 {
-                    FileSystem.CopyDirectory(dataPath, Path.Combine(newestBackupPath, "data"));
+                    FileSystem.CopyDirectory(dataPath, Path.Combine(newestBackupPath, Manager.BACKUP_DATA_FOLDER_NAME), true);
                 }
-                if (FileSystem.DirectoryExists(profilePath))
+                if (Directory.Exists(profilePath))
                 {
-                    string[] filePaths = FileSystem.GetFiles(profilePath).ToArray();
+                    string[] filePaths = Directory.GetFiles(profilePath).ToArray();
                     foreach (string filePath in filePaths)
                     {
-                        if (Path.GetExtension(filePath) == ".ADM" || Path.GetExtension(filePath) == ".RPT" || Path.GetExtension(filePath) == ".log" || Path.GetExtension(filePath) == ".mdmp")
+                        if (Manager.LogsNames.Contains(Path.GetExtension(filePath)))
                         {
-                            FileSystem.MoveFile(filePath, Path.Combine(newestBackupPath, "logs", Path.GetFileName(filePath)));
+                            File.Move(filePath, Path.Combine(newestBackupPath, Manager.BACKUP_LOGS_FOLDER_NAME, Path.GetFileName(filePath)), true);
                         }
                     }
                 }
@@ -52,17 +52,17 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                if (FileSystem.DirectoryExists(backupPath))
+                if (Directory.Exists(backupPath))
                 {
                     DateTime dateTreshold = DateTime.Now.AddDays(-maxKeepTime);
-                    List<string> backupFolders = FileSystem.GetDirectories(backupPath).ToList();
+                    List<string> backupFolders = Directory.GetDirectories(backupPath).ToList();
                     foreach (string folder in backupFolders)
                     {
                         DateTime folderDate;
                         bool isValidDate = DateTime.TryParseExact(Path.GetFileName(folder), "yyyy-MM-dd HH-mm-ss", System.Globalization.CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out folderDate);
                         if (isValidDate && folderDate < dateTreshold)
                         {
-                            FileSystem.DeleteDirectory(folder, DeleteDirectoryOption.DeleteAllContents);
+                            Directory.Delete(folder, true);
                         }
                     }
                 }

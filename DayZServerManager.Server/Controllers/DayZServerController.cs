@@ -22,7 +22,7 @@ namespace DayZServerManager.Server.Controllers
         {
             if (Manager.props == null)
             {
-                Manager.props = new ManagerProps("Listening", "Not Running", "Not Running", 0);
+                Manager.props = new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STEAMCMD_STATUS_NOT_RUNNING, 0);
             }
             return Manager.props;
         }
@@ -30,7 +30,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("StartServer")]
         public bool StartDayZServer()
         {
-            if (Manager.props != null && (Manager.props.managerStatus == "Listening" || Manager.props.managerStatus == "Server Stopped") && Manager.props.dayzServerStatus == "Not Running")
+            if (Manager.props != null && (Manager.props.managerStatus == Manager.STATUS_LISTENING || Manager.props.managerStatus == Manager.STATUS_SERVER_STOPPED) && Manager.props.dayzServerStatus == Manager.STATUS_NOT_RUNNING)
             {
                 Task startTask = new Task(() => { Manager.StartServer(); });
                 startTask.Start();
@@ -45,11 +45,11 @@ namespace DayZServerManager.Server.Controllers
             Manager.StopServer();
             if (Manager.props != null)
             {
-                while (Manager.props.managerStatus == "Stopping Server")
+                while (Manager.props.managerStatus == Manager.STATUS_STOPPING_SERVER)
                 {
                     Thread.Sleep(1000);
                 }
-                if (Manager.props.managerStatus == "Listening")
+                if (Manager.props.managerStatus == Manager.STATUS_LISTENING)
                 {
                     return true;
                 }

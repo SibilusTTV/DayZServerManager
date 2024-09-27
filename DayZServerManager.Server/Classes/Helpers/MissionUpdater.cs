@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic.FileIO;
-using LibGit2Sharp;
+﻿using LibGit2Sharp;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EconomyCoreClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EventSpawnClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.GlobalsClasses;
@@ -10,6 +9,7 @@ using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.Manag
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EnvironmentClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.RarityFile;
+using Microsoft.VisualBasic.FileIO;
 
 namespace DayZServerManager.Server.Classes.Helpers
 {
@@ -22,42 +22,39 @@ namespace DayZServerManager.Server.Classes.Helpers
                 if (Manager.managerConfig != null)
                 {
                     //Creating path variables for later use
-                    string missionPath = Path.Combine(Manager.SERVER_PATH, "mpmissions", Manager.managerConfig.missionName);
-                    string missionTemplatePath = Path.Combine(Manager.MISSION_PATH, Manager.managerConfig.missionTemplateName);
+                    string missionPath = Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionName);
+                    string missionTemplatePath = Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionTemplateName);
 
                     #region Creating directories
-                    List<string> serverDirectories = FileSystem.GetDirectories(Manager.SERVER_PATH).ToList<string>();
-                    if (serverDirectories.Find(dir => Path.GetFileName(dir) == "mpmissions") == null)
+                    if (!Directory.Exists(missionPath))
                     {
-                        FileSystem.CreateDirectory(Path.Combine(Manager.SERVER_PATH, "mpmissions"));
+                        Directory.CreateDirectory(missionPath);
                     }
 
-                    List<string> mpmissionDirectories = FileSystem.GetDirectories(Manager.MISSION_PATH).ToList<string>();
-                    if (mpmissionDirectories.Find(dir => Path.GetFileName(dir) == Manager.managerConfig.missionTemplateName) == null)
+                    if (!Directory.Exists(missionTemplatePath))
                     {
-                        FileSystem.CreateDirectory(missionTemplatePath);
+                        Directory.CreateDirectory(missionTemplatePath);
                     }
                     #endregion Creating directories
 
                     #region Creating example CustomFiles
 
                     //Creating CustomFiles folder
-                    List<string> missionTemplateDirectories = FileSystem.GetDirectories(missionTemplatePath).ToList<string>();
-                    if (missionTemplateDirectories.Find(dir => Path.GetFileName(dir) == "CustomFiles") == null)
+                    if (!Directory.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME)))
                     {
-                        FileSystem.CreateDirectory(Path.Combine(missionTemplatePath, "CustomFiles"));
+                        Directory.CreateDirectory(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME));
                     }
 
                     // Creating example folder in CustomFiles
-                    List<string> customFilesDirectories = FileSystem.GetDirectories(Path.Combine(missionTemplatePath, "CustomFiles")).ToList<string>();
+                    List<string> customFilesDirectories = Directory.GetDirectories(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME)).ToList<string>();
                     if (customFilesDirectories.Count == 0)
                     {
-                        FileSystem.CreateDirectory(Path.Combine(missionTemplatePath, "CustomFiles", "ExampleModFiles"));
-                        customFilesDirectories = FileSystem.GetDirectories(Path.Combine(missionTemplatePath, "CustomFiles")).ToList<string>();
+                        Directory.CreateDirectory(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME, Manager.MISSION_EXAMPLE_MOD_FILES_FOLDER_NAME));
+                        customFilesDirectories = Directory.GetDirectories(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME)).ToList<string>();
                     }
 
                     //Creating Example typesFile
-                    List<string> filesNames = FileSystem.GetFiles(Path.Combine(customFilesDirectories[0])).ToList<string>();
+                    List<string> filesNames = Directory.GetFiles(Path.Combine(customFilesDirectories[0])).ToList<string>();
                     if (filesNames.Count == 0)
                     {
                         TypesFile exampleTypesFile = new TypesFile()
@@ -80,12 +77,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                                 }
                             }
                         };
-                        XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(customFilesDirectories[0], "exampleTypesFile.xml"), exampleTypesFile);
+                        XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(customFilesDirectories[0], Manager.MISSION_EXAMPLE_TYPES_FILE_NAME), exampleTypesFile);
                     }
 
-                    List<string> missionTemplateFiles = FileSystem.GetFiles(Path.Combine(missionTemplatePath)).ToList<string>();
                     // Creating Exmple cfgeconomycore
-                    if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "cfgeconomycore.xml") == null)
+                    if (!File.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME)))
                     {
                         EconomyCoreFile exampleEconomyCore = new EconomyCoreFile()
                         {
@@ -93,48 +89,48 @@ namespace DayZServerManager.Server.Classes.Helpers
                         {
                             new CeItem()
                             {
-                                folder = Path.Combine("CustomFiles", Path.GetFileName(customFilesDirectories[0])),
+                                folder = Path.Combine(Manager.MISSION_CUSTOM_FILE_NAME, Path.GetFileName(customFilesDirectories[0])),
                                 fileItems = new List<FileItem>()
                                 {
                                     new FileItem()
                                     {
-                                        name = "exampleTypesFile.xml",
+                                        name = Manager.MISSION_EXAMPLE_TYPES_FILE_NAME,
                                         type = "types"
                                     }
                                 }
                             }
                         }
                         };
-                        XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, "cfgeconomycore.xml"), exampleEconomyCore);
+                        XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME), exampleEconomyCore);
                     }
                     else
                     {
-                        EconomyCoreFile? economyCoreFile = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, "cfgeconomycore.xml"));
+                        EconomyCoreFile? economyCoreFile = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME));
                         if (economyCoreFile != null && economyCoreFile.ceItems == null)
                         {
                             economyCoreFile.ceItems = new List<CeItem>()
                         {
                             new CeItem()
                             {
-                                folder = Path.Combine("CustomFiles", Path.GetFileName(customFilesDirectories[0])),
+                                folder = Path.Combine(Manager.MISSION_CUSTOM_FILE_NAME, Path.GetFileName(customFilesDirectories[0])),
                                 fileItems = new List<FileItem>()
                                 {
                                     new FileItem()
                                     {
-                                        name = "exampleTypesFile.xml",
+                                        name = Manager.MISSION_EXAMPLE_TYPES_FILE_NAME,
                                         type = "types"
                                     }
                                 }
                             }
                         };
-                            XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, "cfgeconomycore.xml"), economyCoreFile);
+                            XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME), economyCoreFile);
                         }
                     }
                     #endregion Create example CustomFiles
 
                     #region Creating example rarities and types changes files
                     //Creating customFilesRarities.json file
-                    if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "customFilesRarities.json") == null)
+                    if (!File.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME)))
                     {
                         RarityFile customFilesRarities = new RarityFile();
                         customFilesRarities.ItemRarity = new List<RarityItem>()
@@ -152,11 +148,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                                 rarity = 5
                             }
                         };
-                        JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "customFilesRarities.json"), customFilesRarities);
+                        JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME), customFilesRarities);
                     }
 
                     //Creating vanillaRarities.json
-                    if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "vanillaRarities.json") == null)
+                    if (!File.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME)))
                     {
                         RarityFile vanillaRarities = new RarityFile();
                         vanillaRarities.ItemRarity = new List<RarityItem>()
@@ -174,11 +170,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                                 rarity = 5
                             }
                         };
-                        JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "vanillaRarities.json"), vanillaRarities);
+                        JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME), vanillaRarities);
                     }
 
                     //Creating vanillaTypesChanges.json
-                    if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "vanillaTypesChanges.json") == null)
+                    if (!File.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_TYPES_CHANGES_FILE_NAME)))
                     {
                         TypesChangesFile vanillaTypesChanges = new TypesChangesFile();
                         vanillaTypesChanges.types =
@@ -214,14 +210,14 @@ namespace DayZServerManager.Server.Classes.Helpers
                         }
                         ];
 
-                        JSONSerializer.SerializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json"), vanillaTypesChanges);
+                        JSONSerializer.SerializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_TYPES_CHANGES_FILE_NAME), vanillaTypesChanges);
                     }
 
                     //Creating expansionRarities.json and expansionTypesChanges.json, if Expansion is part of the mods
                     if (Manager.managerConfig.clientMods != null && Manager.managerConfig.clientMods.FindAll(p => p.name.ToLower().Contains("expansion")).Count > 0)
                     {
                         //Creating expansionRarities.json
-                        if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "expansionRarities.json") == null)
+                        if (!File.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_RARITIES_FILE_NAME)))
                         {
                             RarityFile expansionRarityFile = new RarityFile();
                             expansionRarityFile.ItemRarity = new List<RarityItem>()
@@ -239,11 +235,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                                     rarity = 5
                                 }
                             };
-                            JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "expansionRarities.json"), expansionRarityFile);
+                            JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_RARITIES_FILE_NAME), expansionRarityFile);
                         }
 
                         //Creating expansionTypesChanges.json
-                        if (missionTemplateFiles.Find(x => Path.GetFileName(x) == "expansionTypesChanges.json") == null)
+                        if (!File.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_TYPES_CHANGES_FILE_NAME)))
                         {
                             TypesChangesFile expansionTypesChanges = new TypesChangesFile();
                             expansionTypesChanges.types = new List<TypesChangesItem>
@@ -260,25 +256,23 @@ namespace DayZServerManager.Server.Classes.Helpers
                             }
                         };
 
-                            JSONSerializer.SerializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, "expansionTypesChanges.json"), expansionTypesChanges);
+                            JSONSerializer.SerializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_TYPES_CHANGES_FILE_NAME), expansionTypesChanges);
                         }
 
                         // Creating expansion folder in the missionTemplate folder, if it doesn't exist
-                        if (missionTemplateDirectories.Find(x => Path.GetFileName(x) == "expansion") == null)
+                        if (!Directory.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME)))
                         {
-                            FileSystem.CreateDirectory(Path.Combine(missionTemplatePath, "expansion"));
+                            Directory.CreateDirectory(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME));
                         }
 
                         // Creating settings folder in the expansion folder of the missionTemplate folder, if it doesn't exist
-                        List<string> ExpansionDirectories = FileSystem.GetDirectories(Path.Combine(missionTemplatePath, "expansion")).ToList<string>();
-                        if (ExpansionDirectories.Find(x => Path.GetFileName(x) == "settings") == null)
+                        if (!Directory.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME)))
                         {
-                            FileSystem.CreateDirectory(Path.Combine(missionTemplatePath, "expansion", "settings"));
+                            Directory.CreateDirectory(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME));
                         }
 
                         // Creating HardlineSettings.json in the settings folder of the expansion folder of the missionTemplate folder, if it doesn't exist
-                        List<string> ExpansionSettingsFiles = FileSystem.GetFiles(Path.Combine(missionTemplatePath, "expansion", "settings")).ToList<string>();
-                        if (ExpansionDirectories.Find(x => Path.GetFileName(x) == "HardlineSettings.json") == null)
+                        if (!File.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME)))
                         {
                             HardlineFile? exampleHardlineRarity = new HardlineFile
                             {
@@ -317,44 +311,47 @@ namespace DayZServerManager.Server.Classes.Helpers
                                 ItemRarity = new Dictionary<string, int>()
                             };
 
-                            JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, "expansion", "settings", "HardlineSettings.json"), exampleHardlineRarity);
+                            JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), exampleHardlineRarity);
                         }
                     }
                     #endregion Creating example rarities and types changes files
 
                     // Rename the old mission folder and copy the contents of the vanilla folder
-                    CopyVanillaMissionFolder(missionPath, Path.Combine(Manager.SERVER_PATH, "mpmissions", Manager.managerConfig.vanillaMissionName), Manager.managerConfig.backupPath);
+                    CopyVanillaMissionFolder(missionPath, Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.vanillaMissionName), Manager.managerConfig.backupPath);
 
                     string expansionTemplatePath = Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", Manager.managerConfig.mapName);
-                    if (Manager.managerConfig.clientMods != null && Manager.managerConfig.clientMods.FindAll(p => p.name.ToLower().Contains("expansion")).Count > 0)
+                    if (Manager.managerConfig.clientMods != null && Manager.managerConfig.clientMods.FindAll(p => p.name.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH)).Count > 0)
                     {
                         // Get the new expansion mission template from git
                         expansionTemplatePath = DownloadExpansionTemplates();
 
                         // Copy the folder expansion_ce from the expansionTemplate to the new mission folder
-                        CopyExpansionTemplateFiles(expansionTemplatePath, missionPath);
+                        CopyExpansionTemplateFiles(expansionTemplatePath, missionPath, missionPath + "Old");
                     }
 
                     // Copy the folders CustomFiles and expansion and also the files mapgrouppos.xml, cfgweather.xml and cfgplayerspawnpoints.xml from the missionTemplate to the new mission folder
                     CopyMissionTemplateFiles(missionTemplatePath, missionPath);
 
-                    if (mpmissionDirectories.Find(x => Path.GetFileName(x) == Manager.managerConfig.missionName) != null)
+                    if (Directory.Exists(missionPath))
                     {
-                        // Change the variables in the globals.xml of TimeLogin to 5 and ZombieMaxCount to 500
-                        GlobalsFile? globals = XMLSerializer.DeserializeXMLFile<GlobalsFile>(Path.Combine(missionPath, "db", "globals.xml"));
-                        if (globals != null)
+                        if (File.Exists(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_GLOBALS_FILE_NAME)))
                         {
-                            UpdateGlobals(globals);
-                            XMLSerializer.SerializeXMLFile<GlobalsFile>(Path.Combine(missionPath, "db", "globals.xml"), globals);
+                            // Change the variables in the globals.xml of TimeLogin to 5 and ZombieMaxCount to 500
+                            GlobalsFile? globals = XMLSerializer.DeserializeXMLFile<GlobalsFile>(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_GLOBALS_FILE_NAME));
+                            if (globals != null)
+                            {
+                                UpdateGlobals(globals);
+                                XMLSerializer.SerializeXMLFile<GlobalsFile>(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_GLOBALS_FILE_NAME), globals);
+                            }
                         }
 
                         // Add the other parts of the cfgeconomycore.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
-                        EconomyCoreFile? missionEconomyCore = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(Path.Combine(missionPath, "cfgeconomycore.xml"));
+                        EconomyCoreFile? missionEconomyCore = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(Path.Combine(missionPath, Manager.MISSION_ECONOMYCORE_FILE_NAME));
 
                         if (missionEconomyCore != null)
                         {
-                            EconomyCoreFile? expansionTemplateEconomyCore = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(Path.Combine(expansionTemplatePath, "cfgeconomycore.xml"));
-                            EconomyCoreFile? missionTemplateEconomyCore = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, "cfgeconomycore.xml"));
+                            EconomyCoreFile? expansionTemplateEconomyCore = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(Path.Combine(expansionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME));
+                            EconomyCoreFile? missionTemplateEconomyCore = XMLSerializer.DeserializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME));
                             if (expansionTemplateEconomyCore != null)
                             {
                                 UpdateEconomyCore(missionEconomyCore, expansionTemplateEconomyCore);
@@ -363,16 +360,16 @@ namespace DayZServerManager.Server.Classes.Helpers
                             {
                                 UpdateEconomyCore(missionEconomyCore, missionTemplateEconomyCore);
                             }
-                            XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionPath, "cfgeconomycore.xml"), missionEconomyCore);
+                            XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionPath, Manager.MISSION_ECONOMYCORE_FILE_NAME), missionEconomyCore);
                         }
 
                         // Add the other parts of the cfgeventspawns.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
-                        EventSpawnsFile? missionEventSpawns = XMLSerializer.DeserializeXMLFile<EventSpawnsFile>(Path.Combine(missionPath, "cfgeventspawns.xml"));
+                        EventSpawnsFile? missionEventSpawns = XMLSerializer.DeserializeXMLFile<EventSpawnsFile>(Path.Combine(missionPath, Manager.MISSION_EVENTSPAWNS_FILE_NAME));
 
                         if (missionEventSpawns != null)
                         {
-                            EventSpawnsFile? expansionTemplateEventSpawns = XMLSerializer.DeserializeXMLFile<EventSpawnsFile>(Path.Combine(expansionTemplatePath, "cfgeventspawns.xml"));
-                            EventSpawnsFile? missionTemplateEventSpawns = XMLSerializer.DeserializeXMLFile<EventSpawnsFile>(Path.Combine(missionTemplatePath, "cfgeventspawns.xml"));
+                            EventSpawnsFile? expansionTemplateEventSpawns = XMLSerializer.DeserializeXMLFile<EventSpawnsFile>(Path.Combine(expansionTemplatePath, Manager.MISSION_EVENTSPAWNS_FILE_NAME));
+                            EventSpawnsFile? missionTemplateEventSpawns = XMLSerializer.DeserializeXMLFile<EventSpawnsFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EVENTSPAWNS_FILE_NAME));
                             if (expansionTemplateEventSpawns != null)
                             {
                                 UpdateEventSpawns(missionEventSpawns, expansionTemplateEventSpawns);
@@ -381,15 +378,15 @@ namespace DayZServerManager.Server.Classes.Helpers
                             {
                                 UpdateEventSpawns(missionEventSpawns, missionTemplateEventSpawns);
                             }
-                            XMLSerializer.SerializeXMLFile<EventSpawnsFile>(Path.Combine(missionPath, "cfgeventspawns.xml"), missionEventSpawns);
+                            XMLSerializer.SerializeXMLFile<EventSpawnsFile>(Path.Combine(missionPath, Manager.MISSION_EVENTSPAWNS_FILE_NAME), missionEventSpawns);
                         }
 
-                        EnvironmentFile? missionEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(missionPath, "cfgenvironment.xml"));
+                        EnvironmentFile? missionEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(missionPath, Manager.MISSION_ENVIRONMENTS_FILE_NAME));
 
                         if (missionEnvironmentFile != null)
                         {
-                            EnvironmentFile? expansionTemplateEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(expansionTemplatePath, "cfgenvironment.xml"));
-                            EnvironmentFile? missionTemplateEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(missionTemplatePath, "cfgenvironment.xml"));
+                            EnvironmentFile? expansionTemplateEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(expansionTemplatePath, Manager.MISSION_ENVIRONMENTS_FILE_NAME));
+                            EnvironmentFile? missionTemplateEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(missionTemplatePath, Manager.MISSION_ENVIRONMENTS_FILE_NAME));
 
                             if (expansionTemplateEnvironmentFile != null)
                             {
@@ -399,32 +396,31 @@ namespace DayZServerManager.Server.Classes.Helpers
                             {
                                 UpdateEnvironmentFile(missionEnvironmentFile, missionTemplateEnvironmentFile);
                             }
-                            XMLSerializer.SerializeXMLFile<EnvironmentFile>(Path.Combine(missionPath, "cfgenvironment.xml"), missionEnvironmentFile);
+                            XMLSerializer.SerializeXMLFile<EnvironmentFile>(Path.Combine(missionPath, Manager.MISSION_ENVIRONMENTS_FILE_NAME), missionEnvironmentFile);
                         }
 
-                        List<string> missionFiles = FileSystem.GetFiles(missionPath).ToList<string>();
                         // Add the part of the main method of the init.c of the missionTemplate to the one from the new mission folder
-                        if (missionFiles.Find(x => Path.GetFileName(x) == "init.c") != null && missionTemplateFiles.Find(x => Path.GetFileName(x) == "init.c") != null)
+                        if (File.Exists(Path.Combine(missionPath, Manager.MISSION_INIT_FILE_NAME)) && File.Exists(Path.Combine(missionTemplatePath, Manager.MISSION_INIT_FILE_NAME)))
                         {
-                            string missionInit = InitFileSerializer.DeserializeInitFile(Path.Combine(missionPath, "init.c"));
-                            string templateInit = InitFileSerializer.DeserializeInitFile(Path.Combine(missionTemplatePath, "init.c"));
+                            string missionInit = InitFileSerializer.DeserializeInitFile(Path.Combine(missionPath, Manager.MISSION_INIT_FILE_NAME));
+                            string templateInit = InitFileSerializer.DeserializeInitFile(Path.Combine(missionTemplatePath, Manager.MISSION_INIT_FILE_NAME));
 
                             missionInit = UpdateInit(missionInit, templateInit);
 
-                            InitFileSerializer.SerializeInitFile(Path.Combine(missionPath, "init.c"), missionInit);
+                            InitFileSerializer.SerializeInitFile(Path.Combine(missionPath, Manager.MISSION_INIT_FILE_NAME), missionInit);
                         }
 
                         // Changing the types files to reflect the rarities
-                        HardlineFile? hardlineFile = JSONSerializer.DeserializeJSONFile<HardlineFile>(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json"));
-                        RarityFile? vanillaRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "vanillaRarities.json"));
-                        RarityFile? expansionRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "expansionRarities.json"));
+                        HardlineFile? hardlineFile = JSONSerializer.DeserializeJSONFile<HardlineFile>(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME));
+                        RarityFile? vanillaRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME));
+                        RarityFile? expansionRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_RARITIES_FILE_NAME));
 
-                        TypesFile? vanillaTypes = XMLSerializer.DeserializeXMLFile<TypesFile>(Path.Combine(missionPath, "db", "types.xml"));
-                        TypesFile? expansionTypes = XMLSerializer.DeserializeXMLFile<TypesFile>(Path.Combine(missionPath, "expansion_ce", "expansion_types.xml"));
+                        TypesFile? vanillaTypes = XMLSerializer.DeserializeXMLFile<TypesFile>(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME));
+                        TypesFile? expansionTypes = XMLSerializer.DeserializeXMLFile<TypesFile>(Path.Combine(missionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME, Manager.MISSION_EXPANSION_TYPES_FILE_NAME));
 
                         if (hardlineFile != null)
                         {
-                            RarityFile? customFilesRarityFile = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, "customFilesRarities.json"));
+                            RarityFile? customFilesRarityFile = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME));
                             if (vanillaRarity != null)
                             {
                                 UpdateHardlineRarity(hardlineFile, vanillaRarity);
@@ -437,7 +433,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                             {
                                 UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
                             }
-                            JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionPath, "expansion", "settings", "HardlineSettings.json"), hardlineFile);
+                            JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), hardlineFile);
                         }
 
                         if (vanillaTypes != null)
@@ -448,13 +444,13 @@ namespace DayZServerManager.Server.Classes.Helpers
                             }
 
                             // Change the Lifetimes of items in the types.xml
-                            TypesChangesFile? changes = JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, "vanillaTypesChanges.json"));
+                            TypesChangesFile? changes = JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_TYPES_CHANGES_FILE_NAME));
                             if (changes != null)
                             {
                                 UpdateTypesWithTypesChanges(vanillaTypes, changes);
                             }
 
-                            XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(missionPath, "db", "types.xml"), vanillaTypes);
+                            XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME), vanillaTypes);
                         }
 
                         if (expansionTypes != null)
@@ -465,25 +461,23 @@ namespace DayZServerManager.Server.Classes.Helpers
                             }
 
                             // Change the Lifetimes of items in the expansionTypes.xml
-                            TypesChangesFile? changes = JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, "expansionTypesChanges.json"));
+                            TypesChangesFile? changes = JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_TYPES_CHANGES_FILE_NAME));
                             if (changes != null)
                             {
                                 UpdateTypesWithTypesChanges(expansionTypes, changes);
                             }
 
-                            XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(missionPath, "expansion_ce", "expansion_types.xml"), expansionTypes);
+                            XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(missionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME, Manager.MISSION_EXPANSION_TYPES_FILE_NAME), expansionTypes);
                         }
                     }
 
-                    mpmissionDirectories = FileSystem.GetDirectories(Manager.MISSION_PATH).ToList<string>();
-                    if (mpmissionDirectories.Find(x => Path.GetFileName(x) == Manager.managerConfig.missionName + "Old") != null)
+                    if (Directory.Exists(missionPath + "Old"))
                     {
 
-                        List<string> oldMissionDirectories = FileSystem.GetDirectories(missionPath + "Old").ToList<string>();
                         // Copy over the data and map from the old mission into the new one
-                        if (oldMissionDirectories.Find(x => Path.GetFileName(x) == "storage_1") != null)
+                        if (Directory.Exists(Path.Combine(missionPath + "Old", Manager.PERSISTANCE_FOLDER_NAME)))
                         {
-                            CopyPersistenceData(missionPath);
+                            CopyPersistenceData(missionPath, missionPath + "Old");
                         }
 
                         // Move old mission to backup
@@ -602,6 +596,37 @@ namespace DayZServerManager.Server.Classes.Helpers
                 Manager.WriteToConsole(ex.ToString());
                 return null;
             }
+        }
+
+        private static string SearchForExpansionTemplate(string folderPath)
+        {
+            try
+            {
+                if (Manager.managerConfig != null)
+                {
+                    List<string> folderDirectories = Directory.GetDirectories(folderPath).ToList<string>();
+                    foreach (string folder in folderDirectories)
+                    {
+                        if (Path.GetFileName(folder).ToLower() == Manager.managerConfig.mapName.ToLower())
+                        {
+                            return folder;
+                        }
+                    }
+                    foreach (string folder in folderDirectories)
+                    {
+                        string matchingTemplateFolder = SearchForExpansionTemplate(folder);
+                        if (matchingTemplateFolder != "")
+                        {
+                            return matchingTemplateFolder;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+            }
+            return string.Empty;
         }
         #endregion Searches
 
@@ -942,17 +967,17 @@ namespace DayZServerManager.Server.Classes.Helpers
             try
             {
                 Manager.WriteToConsole("Copying vanilla mission files and folders");
-                if (FileSystem.DirectoryExists(vanillaMissionPath))
+                if (Directory.Exists(vanillaMissionPath))
                 {
-                    if (FileSystem.DirectoryExists(missionPath))
+                    if (Directory.Exists(missionPath))
                     {
-                        if (FileSystem.DirectoryExists(missionPath + "Old"))
+                        if (Directory.Exists(missionPath + "Old"))
                         {
                             MoveOldMission(missionPath, backupPath);
                         }
-                        FileSystem.MoveDirectory(missionPath, missionPath + "Old");
+                        Directory.Move(missionPath, missionPath + "Old");
                     }
-                    FileSystem.CopyDirectory(vanillaMissionPath, missionPath);
+                    FileSystem.CopyDirectory(vanillaMissionPath, missionPath, true);
                 }
                 Manager.WriteToConsole("Finished copying vanilla mission files and folders");
             }
@@ -962,14 +987,18 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
         }
         
-        private static void CopyExpansionTemplateFiles(string expansionTemplatePath, string missionPath)
+        private static void CopyExpansionTemplateFiles(string expansionTemplatePath, string missionPath, string oldMissionPath)
         {
             try
             {
                 Manager.WriteToConsole("Copying expansion template files");
-                if (FileSystem.DirectoryExists(expansionTemplatePath))
+                if (Directory.Exists(Path.Combine(expansionTemplatePath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME)))
                 {
-                    FileSystem.CopyDirectory(Path.Combine(expansionTemplatePath, "expansion_ce"), Path.Combine(missionPath, "expansion_ce"), true);
+                    FileSystem.CopyDirectory(Path.Combine(expansionTemplatePath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME), Path.Combine(missionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME), true);
+                }
+                else if (Directory.Exists(Path.Combine(oldMissionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME)))
+                {
+                    FileSystem.CopyDirectory(Path.Combine(oldMissionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME), Path.Combine(missionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME), true);
                 }
                 Manager.WriteToConsole("Finished copying expansion template files");
             }
@@ -984,28 +1013,28 @@ namespace DayZServerManager.Server.Classes.Helpers
             try
             {
                 Manager.WriteToConsole("Moving mission template files and folders");
-                List<string> templateDirectories = FileSystem.GetDirectories(missionTemplatePath).ToList<string>();
-                List<string> templateFiles = FileSystem.GetFiles(missionTemplatePath).ToList<string>();
+                List<string> templateDirectories = Directory.GetDirectories(missionTemplatePath).ToList<string>();
+                List<string> templateFiles = Directory.GetFiles(missionTemplatePath).ToList<string>();
 
                 foreach (string directory in templateDirectories)
                 {
-                    FileSystem.CopyDirectory(directory, Path.Combine(missionPath, Path.GetFileName(directory)));
+                    FileSystem.CopyDirectory(directory, Path.Combine(missionPath, Path.GetFileName(directory)), true);
                 }
 
                 foreach (string file in templateFiles)
                 {
                     string fileName = Path.GetFileName(file);
-                    if (fileName != "cfgeconomycore.xml"
-                        && fileName != "cfgeventspawns.xml"
-                        && fileName != "cfgenvironment.xml"
-                        && fileName != "customFilesRarities.json"
-                        && fileName != "expansionRarities.json"
-                        && fileName != "expansionTypesChanges.json"
-                        && fileName != "init.c"
-                        && fileName != "vanillaRarities.json"
-                        && fileName != "vanillaTypesChanges.json")
+                    if (fileName != Manager.MISSION_ECONOMYCORE_FILE_NAME
+                        && fileName != Manager.MISSION_EVENTSPAWNS_FILE_NAME
+                        && fileName != Manager.MISSION_ENVIRONMENTS_FILE_NAME
+                        && fileName != Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME
+                        && fileName != Manager.MISSION_EXPANSION_RARITIES_FILE_NAME
+                        && fileName != Manager.MISSION_VANILLA_RARITIES_FILE_NAME
+                        && fileName != Manager.MISSION_INIT_FILE_NAME
+                        && fileName != Manager.MISSION_VANILLA_RARITIES_FILE_NAME
+                        && fileName != Manager.MISSION_VANILLA_TYPES_CHANGES_FILE_NAME)
                     {
-                        FileSystem.CopyFile(file, Path.Combine(missionPath, Path.GetFileName(file)), true);
+                        File.Copy(file, Path.Combine(missionPath, Path.GetFileName(file)), true);
                     }
                 }
                 Manager.WriteToConsole("Finshed moving mission template files and folders");
@@ -1016,12 +1045,12 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
         }
         
-        private static void CopyPersistenceData(string missionPath)
+        private static void CopyPersistenceData(string missionPath, string oldMissionPath)
         {
             try
             {
                 Manager.WriteToConsole("Copying old persistance data");
-                FileSystem.CopyDirectory(Path.Combine(missionPath + "Old", "storage_1"), Path.Combine(missionPath, "storage_1"));
+                FileSystem.CopyDirectory(Path.Combine(oldMissionPath, Manager.PERSISTANCE_FOLDER_NAME), Path.Combine(missionPath, Manager.PERSISTANCE_FOLDER_NAME), true);
                 Manager.WriteToConsole("Finished copy old persistance data");
             }
             catch (Exception ex)
@@ -1035,12 +1064,12 @@ namespace DayZServerManager.Server.Classes.Helpers
             try
             {
                 Manager.WriteToConsole("Moving old mission");
-                string newPath = Path.Combine(backupPath, "FullMissionBackups", DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-                if (!FileSystem.DirectoryExists(Path.Combine(backupPath, "FullMissionBackups")))
+                string newPath = Path.Combine(backupPath, Manager.BACKUPS_FULL_MISSION_BACKUPS_FOLDER_NAME, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
+                if (!Directory.Exists(Path.Combine(backupPath, Manager.BACKUPS_FULL_MISSION_BACKUPS_FOLDER_NAME)))
                 {
-                    FileSystem.CreateDirectory(Path.Combine(backupPath, "FullMissionBackups"));
+                    Directory.CreateDirectory(Path.Combine(backupPath, Manager.BACKUPS_FULL_MISSION_BACKUPS_FOLDER_NAME));
                 }
-                FileSystem.MoveDirectory(oldPath, newPath);
+                Directory.Move(oldPath, newPath);
                 Manager.WriteToConsole("Finished moving old mission");
             }
             catch (Exception ex)
@@ -1058,7 +1087,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                 if (Manager.managerConfig != null)
                 {
                     Manager.WriteToConsole("Downloading expansion template");
-                    if (FileSystem.DirectoryExists(Manager.EXPANSION_DOWNLOAD_PATH))
+                    if (Directory.Exists(Manager.EXPANSION_DOWNLOAD_PATH))
                     {
                         Repository rep = new Repository(Manager.EXPANSION_DOWNLOAD_PATH);
                         PullOptions pullOptions = new PullOptions();
@@ -1066,49 +1095,22 @@ namespace DayZServerManager.Server.Classes.Helpers
                         Commands.Pull(rep, new Signature("username", "email", new DateTimeOffset(DateTime.Now)), pullOptions);
 
                         Manager.WriteToConsole("Finished downloading expansion template");
-
-                        if (FileSystem.DirectoryExists(Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", Manager.managerConfig.mapName)))
-                        {
-                            return Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", Manager.managerConfig.mapName);
-                        }
-                        else if (FileSystem.DirectoryExists(Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", "0_INCOMPLETE", Manager.managerConfig.mapName)))
-                        {
-                            return Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", "0_INCOMPLETE", Manager.managerConfig.mapName);
-                        }
-                        else
-                        {
-                            return string.Empty;
-                        }
+                        return SearchForExpansionTemplate(Manager.EXPANSION_DOWNLOAD_PATH);
                     }
                     else
                     {
-                        if (Manager.EXPANSION_DOWNLOAD_PATH == string.Empty)
-                        {
-                            Manager.EXPANSION_DOWNLOAD_PATH = Path.Combine(Manager.SERVER_PATH, "mpmissions", "DayZ-Expansion-Missions");
-                        }
-
                         Repository.Clone("https://github.com/ExpansionModTeam/DayZ-Expansion-Missions.git", Manager.EXPANSION_DOWNLOAD_PATH);
 
                         Manager.WriteToConsole("Finished downloading expansion template");
-
-                        if (FileSystem.DirectoryExists(Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", Manager.managerConfig.mapName)))
-                        {
-                            return Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", Manager.managerConfig.mapName);
-                        }
-                        else if (FileSystem.DirectoryExists(Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", "0_INCOMPLETE", Manager.managerConfig.mapName)))
-                        {
-                            return Path.Combine(Manager.EXPANSION_DOWNLOAD_PATH, "Template", "0_INCOMPLETE", Manager.managerConfig.mapName);
-                        }
+                        return SearchForExpansionTemplate(Manager.EXPANSION_DOWNLOAD_PATH);
                     }
                 }
-
-                return string.Empty;
             }
             catch (Exception ex)
             {
                 Manager.WriteToConsole(ex.ToString());
-                return string.Empty;
             }
+            return string.Empty;
         }
         #endregion DownloadFunctions
     }
