@@ -421,7 +421,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     steamCMDProcess.Kill();
                     steamCMDProcess = null;
-                    Manager.props.steamCMDStatus = Manager.STEAMCMD_STATUS_NOT_RUNNING;
+                    Manager.props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
                 }
             }
             catch (Exception ex)
@@ -526,7 +526,7 @@ namespace DayZServerManager.Server.Classes
                     string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)} \"+login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" +quit";
                     Manager.WriteToConsole("Updating the DayZ Server");
                     StartSteamCMD(props, serverUpdateArguments);
-                    if (props.steamCMDStatus == Manager.STEAMCMD_STATUS_NOT_RUNNING)
+                    if (props.steamCMDStatus == Manager.STATUS_NOT_RUNNING)
                     {
                         CheckForUpdatedServer();
                     }

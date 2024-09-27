@@ -22,7 +22,7 @@ namespace DayZServerManager.Server.Controllers
         {
             if (Manager.props == null)
             {
-                Manager.props = new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STEAMCMD_STATUS_NOT_RUNNING, 0);
+                Manager.props = new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, 0);
             }
             return Manager.props;
         }
