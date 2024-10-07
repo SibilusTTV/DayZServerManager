@@ -132,7 +132,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClas
             networkObjectBatchEnforceBandwidthLimits = 1;   //Enables a limiter for object creation based on bandwidth statistics
             networkObjectBatchUseEstimatedBandwidth = 0;    //Switch between the method behind finding the bandwidth usage of a connection. If set to 0, it will use the total of the actual data sent since the last server frame, and if set to 1, it will use a crude estimation
             networkObjectBatchUseDynamicMaximumBandwidth = 1;   //Determines if the bandwidth limit should be a factor of the maximum bandwidth that can be sent or a hard limit. The maximum bandwidth that can be sent fluctuates depending on demand in the system.
-            networkObjectBatchBandwidthLimit = 0.8;     //The actual limit, could be a [0,1] value or a [1,inf] value depending on networkObjectBatchUseDynamicMaximumBandwidth. See above
+            networkObjectBatchBandwidthLimit = 0.8f;     //The actual limit, could be a [0,1] value or a [1,inf] value depending on networkObjectBatchUseDynamicMaximumBandwidth. See above
             networkObjectBatchCompute = 1000;   //Number of objects in the create/destroy lists that are checked in a single server frame
             networkObjectBatchSendCreate = 10;  //Maximum number of objects that can be sent for creation
             networkObjectBatchSendDelete = 10;	//Maximum number of objects that can be sent for deletion
