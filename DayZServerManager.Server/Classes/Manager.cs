@@ -221,6 +221,7 @@ namespace DayZServerManager.Server.Classes
         {
             if (props != null)
             {
+                Task? serverUpdateTask = null;
 
                 Thread.Sleep(10000);
 
@@ -253,17 +254,21 @@ namespace DayZServerManager.Server.Classes
                             WriteToConsole("Scheduler is still running");
                         }
 
-                        if (i % 120 == 0)
+                        if (i % 300 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
                         {
-                            UpdateAndBackupServer(dayZServer, true, false);
-
-                            dayZServer.RestartForUpdates();
+                            serverUpdateTask = new Task(() => {
+                                UpdateAndBackupServer(dayZServer, true, false);
+                                dayZServer.RestartForUpdates();
+                            });
+                            serverUpdateTask.Start();
                         }
                         i += 10;
                         props.managerStatus = STATUS_LISTENING;
                         Thread.Sleep(10000);
                     }
                 }
+
+                serverUpdateTask = null;
 
                 WriteToConsole(STATUS_STOPPING_SERVER);
 

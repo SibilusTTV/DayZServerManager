@@ -55,8 +55,14 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClas
         public int networkRangeNear { get; set; }
         public int networkRangeFar { get; set; }
         public int networkRangeDistantEffect { get; set; }
-        public int networkObjectBatchSend { get; set; }
+        public int networkObjectBatchLogSlow { get; set; }
+        public int networkObjectBatchEnforceBandwidthLimits { get; set; }
+        public int networkObjectBatchUseEstimatedBandwidth { get; set; }
+        public int networkObjectBatchUseDynamicMaximumBandwidth { get; set; }
+        public float networkObjectBatchBandwidthLimit { get; set; }
         public int networkObjectBatchCompute { get; set; }
+        public int networkObjectBatchSendCreate { get; set; }
+        public int networkObjectBatchSendDelete { get; set; }
         public int defaultVisibility { get; set; }
         public int defaultObjectViewDistance { get; set; }
         public int disableBaseDamage { get; set; }
@@ -121,8 +127,15 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClas
             networkRangeNear = 150;         // network bubble distance for spawn (despawn +10%) of near inventory items objects, set in meters, default value if not set is 150
             networkRangeFar = 1000;         // network bubble distance for spawn (despawn +10%) of far objects (other than inventory items), set in meters, default value if not set is 1000
             networkRangeDistantEffect = 4000;   // network bubble distance for spawn of effects (currently only sound effects), set in meters, default value if not set is 4000
-            networkObjectBatchSend = 10;        // number of objects within a player's network bubble that are sent to be created within a server frame
-            networkObjectBatchCompute = 1000;   // number of objects within a player's network bubble that are processed to check if it already exists for the player within a server frame
+
+            networkObjectBatchLogSlow = 5;  //Maximum time a bubble can take to iterate in seconds before it is logged to the console
+            networkObjectBatchEnforceBandwidthLimits = 1;   //Enables a limiter for object creation based on bandwidth statistics
+            networkObjectBatchUseEstimatedBandwidth = 0;    //Switch between the method behind finding the bandwidth usage of a connection. If set to 0, it will use the total of the actual data sent since the last server frame, and if set to 1, it will use a crude estimation
+            networkObjectBatchUseDynamicMaximumBandwidth = 1;   //Determines if the bandwidth limit should be a factor of the maximum bandwidth that can be sent or a hard limit. The maximum bandwidth that can be sent fluctuates depending on demand in the system.
+            networkObjectBatchBandwidthLimit = 0.8;     //The actual limit, could be a [0,1] value or a [1,inf] value depending on networkObjectBatchUseDynamicMaximumBandwidth. See above
+            networkObjectBatchCompute = 1000;   //Number of objects in the create/destroy lists that are checked in a single server frame
+            networkObjectBatchSendCreate = 10;  //Maximum number of objects that can be sent for creation
+            networkObjectBatchSendDelete = 10;	//Maximum number of objects that can be sent for deletion
             defaultVisibility = 1375;           // highest terrain render distance on server (if higher than "viewDistance=" in DayZ client profile, clientside parameter applies)
             defaultObjectViewDistance = 1375;   // highest object render distance on server (if higher than "preferredObjectViewDistance=" in DayZ client profile, clientside parameter applies)
             lightingConfig = 0;             // 0 for brighter night, 1 for darker night

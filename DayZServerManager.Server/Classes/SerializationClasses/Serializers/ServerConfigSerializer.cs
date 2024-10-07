@@ -168,11 +168,29 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                         case "networkRangeDistantEffect":
                             cfg.networkRangeDistantEffect = int.Parse(match.Groups[4].Value);
                             break;
-                        case "networkObjectBatchSend":
-                            cfg.networkObjectBatchSend = int.Parse(match.Groups[4].Value);
+                        case "networkObjectBatchLogSlow":
+                            cfg.networkObjectBatchLogSlow = int.Parse(match.Groups[4].Value);
+                            break;
+                        case "networkObjectBatchEnforceBandwidthLimits":
+                            cfg.networkObjectBatchEnforceBandwidthLimits = int.Parse(match.Groups[4].Value);
+                            break;
+                        case "networkObjectBatchUseEstimatedBandwidth":
+                            cfg.networkObjectBatchUseEstimatedBandwidth = int.Parse(match.Groups[4].Value);
+                            break;
+                        case "networkObjectBatchUseDynamicMaximumBandwidth":
+                            cfg.networkObjectBatchUseDynamicMaximumBandwidth = int.Parse(match.Groups[4].Value);
+                            break;
+                        case "networkObjectBatchBandwidthLimit":
+                            cfg.networkObjectBatchBandwidthLimit = int.Parse(match.Groups[4].Value);
                             break;
                         case "networkObjectBatchCompute":
                             cfg.networkObjectBatchCompute = int.Parse(match.Groups[4].Value);
+                            break;
+                        case "networkObjectBatchSendCreate":
+                            cfg.networkObjectBatchSendCreate = int.Parse(match.Groups[4].Value);
+                            break;
+                        case "networkObjectBatchSendDelete":
+                            cfg.networkObjectBatchSendDelete = int.Parse(match.Groups[4].Value);
                             break;
                         case "defaultVisibility":
                             cfg.defaultVisibility = int.Parse(match.Groups[4].Value);
@@ -286,8 +304,14 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                 returnString += $"{Environment.NewLine}networkRangeNear = {cfg.networkRangeNear.ToString()};";
                 returnString += $"{Environment.NewLine}networkRangeFar = {cfg.networkRangeFar.ToString()};";
                 returnString += $"{Environment.NewLine}networkRangeDistantEffect = {cfg.networkRangeDistantEffect.ToString()};";
-                returnString += $"{Environment.NewLine}networkObjectBatchSend = {cfg.networkObjectBatchSend.ToString()};";
+                returnString += $"{Environment.NewLine}networkObjectBatchLogSlow = {cfg.networkObjectBatchLogSlow.ToString()};";
+                returnString += $"{Environment.NewLine}networkObjectBatchEnforceBandwidthLimits = {cfg.networkObjectBatchEnforceBandwidthLimits.ToString()};";
+                returnString += $"{Environment.NewLine}networkObjectBatchUseEstimatedBandwidth = {cfg.networkObjectBatchUseEstimatedBandwidth.ToString()};";
+                returnString += $"{Environment.NewLine}networkObjectBatchUseDynamicMaximumBandwidth = {cfg.networkObjectBatchUseDynamicMaximumBandwidth.ToString()};";
+                returnString += $"{Environment.NewLine}networkObjectBatchBandwidthLimit = {cfg.networkObjectBatchBandwidthLimit.ToString()};";
                 returnString += $"{Environment.NewLine}networkObjectBatchCompute = {cfg.networkObjectBatchCompute.ToString()};";
+                returnString += $"{Environment.NewLine}networkObjectBatchSendCreate = {cfg.networkObjectBatchSendCreate.ToString()};";
+                returnString += $"{Environment.NewLine}networkObjectBatchSendDelete = {cfg.networkObjectBatchSendDelete.ToString()};";
                 returnString += $"{Environment.NewLine}defaultVisibility = {cfg.defaultVisibility.ToString()};";
                 returnString += $"{Environment.NewLine}defaultObjectViewDistance = {cfg.defaultObjectViewDistance.ToString()};";
                 returnString += $"{Environment.NewLine}disableBaseDamage = {cfg.disableBaseDamage.ToString()};";

@@ -204,7 +204,6 @@ namespace DayZServerManager.Server.Classes
                         Directory.CreateDirectory(Manager.SCHEDULER_PATH);
                     }
 
-
                     Manager.WriteToConsole("Downloading Scheduler");
                     HttpResponseMessage response;
                     using (HttpClient client = new HttpClient())
