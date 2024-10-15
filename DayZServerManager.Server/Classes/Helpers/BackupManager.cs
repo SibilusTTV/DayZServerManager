@@ -31,20 +31,35 @@ namespace DayZServerManager.Server.Classes.Helpers
                 }
                 if (Directory.Exists(profilePath))
                 {
-                    string[] filePaths = Directory.GetFiles(profilePath).ToArray();
-                    foreach (string filePath in filePaths)
+                    if (!Directory.Exists(Path.Combine(newestBackupPath, Manager.BACKUP_LOGS_FOLDER_NAME)))
                     {
-                        if (Manager.LogsNames.Contains(Path.GetExtension(filePath)))
-                        {
-                            File.Move(filePath, Path.Combine(newestBackupPath, Manager.BACKUP_LOGS_FOLDER_NAME, Path.GetFileName(filePath)), true);
-                        }
+                        Directory.CreateDirectory(Path.Combine(newestBackupPath, Manager.BACKUP_LOGS_FOLDER_NAME));
                     }
+                    MoveLogsInDirectory(profilePath, newestBackupPath);
                 }
                 Manager.WriteToConsole($"Server backup and moving of the logs done");
             }
             catch (Exception ex)
             {
                 Manager.WriteToConsole(ex.ToString());
+            }
+        }
+
+        public static void MoveLogsInDirectory(string folderPath, string newestBackupPath)
+        {
+            string[] filePaths = Directory.GetFiles(folderPath).ToArray();
+            foreach (string filePath in filePaths)
+            {
+                if (Manager.LogsNames.Contains(Path.GetExtension(filePath)))
+                {
+                    File.Move(filePath, Path.Combine(newestBackupPath, Manager.BACKUP_LOGS_FOLDER_NAME, Path.GetFileName(filePath)), true);
+                }
+            }
+
+            string[] folderPaths = Directory.GetDirectories(folderPath).ToArray();
+            foreach (string nextFolderPath in folderPaths)
+            {
+                MoveLogsInDirectory(nextFolderPath, newestBackupPath);
             }
         }
 

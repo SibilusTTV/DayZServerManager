@@ -3,6 +3,7 @@ using DayZServerManager.Server.Classes.Helpers;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
 using System.Formats.Tar;
@@ -430,72 +431,47 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        public void UpdateAndMoveServer(ManagerProps props, bool hasToUpdate, bool hasToMove)
+        public void UpdateAndBackupServer(ManagerProps props, bool hasToUpdate, bool hasToMove)
         {
-            if (Manager.props != null)
+            if (Manager.managerConfig != null)
             {
+                List<Mod> mods = new List<Mod>();
+                mods.AddRange(Manager.managerConfig.clientMods);
+                mods.AddRange(Manager.managerConfig.serverMods);
                 if (hasToUpdate)
                 {
-                    Manager.props.managerStatus = Manager.STATUS_UPDATING_SERVER;
-                    Manager.WriteToConsole(Manager.STATUS_UPDATING_SERVER);
                     UpdateServer(props);
-                    Manager.props.managerStatus = Manager.STATUS_SERVER_UPDATED;
-                    Manager.WriteToConsole(Manager.STATUS_SERVER_UPDATED);
+                    if (mods.Count > 0)
+                    {
+                        UpdateMods(props, mods);
+                    }
                 }
-
                 if (hasToMove)
                 {
-                    Manager.props.managerStatus = Manager.STATUS_MOVING_SERVER;
-                    Manager.WriteToConsole(Manager.STATUS_MOVING_SERVER);
-                    MoveServer();
-                    Manager.props.managerStatus = Manager.STATUS_SERVER_MOVED;
-                    Manager.WriteToConsole(Manager.STATUS_SERVER_MOVED);
+                    MoveServer(props);
+
+                    MoveMods(props, mods);
 
                     UpdateMission();
-                }
-            }
-        }
 
-        private void MoveServer()
-        {
-            if (updatedServer && Manager.managerConfig != null)
-            {
-                List<string> serverDeployDirectories = Directory.GetDirectories(Manager.SERVER_DEPLOY).ToList<string>();
-                List<string> serverDeployFiles = Directory.GetFiles(Manager.SERVER_DEPLOY).ToList<string>();
+                    UpdateScheduler();
 
-                List<string> filteredDirectories = serverDeployDirectories.FindAll(x => Path.GetFileName(x) != Manager.managerConfig.profileName && Path.GetFileName(x) != Manager.BATTLEYE_FOLDER_NAME);
-                List<string> filteredFiles = serverDeployFiles.FindAll(x => Path.GetFileName(x).ToLower() != Manager.BANS_FILE_NAME && Path.GetFileName(x).ToLower() != Manager.BAN_FILE_NAME && Path.GetFileName(x) != Manager.managerConfig.serverConfigName && Path.GetFileName(x).ToLower() != Manager.WHITELIST_FILE_NAME && Path.GetFileName(x).ToLower() != Manager.DAYZ_SETTINGS_FILE_NAME);
-
-                foreach (string dir in serverDeployDirectories)
-                {
-                    try
+                    if (Manager.managerConfig != null && Manager.managerConfig.makeBackups)
                     {
-                        FileSystem.CopyDirectory(dir, Path.Combine(Manager.SERVER_PATH, Path.GetFileName(dir)), true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Manager.WriteToConsole(ex.ToString());
-                    }
-                }
-
-                foreach (string file in filteredFiles)
-                {
-                    try
-                    {
-                        File.Copy(file, Path.Combine(Manager.SERVER_PATH, Path.GetFileName(file)), true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Manager.WriteToConsole(ex.ToString());
+                        BackupServerData(props);
                     }
                 }
             }
+
         }
 
         private void UpdateServer(ManagerProps props)
         {
-            if (Manager.managerConfig != null)
+            if (Manager.managerConfig != null && Manager.props != null)
             {
+                props.managerStatus = Manager.STATUS_UPDATING_SERVER;
+                Manager.WriteToConsole(Manager.STATUS_UPDATING_SERVER);
+
                 try
                 {
                     if (!Directory.Exists(Manager.STEAM_CMD_PATH))
@@ -535,6 +511,155 @@ namespace DayZServerManager.Server.Classes
                     Manager.WriteToConsole(ex.ToString());
                     props.managerStatus = Manager.STATUS_ERROR;
                 }
+
+                props.managerStatus = Manager.STATUS_SERVER_UPDATED;
+                Manager.WriteToConsole(Manager.STATUS_SERVER_UPDATED);
+            }
+        }
+
+        private void MoveServer(ManagerProps props)
+        {
+            if (updatedServer && Manager.managerConfig != null)
+            {
+                props.managerStatus = Manager.STATUS_MOVING_SERVER;
+                Manager.WriteToConsole(Manager.STATUS_MOVING_SERVER);
+
+                List<string> serverDeployDirectories = Directory.GetDirectories(Manager.SERVER_DEPLOY).ToList<string>();
+                List<string> serverDeployFiles = Directory.GetFiles(Manager.SERVER_DEPLOY).ToList<string>();
+
+                List<string> filteredDirectories = serverDeployDirectories.FindAll(x => Path.GetFileName(x) != Manager.managerConfig.profileName && Path.GetFileName(x) != Manager.BATTLEYE_FOLDER_NAME);
+                List<string> filteredFiles = serverDeployFiles.FindAll(x => Path.GetFileName(x).ToLower() != Manager.BANS_FILE_NAME && Path.GetFileName(x).ToLower() != Manager.BAN_FILE_NAME && Path.GetFileName(x) != Manager.managerConfig.serverConfigName && Path.GetFileName(x).ToLower() != Manager.WHITELIST_FILE_NAME && Path.GetFileName(x).ToLower() != Manager.DAYZ_SETTINGS_FILE_NAME);
+
+                foreach (string dir in serverDeployDirectories)
+                {
+                    try
+                    {
+                        FileSystem.CopyDirectory(dir, Path.Combine(Manager.SERVER_PATH, Path.GetFileName(dir)), true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Manager.WriteToConsole(ex.ToString());
+                    }
+                }
+
+                foreach (string file in filteredFiles)
+                {
+                    try
+                    {
+                        File.Copy(file, Path.Combine(Manager.SERVER_PATH, Path.GetFileName(file)), true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Manager.WriteToConsole(ex.ToString());
+                    }
+                }
+
+                props.managerStatus = Manager.STATUS_SERVER_MOVED;
+                Manager.WriteToConsole(Manager.STATUS_SERVER_MOVED);
+            }
+        }
+
+
+        public void UpdateMods(ManagerProps props, List<Mod> mods)
+        {
+            if (Manager.managerConfig != null)
+            {
+                props.managerStatus = Manager.STATUS_UPDATING_MODS;
+                Manager.WriteToConsole(Manager.STATUS_UPDATING_MODS);
+
+                try
+                {
+                    string modUpdateArguments = string.Empty;
+                    if (mods.Count > 0)
+                    {
+                        foreach (Mod mod in mods)
+                        {
+                            modUpdateArguments += $" +workshop_download_item {Manager.DAYZ_GAME_BRANCH} {mod.workshopID.ToString()}";
+                        }
+                        string arguments = $"+force_install_dir {Path.Combine("..", Manager.MODS_PATH)} +login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}{modUpdateArguments} +quit";
+
+                        StartSteamCMD(props, arguments);
+
+                        Manager.WriteToConsole($"All mods were downloaded");
+
+                        foreach (Mod mod in mods)
+                        {
+                            if (CompareForChanges(Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString()), Path.Combine(Manager.SERVER_PATH, mod.name)))
+                            {
+                                if (updatedModsIDs.Contains(mod.workshopID))
+                                {
+                                    updatedMods = true;
+                                }
+                                else
+                                {
+                                    Manager.WriteToConsole($"{mod.name} was updated");
+                                    updatedModsIDs.Add(mod.workshopID);
+                                    updatedMods = true;
+                                }
+                            }
+                        }
+
+                        foreach (long key in updatedModsIDs)
+                        {
+                            Mod? mod = SearchForMod(key, mods);
+                            if (mod != null)
+                            {
+                                Manager.WriteToConsole($"{mod.name} was updated");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Manager.WriteToConsole(ex.ToString());
+                }
+
+                props.managerStatus = Manager.STATUS_MODS_UPDATED;
+                Manager.WriteToConsole(Manager.STATUS_MODS_UPDATED);
+            }
+        }
+
+        public void MoveMods(ManagerProps props, List<Mod> mods)
+        {
+            if (updatedMods)
+            {
+                props.managerStatus = Manager.STATUS_MOVING_MODS;
+                Manager.WriteToConsole(Manager.STATUS_MOVING_MODS);
+
+                foreach (long key in updatedModsIDs)
+                {
+                    try
+                    {
+                        Mod? mod = SearchForMod(key, mods);
+                        if (mod != null)
+                        {
+                            string steamModPath = Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString());
+                            string serverModPath = Path.Combine(Manager.SERVER_PATH, mod.name);
+
+                            Manager.WriteToConsole($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
+                            if (Directory.Exists(steamModPath))
+                            {
+                                FileSystem.CopyDirectory(steamModPath, serverModPath, true);
+
+                                string serverKeysPath = GetKeysFolder(Manager.SERVER_PATH);
+                                string modKeysPath = GetKeysFolder(serverModPath);
+
+                                if (modKeysPath != string.Empty && serverKeysPath != string.Empty && Directory.Exists(modKeysPath) && Directory.Exists(serverKeysPath))
+                                {
+                                    FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
+                                }
+                                Manager.WriteToConsole($"Mod was moved to {mod.name}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Manager.WriteToConsole(ex.ToString());
+                    }
+                }
+
+                props.managerStatus = Manager.STATUS_MODS_MOVED;
+                Manager.WriteToConsole(Manager.STATUS_MODS_MOVED);
             }
         }
 
@@ -680,7 +805,7 @@ namespace DayZServerManager.Server.Classes
                 }
                 else
                 {
-                    dateAfterUpdate = DateTime.MinValue;
+                    dateAfterUpdate = DateTime.MaxValue;
                 }
 
                 if (dateBeforeUpdate < dateAfterUpdate)
@@ -700,130 +825,32 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
+        private bool CompareForChanges(string steamModPath, string serverModPath)
+        {
+            List<string> steamModFilePaths = Directory.GetFiles(steamModPath).ToList<string>();
+            foreach (string filePath in steamModFilePaths)
+            {
+                if (CheckFile(filePath, serverModPath))
+                {
+                    return true;
+                }
+            }
+
+            List<string> steamModDirectoryPaths = Directory.GetDirectories(steamModPath).ToList<string>();
+            foreach (string directoryPath in steamModDirectoryPaths)
+            {
+                if (CheckDirectories(directoryPath, serverModPath))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool CheckSteamCMD()
         {
             return steamCMDProcess != null && !steamCMDProcess.HasExited;
-        }
-
-        public void UpdateAndMoveMods(ManagerProps props, bool hasToUpdate, bool hasToMove)
-        {
-            if (Manager.managerConfig != null)
-            {
-                List<Mod> mods = new List<Mod>();
-                mods.AddRange(Manager.managerConfig.clientMods);
-                mods.AddRange(Manager.managerConfig.serverMods);
-                if (mods.Count > 0 && Manager.props != null)
-                {
-                    if (hasToUpdate)
-                    {
-                        Manager.props.managerStatus = Manager.STATUS_UPDATING_MODS;
-                        Manager.WriteToConsole(Manager.STATUS_UPDATING_MODS);
-                        UpdateMods(props, mods);
-                        Manager.props.managerStatus = Manager.STATUS_MODS_UPDATED;
-                        Manager.WriteToConsole(Manager.STATUS_MODS_UPDATED);
-                    }
-                    if (hasToMove)
-                    {
-                        Manager.props.managerStatus = Manager.STATUS_MOVING_MODS;
-                        Manager.WriteToConsole(Manager.STATUS_MOVING_MODS);
-                        MoveMods(mods);
-                        Manager.props.managerStatus = Manager.STATUS_MODS_MOVED;
-                        Manager.WriteToConsole(Manager.STATUS_MODS_MOVED);
-
-                        UpdateMission();
-                    }
-                }
-            }
-        }
-
-        public void UpdateMods(ManagerProps props, List<Mod> mods)
-        {
-            if (Manager.managerConfig != null)
-            {
-                try
-                {
-                    string modUpdateArguments = string.Empty;
-                    if (mods.Count > 0)
-                    {
-                        foreach (Mod mod in mods)
-                        {
-                            modUpdateArguments += $" +workshop_download_item {Manager.DAYZ_GAME_BRANCH} {mod.workshopID.ToString()}";
-                        }
-                        string arguments = $"+force_install_dir {Path.Combine("..", Manager.MODS_PATH)} +login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}{modUpdateArguments} +quit";
-
-                        StartSteamCMD(props, arguments);
-
-                        Manager.WriteToConsole($"All mods were downloaded");
-
-                        foreach (Mod mod in mods)
-                        {
-                            if (CompareForChanges(Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString()), Path.Combine(Manager.SERVER_PATH, mod.name)))
-                            {
-                                if (updatedModsIDs.Contains(mod.workshopID))
-                                {
-                                    updatedMods = true;
-                                }
-                                else
-                                {
-                                    updatedModsIDs.Add(mod.workshopID);
-                                    updatedMods = true;
-                                }
-                            }
-                        }
-
-                        foreach (long key in updatedModsIDs)
-                        {
-                            Mod? mod = SearchForMod(key, mods);
-                            if (mod != null)
-                            {
-                                Manager.WriteToConsole($"{mod.name} was updated");
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Manager.WriteToConsole(ex.ToString());
-                }
-            }
-        }
-
-        public void MoveMods(List<Mod> mods)
-        {
-            if (updatedMods)
-            {
-                foreach (long key in updatedModsIDs)
-                {
-                    try
-                    {
-                        Mod? mod = SearchForMod(key, mods);
-                        if (mod != null)
-                        {
-                            string steamModPath = Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString());
-                            string serverModPath = Path.Combine(Manager.SERVER_PATH, mod.name);
-
-                            Manager.WriteToConsole($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
-                            if (Directory.Exists(steamModPath))
-                            {
-                                FileSystem.CopyDirectory(steamModPath, serverModPath, true);
-
-                                string serverKeysPath = GetKeysFolder(Manager.SERVER_PATH);
-                                string modKeysPath = GetKeysFolder(serverModPath);
-
-                                if (modKeysPath != string.Empty && serverKeysPath != string.Empty && Directory.Exists(modKeysPath) && Directory.Exists(serverKeysPath))
-                                {
-                                    FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
-                                }
-                                Manager.WriteToConsole($"Mod was moved to {mod.name}");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Manager.WriteToConsole(ex.ToString());
-                    }
-                }
-            }
         }
 
         public bool RestartForUpdates()
@@ -999,29 +1026,6 @@ namespace DayZServerManager.Server.Classes
                 Manager.WriteToConsole(ex.ToString());
                 return string.Empty;
             }
-        }
-
-        private bool CompareForChanges(string steamModPath, string serverModPath)
-        {
-            List<string> steamModFilePaths = Directory.GetFiles(steamModPath).ToList<string>();
-            foreach (string filePath in steamModFilePaths)
-            {
-                if (CheckFile(filePath, serverModPath))
-                {
-                    return true;
-                }
-            }
-
-            List<string> steamModDirectoryPaths = Directory.GetDirectories(steamModPath).ToList<string>();
-            foreach (string directoryPath in steamModDirectoryPaths)
-            {
-                if (CheckDirectories(directoryPath, serverModPath))
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private bool CheckDirectories(string steamDirectoryPath, string serverModPath)

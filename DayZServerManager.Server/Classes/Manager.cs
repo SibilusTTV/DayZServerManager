@@ -200,7 +200,7 @@ namespace DayZServerManager.Server.Classes
                     SaveServerConfig();
                 }
 
-                UpdateAndBackupServer(dayZServer, true, true);
+                dayZServer.UpdateAndBackupServer(props, true, true);
 
                 kill = false;
                 props.managerStatus = STATUS_STARTING_SERVER;
@@ -236,7 +236,7 @@ namespace DayZServerManager.Server.Classes
                             i += 10;
                             SaveServerConfig();
 
-                            UpdateAndBackupServer(dayZServer, false, true);
+                            dayZServer.UpdateAndBackupServer(props, false, true);
 
                             dayZServer.StartServer();
                         }
@@ -257,7 +257,7 @@ namespace DayZServerManager.Server.Classes
                         if (i % 300 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
                         {
                             serverUpdateTask = new Task(() => {
-                                UpdateAndBackupServer(dayZServer, true, false);
+                                dayZServer.UpdateAndBackupServer(props, true, false);
                                 dayZServer.RestartForUpdates();
                             });
                             serverUpdateTask.Start();
@@ -325,26 +325,6 @@ namespace DayZServerManager.Server.Classes
             if (serverLoop != null)
             {
                 serverLoop = null;
-            }
-        }
-
-        private static void UpdateAndBackupServer(Server server, bool hasToUpdate, bool hasToMove)
-        {
-            if (props != null)
-            {
-                if (hasToMove)
-                {
-                    server.UpdateScheduler();
-
-                    if (managerConfig != null && managerConfig.makeBackups)
-                    {
-                        server.BackupServerData(props);
-                    }
-                }
-
-                server.UpdateAndMoveServer(props, hasToUpdate, hasToMove);
-                
-                server.UpdateAndMoveMods(props, hasToUpdate, hasToMove);
             }
         }
 

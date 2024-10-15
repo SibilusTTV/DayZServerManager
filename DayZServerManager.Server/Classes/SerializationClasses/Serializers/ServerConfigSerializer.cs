@@ -219,6 +219,12 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                         case "serverFpsWarning":
                             cfg.serverFpsWarning = int.Parse(match.Groups[4].Value);
                             break;
+                        case "shardId":
+                            cfg.shardId = match.Groups[4].Value;
+                            break;
+                        case "description":
+                            cfg.description = match.Groups[4].Value;
+                            break;
                         case "motdInterval":
                             cfg.motdInterval = int.Parse(match.Groups[4].Value);
                             break;
@@ -322,6 +328,8 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                 returnString += $"{Environment.NewLine}MaxPing = {cfg.MaxPing.ToString()};";
                 returnString += $"{Environment.NewLine}serverFpsWarning = {cfg.serverFpsWarning.ToString()};";
                 returnString += $"{Environment.NewLine}motdInterval = {cfg.motdInterval.ToString()};";
+                returnString += $"{Environment.NewLine}shardId = {cfg.shardId.ToString()};";
+                returnString += $"{Environment.NewLine}description = {cfg.description.ToString()};";
 
                 returnString += $"{Environment.NewLine}motd[] = {{";
 
