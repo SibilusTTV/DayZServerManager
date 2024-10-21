@@ -45,9 +45,9 @@ namespace DayZServerManager.Server.Controllers
             Manager.StopServer();
             if (Manager.props != null)
             {
-                while (Manager.props.managerStatus != Manager.STATUS_LISTENING
-                    || Manager.props.managerStatus != Manager.STATUS_ERROR
-                    || Manager.props.managerStatus == Manager.STATUS_STOPPING_SERVER)
+                while (Manager.props.managerStatus == Manager.STATUS_STOPPING_SERVER ||
+                    (Manager.props.managerStatus != Manager.STATUS_LISTENING
+                    && Manager.props.managerStatus != Manager.STATUS_ERROR))
                 {
                     Thread.Sleep(1000);
                 }
