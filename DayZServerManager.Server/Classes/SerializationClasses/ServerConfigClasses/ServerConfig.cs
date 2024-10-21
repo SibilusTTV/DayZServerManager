@@ -74,6 +74,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClas
         public int serverFpsWarning { get; set; }
         public string shardId { get; set; }
         public string description { get; set; }
+        public int steamProtocolMaxDataSize { get; set; }
 
         public int motdInterval { get; set; }
         public List<string> motd { get; set; }
@@ -150,7 +151,8 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClas
             MaxPing = 300;                  // set to define the ping value from which a player is kicked from the server (value in milliseconds)
             serverFpsWarning = 15;          // set to define the server fps value under which the initial server fps warning is triggered (minimum value is 11)
             shardId = "123abc";         // Six alphanumeric characters for Private server
-            description = "";			// Description of the server. Gets displayed to users in client server browser.
+            description = "";           // Description of the server. Gets displayed to users in client server browser.
+            steamProtocolMaxDataSize = 4096;
 
             motdInterval = 1;				// Time interval (in seconds) between each message
             motd = new List<string> { "line1", "line2" };    // Message of the day displayed in the in-game chat

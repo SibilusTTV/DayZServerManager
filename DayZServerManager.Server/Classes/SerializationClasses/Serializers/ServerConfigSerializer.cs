@@ -225,6 +225,9 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                         case "description":
                             cfg.description = match.Groups[4].Value;
                             break;
+                        case "steamProtocolMaxDataSize":
+                            cfg.steamProtocolMaxDataSize = int.Parse(match.Groups[4].Value);
+                            break;
                         case "motdInterval":
                             cfg.motdInterval = int.Parse(match.Groups[4].Value);
                             break;
@@ -330,6 +333,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
                 returnString += $"{Environment.NewLine}motdInterval = {cfg.motdInterval.ToString()};";
                 returnString += $"{Environment.NewLine}shardId = {cfg.shardId.ToString()};";
                 returnString += $"{Environment.NewLine}description = {cfg.description.ToString()};";
+                returnString += $"{Environment.NewLine}steamProtocolMaxDataSize = {cfg.steamProtocolMaxDataSize.ToString()};";
 
                 returnString += $"{Environment.NewLine}motd[] = {{";
 
