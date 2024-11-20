@@ -789,7 +789,7 @@ namespace DayZServerManager.Server.Classes
             try
             {
                 DateTime dateBeforeUpdate;
-                if (!File.Exists(Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)))
+                if (File.Exists(Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)))
                 {
                     dateBeforeUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE));
                 }
@@ -799,7 +799,7 @@ namespace DayZServerManager.Server.Classes
                 }
 
                 DateTime dateAfterUpdate;
-                if (!File.Exists(Path.Combine(Manager.SERVER_DEPLOY, Manager.SERVER_EXECUTABLE)))
+                if (File.Exists(Path.Combine(Manager.SERVER_DEPLOY, Manager.SERVER_EXECUTABLE)))
                 {
                     dateAfterUpdate = File.GetLastWriteTimeUtc(Path.Combine(Manager.SERVER_DEPLOY, Manager.SERVER_EXECUTABLE));
                 }
