@@ -7,10 +7,27 @@ import path from 'path';
 import child_process from 'child_process';
 import { env } from 'process';
 
-const baseFolder =
-    env.APPDATA !== undefined && env.APPDATA !== ''
-        ? `${env.APPDATA}/ASP.NET/https`
-        : `${env.HOME}/.aspnet/https`;
+var aspnetFolder;
+
+if (env.APPDATA !== undefined && env.APPDATA !== '') {
+    aspnetFolder = path.join(env.APPDATA, "ASP.NET")
+}
+else if (env.HOME !== undefined && env.Home !== '') {
+    aspnetFolder = path.join(env?.HOME, ".aspnet")
+}
+else {
+    throw new Error("Neither Home or Appdata is set");
+}
+
+if (!fs.existsSync(aspnetFolder)) {
+    fs.mkdirSync(aspnetFolder);
+}
+
+const baseFolder = path.join(aspnetFolder, "https");
+
+if (!fs.existsSync(baseFolder)) {
+    fs.mkdirSync(baseFolder);
+}
 
 const certificateName = "dayzservermanager.client";
 const certFilePath = path.join(baseFolder, `${certificateName}.pem`);

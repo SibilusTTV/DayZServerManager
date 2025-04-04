@@ -136,6 +136,11 @@ namespace DayZServerManager.Server.Classes
 
                 try
                 {
+                    if (!File.Exists(Path.Combine(Manager.SERVER_PATH, "ban.txt")))
+                    {
+                        File.Create(Path.Combine(Manager.SERVER_PATH, "ban.txt"));
+                    }
+
                     serverProcess = new Process();
                     ProcessStartInfo procInf = new ProcessStartInfo();
                     string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);

@@ -1,4 +1,4 @@
-import {  Button, Paper } from "@mui/material";
+import {  Button, Paper, Toolbar } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef, GridRenderCellParams, GridRowSelectionModel, GridSlots, GridToolbarContainer } from '@mui/x-data-grid';
 import { useEffect, useState } from "react";
 import AddIcon from '@mui/icons-material/Add';
@@ -32,7 +32,7 @@ const rarityDefinitions: string[] = [
 ]
 
 interface EditToolbarProps {
-    rarities: RarityFile;
+    rarities: RarityFile | undefined;
     checkedItems: number[];
     setRarities: Function;
 }
@@ -41,19 +41,21 @@ function EditToolbar(props: EditToolbarProps) {
     const { rarities, checkedItems, setRarities } = props;
 
     const handleClick = () => {
-        setRarities(
-            {
-                ...rarities,
-                itemRarity: [
-                    {
-                        id: getNewId(rarities.itemRarity),
-                        name: "",
-                        rarity: 0
-                    },
-                    ...rarities.itemRarity
-                ]
-            }
-        );
+        if (rarities != null) {
+            setRarities(
+                {
+                    ...rarities,
+                    itemRarity: [
+                        {
+                            id: getNewId(rarities.itemRarity),
+                            name: "",
+                            rarity: 0
+                        },
+                        ...rarities.itemRarity
+                    ]
+                }
+            );
+        }
     };
 
     const handleBulkChangeClick = (_value: number) => {
@@ -185,8 +187,12 @@ export default function RarityEditor(props: RarityEditorProps) {
         }
     }
 
+    const EditToolbarFunction = () => {
+        return EditToolbar({ rarities, checkedItems, setRarities });
+    }
+
     const contents = rarities == null
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
+        ? <p><em>Either the backend hasn't loaded yet or the Rarity File is empty</em></p>
         :
         <Paper>
             <DataGrid
@@ -205,10 +211,7 @@ export default function RarityEditor(props: RarityEditorProps) {
                 onRowSelectionModelChange={onSelectModelChange}
                 processRowUpdate={processRowUpdate}
                 slots={{
-                    toolbar: EditToolbar as GridSlots['toolbar'],
-                }}
-                slotProps={{
-                    toolbar: { rarities, checkedItems, setRarities },
+                    toolbar: EditToolbarFunction
                 }}
             />
         </Paper>
