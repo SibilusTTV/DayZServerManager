@@ -2,13 +2,16 @@
   "profiles": {
     "http": {
       "commandName": "Project",
+      "workingDirectory": "C:\\Users\\julia\\source\\repos\\SibilusTTV\\DayZServerManager\\DayZServerManager.Server\\Debug",
+      "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.SpaProxy"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5172"
+      "applicationUrl": "http://localhost:5172",
+      "nativeDebugging": false
     },
     "IIS Express": {
       "commandName": "IISExpress",

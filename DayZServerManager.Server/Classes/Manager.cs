@@ -1,4 +1,5 @@
 ﻿using DayZServerManager.Server.Classes.Helpers;
+using DayZServerManager.Server.Classes.Helpers.Property;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
@@ -392,6 +393,7 @@ namespace DayZServerManager.Server.Classes
                         Directory.CreateDirectory(SERVER_PATH);
                     }
                     serverConfig = new ServerConfig();
+                    serverConfig.SetDefaultValues();
                 }
                 catch (Exception ex)
                 {
@@ -404,9 +406,35 @@ namespace DayZServerManager.Server.Classes
         {
             if (serverConfig != null && managerConfig != null)
             {
-                serverConfig.template = managerConfig.missionName;
-                serverConfig.instanceId = managerConfig.instanceId;
-                serverConfig.steamQueryPort = managerConfig.steamQueryPort;
+                PropertyValue? template = serverConfig.GetPropertyValue("template");
+                if (template != null)
+                {
+                    template.Value = managerConfig.missionName;
+                }
+                else
+                {
+                    serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "template", DataType.Text, managerConfig.missionName, ""));
+                }
+
+                PropertyValue? instanceId = serverConfig.GetPropertyValue("instanceId");
+                if (instanceId != null)
+                {
+                    instanceId.Value = managerConfig.instanceId;
+                }
+                else
+                {
+                    serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "instanceId", DataType.Text, managerConfig.instanceId, "")); 
+                }
+
+                PropertyValue? steamQueryPort = serverConfig.GetPropertyValue("steamQueryPort");
+                if (steamQueryPort != null)
+                {
+                    steamQueryPort.Value = managerConfig.steamQueryPort;
+                }
+                else
+                {
+                    serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "steamQueryPort", DataType.Text, managerConfig.steamQueryPort, ""));
+                }
             }
         }
 
