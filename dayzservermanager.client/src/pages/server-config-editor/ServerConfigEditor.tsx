@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, MenuItem, Paper, Select, SelectChangeEvent } from '@mui/material';
-import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid, GridRowId, GridToolbarContainer } from "@mui/x-data-grid";
+import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid, GridToolbarContainer } from "@mui/x-data-grid";
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -300,7 +300,7 @@ export default function ServerConfigEditor() {
         }
     }
 
-    const processRowUpdate = (newRow: PropertyValue, oldRow: PropertyValue, params: { rowId: GridRowId }) => {
+    const processRowUpdate = (newRow: PropertyValue, oldRow: PropertyValue) => {
         let newValue;
         switch (newRow.dataType) {
             case DataType.Number:
@@ -361,7 +361,7 @@ export default function ServerConfigEditor() {
         }
     };
 
-    const processArrayItemUpdate = (newArrayItem: StringRow, oldArrayItem: StringRow, params: {rowId: GridRowId}) => {
+    const processArrayItemUpdate = (newArrayItem: StringRow) => {
         if (serverConfig != null) {
             setServerConfig(
                 {
