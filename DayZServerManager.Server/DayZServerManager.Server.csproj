@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Remove="Backup\**" />
     <Compile Remove="BEC\**" />
+    <Compile Remove="Debug\**" />
     <Compile Remove="deploy\**" />
     <Compile Remove="mods\**" />
     <Compile Remove="Scheduler\**" />
@@ -20,6 +21,7 @@
     <Compile Remove="SteamCMD\**" />
     <Content Remove="Backup\**" />
     <Content Remove="BEC\**" />
+    <Content Remove="Debug\**" />
     <Content Remove="deploy\**" />
     <Content Remove="mods\**" />
     <Content Remove="Scheduler\**" />
@@ -28,6 +30,7 @@
     <Content Remove="SteamCMD\**" />
     <EmbeddedResource Remove="Backup\**" />
     <EmbeddedResource Remove="BEC\**" />
+    <EmbeddedResource Remove="Debug\**" />
     <EmbeddedResource Remove="deploy\**" />
     <EmbeddedResource Remove="mods\**" />
     <EmbeddedResource Remove="Scheduler\**" />
@@ -36,6 +39,7 @@
     <EmbeddedResource Remove="SteamCMD\**" />
     <None Remove="Backup\**" />
     <None Remove="BEC\**" />
+    <None Remove="Debug\**" />
     <None Remove="deploy\**" />
     <None Remove="mods\**" />
     <None Remove="Scheduler\**" />
