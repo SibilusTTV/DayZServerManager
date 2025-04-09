@@ -77,6 +77,7 @@ namespace DayZServerManager.Server.Classes
         public const string WHITELIST_FILE_NAME = "whitelist.txt";
         public const string DAYZ_SETTINGS_FILE_NAME = "dayzsetting.xml";
         public const string MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME = "HardlineSettings.json";
+        public const string STEAMCMD_ANONYMOUS_LOGIN = "anonymous";
 
         // Mission rarity to numbers
         public const int EXOTIC_NOMINAL = 1;
@@ -130,6 +131,7 @@ namespace DayZServerManager.Server.Classes
         public const string STATUS_ERROR = "Error";
         public const string STATUS_CLIENT_CONFIG = "Client Config";
         public const string STATUS_STEAM_GUARD = "Steam Guard";
+        public const string STATUS_CACHED_CREDENTIALS = "Cached Credentials";
         #endregion Constants
 
         public static void InitiateManager()

@@ -3,6 +3,7 @@ using DayZServerManager.Server.Classes.Helpers;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
+using LibGit2Sharp;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
@@ -503,7 +504,7 @@ namespace DayZServerManager.Server.Classes
 
                 try
                 {
-                    string serverUpdateArguments = $"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)} \"+login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" +quit";
+                    string serverUpdateArguments = $"\"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)}\" \"+login {Manager.managerConfig.steamUsername}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" -validate +quit";
                     Manager.WriteToConsole("Updating the DayZ Server");
                     StartSteamCMD(props, serverUpdateArguments);
                     if (props.steamCMDStatus == Manager.STATUS_NOT_RUNNING)
@@ -564,7 +565,6 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-
         public void UpdateMods(ManagerProps props, List<Mod> mods)
         {
             if (Manager.managerConfig != null)
@@ -581,7 +581,7 @@ namespace DayZServerManager.Server.Classes
                         {
                             modUpdateArguments += $" +workshop_download_item {Manager.DAYZ_GAME_BRANCH} {mod.workshopID.ToString()}";
                         }
-                        string arguments = $"+force_install_dir {Path.Combine("..", Manager.MODS_PATH)} +login {Manager.managerConfig.steamUsername} {Manager.managerConfig.steamPassword}{modUpdateArguments} +quit";
+                        string arguments = $"\"+force_install_dir {Path.Combine("..", Manager.MODS_PATH)}\" \"+login {Manager.managerConfig.steamUsername}\" {modUpdateArguments} +quit";
 
                         StartSteamCMD(props, arguments);
 
@@ -709,14 +709,18 @@ namespace DayZServerManager.Server.Classes
                     if (s != null)
                     {
                         Manager.WriteToConsole(s); 
-                        if (s.Contains("client config"))
+                        if (s.ToLower().Contains(Manager.STATUS_CLIENT_CONFIG.ToLower()))
                         {
                             props.steamCMDStatus = Manager.STATUS_CLIENT_CONFIG;
                             outputTime = -1;
                         }
-                        else if (s.Contains("Steam Guard"))
+                        else if (s.ToLower().Contains(Manager.STATUS_STEAM_GUARD.ToLower()))
                         {
                             props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
+                        }
+                        else if (s.ToLower().Contains(Manager.STATUS_CACHED_CREDENTIALS.ToLower()))
+                        {
+                            props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
                         }
                         else if (outputTime != -1)
                         {
@@ -730,9 +734,19 @@ namespace DayZServerManager.Server.Classes
                     Thread.Sleep(1000);
                     if (outputTime > 30)
                     {
-                        Manager.WriteToConsole("Steam Guard");
-                        props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
-                        outputTime = 0;
+                        if (props.steamCMDStatus == Manager.STATUS_CACHED_CREDENTIALS)
+                        {
+                            Manager.WriteToConsole(Manager.STATUS_STEAM_GUARD);
+                            props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
+                            outputTime = 0;
+                        }
+                        else
+                        {
+                            Manager.WriteToConsole(Manager.STATUS_CACHED_CREDENTIALS);
+                            steamCMDProcess.StandardInput.WriteLine(Manager.managerConfig?.steamPassword);
+                            props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
+                            outputTime = 0;
+                        }
                     }
                     else if (outputTime != -1)
                     {
