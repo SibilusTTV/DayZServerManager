@@ -366,6 +366,11 @@ namespace DayZServerManager.Server.Classes
                 {
                     if (s != null)
                     {
+                        if (s.Contains("player count") && Manager.props != null)
+                        {
+                            int playersCount = int.Parse(s.Substring(s.IndexOf("player count") + 1));
+                            Manager.props.players = playersCount;
+                        }
                         Manager.WriteToConsole(s);
                     }
                 });
