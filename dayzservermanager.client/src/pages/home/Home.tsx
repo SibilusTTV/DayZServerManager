@@ -7,7 +7,8 @@ interface ServerInfo{
     managerStatus: string;
     dayzServerStatus: string;
     steamCMDStatus: string;
-    players: number;
+    playersCount: number;
+    players: string[];
 }
 
 export default function Home() {
@@ -40,6 +41,25 @@ export default function Home() {
         sendSteamGuard(steamGuardCode);
     };
 
+    let serverStatusString: string = "";
+
+    if (serverStatus) {
+        Object.entries(serverStatus!).map(([key, value]) => {
+            if (key == "players" && typeof value != "string") {
+            }
+            else {
+                (value as string[]).map(value => serverStatusString += value)
+            }
+        }
+    //        Object.entries(serverStatus!).map(([key, value]) => {
+    //            if (key == "players") {
+    //                (for (value: string in value))
+    //            }
+    //            else {
+    //                return (<p>{key}: {String(value)}</p>))
+    //            }
+    //}
+
     return (
         <div>
             <Button
@@ -57,7 +77,7 @@ export default function Home() {
             >
                 Restart Server
             </Button>
-            {serverStatus && Object.entries(serverStatus!).map(([key, value]) => (<p>{key}: {String(value)}</p>))}
+            {serverStatus && Object.entries(serverStatus!).map(([key, value]) => (key == "players") ? (value as string[]).map(value => (<p>{value}</p>)) : (<p>{key}: {String(value)}</p>))}
             <Dialog
                 open={openDialog}
                 onClose={handleClose}
