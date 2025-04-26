@@ -54,11 +54,11 @@
 
   <ItemGroup>
     <PackageReference Include="BytexDigital.BattlEye.Rcon" Version="1.0.2" />
-    <PackageReference Include="LibGit2Sharp" Version="0.30.0" />
+    <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-      <Version>8.*-*</Version>
+      <Version>9.0.4</Version>
     </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
   </ItemGroup>
 
   <ItemGroup>

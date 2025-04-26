@@ -1,14 +1,28 @@
 import { Button, DialogActions, DialogContent, DialogContentText, TextField } from "@mui/material";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
+import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
+import GavelIcon from '@mui/icons-material/Gavel';
+import DoNotStepIcon from '@mui/icons-material/DoNotStep';
+
 
 interface ServerInfo{
     managerStatus: string;
     dayzServerStatus: string;
     steamCMDStatus: string;
     playersCount: number;
-    players: string[];
+    players: Player[];
+}
+
+interface Player {
+    name: string;
+    guid: string;
+    id: number;
+    ping: number;
+    isVerified: boolean;
+    isInLobby: boolean;
+    ip: string;
 }
 
 export default function Home() {
@@ -23,9 +37,9 @@ export default function Home() {
                 if (dialogTimeout > 0) {
                     setDialogTimeout(dialogTimeout - 1);
                 }
-                getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog);
+                getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog, setDialogTimeout);
             }
-        }, 1000);
+        }, 5000);
         return () => clearInterval(timer);
     })
 
@@ -40,6 +54,181 @@ export default function Home() {
         setDialogTimeout(30);
         sendSteamGuard(steamGuardCode);
     };
+
+    const KickPlayer = (id: number, name: string) => {
+        let reason = prompt("Please give a reason for the kick");
+        if (reason == null) {
+            reason = "";
+        }
+        sendKickRequest(id, name, reason);
+    }
+
+    const BanPlayer = (id: number, name: string) => {
+        let reason = prompt("Please give a reason for the ban");
+        if (reason == null) {
+            reason = "";
+        }
+        let durationString = prompt("Please give a duration for the ban or leave it empty for a permanent ban");
+        let duration = -1;
+        if (durationString != null && durationString != "") {
+            duration = GetMinutes(durationString);
+        }
+        sendBanRequest(id, name, duration, reason);
+    }
+
+    const GetMinutes = (durationString: string): number => {
+        let pattern = /([0-9]+)[^\S\n]*([Yy]ears?|[Yy]|[Mm]onths?|[Dd]ays?|[Dd]|[Hh]ours?|[Hh]|[Mm]inutes?|[Mm]ins?|[Mm]|)/gm
+        let matches = durationString.matchAll(pattern);
+        let finalvalue = 0;
+        for (let match of matches) {
+            let number = parseInt(match[1].valueOf());
+            let type = match[2].valueOf();
+            switch (type) {
+                case "Year":
+                case "Years":
+                case "year":
+                case "years":
+                case "Y":
+                case "y":
+                    finalvalue += number * 365 * 24 * 60;
+                    break;
+                case "Month":
+                case "Months":
+                case "month":
+                case "months":
+                    finalvalue += number * 30 * 24 * 60;
+                    break;
+                case "Day":
+                case "Days":
+                case "day":
+                case "days":
+                case "D":
+                case "d":
+                    finalvalue += number * 24 * 60;
+                    break;
+                case "Hour":
+                case "Hours":
+                case "hour":
+                case "hours":
+                case "H":
+                case "h":
+                    finalvalue += number * 60;
+                    break;
+                case "Minute":
+                case "Minutes":
+                case "minute":
+                case "minutes":
+                case "Min":
+                case "Mins":
+                case "min":
+                case "mins":
+                case "M":
+                case "m":
+                default:
+                    finalvalue += number;
+                    break;
+
+            }
+        }
+        return finalvalue;
+    }
+
+
+    const columns: GridColDef[] = [
+        {
+            field: 'name',
+            headerName: 'Name',
+            width: 360,
+            type: 'string',
+            editable: false
+        },
+        {
+            field: 'guid',
+            headerName: 'Guid',
+            width: 360,
+            type: 'string',
+            editable: false
+        },
+        {
+            field: 'id',
+            headerName: 'Id',
+            width: 80,
+            type: 'number',
+            editable: false
+        },
+        {
+            field: 'ping',
+            headerName: 'Ping',
+            width: 80,
+            type: 'number',
+            editable: false
+        },
+        {
+            field: 'isVerified',
+            headerName: 'Is verified',
+            width: 80,
+            type: 'boolean',
+            editable: false
+        },
+        {
+            field: 'isInLobby',
+            headerName: 'Is in lobby',
+            width: 80,
+            type: 'boolean',
+            editable: false
+        },
+        {
+            field: 'ip',
+            headerName: 'IP',
+            width: 360,
+            type: 'string',
+            editable: false
+        },
+        {
+            field: 'kick',
+            headerName: 'Kick',
+            width: 80,
+            editable: false,
+            display: 'flex',
+            disableReorder: true,
+            filterable: false,
+            hideSortIcons: true,
+            resizable: false,
+            renderCell: (params: GridRenderCellParams<any, Date>) => {
+                let row: Player = params.row;
+                return (
+                    <GridActionsCellItem
+                        icon={<DoNotStepIcon />}
+                        label="Kick"
+                        onClick={() => KickPlayer(row.id, row.name)}
+                        color="inherit"
+                    />
+                );
+            }
+        },
+        {
+            field: 'ban',
+            headerName: 'Ban',
+            width: 80,
+            editable: false,
+            display: 'flex',
+            disableReorder: true,
+            filterable: false,
+            hideSortIcons: true,
+            resizable: false,
+            renderCell: (params: GridRenderCellParams<any, Date>) => {
+                let row: Player = params.row;
+                return (
+                    <GridActionsCellItem
+                        icon={<GavelIcon />}
+                        label="Ban"
+                        onClick={() => BanPlayer(row.id, row.name)}
+                        color="inherit"
+                    />
+                );
+            }
+        }
+    ];
 
     return (
         <div>
@@ -58,7 +247,29 @@ export default function Home() {
             >
                 Restart Server
             </Button>
-            {serverStatus && Object.entries(serverStatus!).map(([key, value]) => (key == "players") ? (value as string[]).map(value => (<p>{value}</p>)) : (<p>{key}: {String(value)}</p>))}
+            {serverStatus && <>
+                <p>Manager Status: {serverStatus.managerStatus}</p>
+                <p>DayZ Server Status: {serverStatus.dayzServerStatus}</p>
+                <p>SteamCMD Status: {serverStatus.steamCMDStatus}</p>
+                <p>Players Count: {serverStatus.playersCount}</p>
+                {serverStatus.players.length > 0 &&
+                    <DataGrid
+                        rows={serverStatus.players}
+                        columns={columns}
+                        initialState={{
+                            pagination: {
+                                paginationModel: {
+                                    pageSize: 20,
+                                },
+                            }
+                        }}
+                        pageSizeOptions={[5, 10, 20, 50, 100]}
+                        sx={{ border: 0 }}
+                    />
+                }
+            </>}
+
+
             <Dialog
                 open={openDialog}
                 onClose={handleClose}
@@ -94,13 +305,18 @@ export default function Home() {
     )
 }
 
-async function getServerStatus(setOpen: Function, setServerStatus: Function, dialogTimeout: number, open: boolean) {
+async function getServerStatus(setOpen: Function, setServerStatus: Function, dialogTimeout: number, open: boolean, setDialogTimeout: Function) {
     try {
         const response = await fetch('DayZServer/GetServerStatus');
-        const result = (await response.json()) as ServerInfo;
-        setServerStatus(result);
-        if (dialogTimeout <= 0 && !open && result.steamCMDStatus === "Steam Guard") {
-            setOpen(true);
+        if (response.ok) {
+            const result = (await response.json()) as ServerInfo;
+            setServerStatus(result);
+            if (dialogTimeout <= 0 && !open && result.steamCMDStatus === "Steam Guard") {
+                setOpen(true);
+            }
+        }
+        else {
+            setDialogTimeout(30);
         }
     }
     catch (ex) {
@@ -185,4 +401,36 @@ async function sendSteamGuard(_code: string) {
     else {
         alert("Steam Guard couldn't be sent");
     }
+}
+
+async function sendKickRequest(_id: number, _name: string, _reason: string) {
+    await fetch('DayZServer/KickPlayer', {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: _id,
+            name: _name,
+            duration: 0,
+            reason: _reason
+        })
+    });
+}
+
+async function sendBanRequest(_id: number, _name: string, _duration:number, _reason: string) {
+    await fetch('DayZServer/BanPlayer', {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id: _id,
+            name: _name,
+            duration: _duration,
+            reason: _reason
+        })
+    });
 }

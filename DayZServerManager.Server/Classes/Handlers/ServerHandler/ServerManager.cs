@@ -357,8 +357,6 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                 Manager.WriteToConsole(ex.ToString());
                 schedulerUpdate = null;
             }
-
-            SteamCMDManager.KillSteamCMD();
         }
 
         public void UpdateAndBackupServer(ManagerProps props, bool hasToUpdate, bool hasToMove)

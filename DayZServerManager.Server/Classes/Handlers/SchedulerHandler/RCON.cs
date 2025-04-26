@@ -5,6 +5,7 @@ using BytexDigital.BattlEye.Rcon.Domain;
 using BytexDigital.BattlEye.Rcon.Requests;
 using BytexDigital.BattlEye.Rcon.Responses;
 using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
+using DayZServerManager.Server.Classes.Helpers;
 using System.Net;
 using System.Text.RegularExpressions;
 
@@ -51,11 +52,13 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 
         private void _client_PlayerRemoved(object? sender, BytexDigital.BattlEye.Rcon.Events.PlayerRemovedArgs e)
         {
+            GetPlayers();
             Manager.WriteToConsole($"Player {e.Name} was removed");
         }
 
         private void _client_PlayerDisconnected(object? sender, BytexDigital.BattlEye.Rcon.Events.PlayerDisconnectedArgs e)
         {
+            GetPlayers();
             Manager.WriteToConsole($"Player {e.Name} disconnected");
         }
 
@@ -97,6 +100,8 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                     return;
                 }
             }
+
+            GetPlayers();
         }
 
         private void _client_MessageReceived(object? sender, string e)
@@ -177,7 +182,38 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 }
             }
 
+            if (Manager.props != null)
+            {
+                List<PlayerProp> playerProps = new List<PlayerProp>();
+                foreach (Player player in _players)
+                {
+                    playerProps.Add(new PlayerProp(player));
+                }
+                Manager.props.players = playerProps;
+                Manager.props.playersCount = _players.Count;
+            }
+
             return _playersCount;
+        }
+
+        public void KickPlayer(int id, string reason, string name)
+        {
+            if (_client.IsConnected)
+            {
+                CommandNetworkRequest request = _client.Send($"kick {id} \"{reason}\"");
+                request.WaitUntilAcknowledged(config.ConnectTimeout * 1000);
+                Manager.WriteToConsole($"The player {name} was kicked for reason \"{reason}\"");
+            }
+        }
+
+        public void BanPlayer(int id, string reason, int duration, string name)
+        {
+            if (_client.IsConnected)
+            {
+                CommandNetworkRequest request = _client.Send($"ban {id} {duration} \"{reason}\"");
+                request.WaitUntilAcknowledged(config.ConnectTimeout * 1000);
+                Manager.WriteToConsole($"The player {name} was banned for reason \"{reason}\"");
+            }
         }
     }
 }

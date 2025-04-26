@@ -307,6 +307,7 @@ namespace DayZServerManager.Server.Classes
             if (dayZServer != null)
             {
                 dayZServer.KillServerProcesses();
+                SteamCMDManager.KillSteamCMD();
                 Thread.Sleep(10000);
                 dayZServer = null;
 

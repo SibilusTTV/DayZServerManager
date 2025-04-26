@@ -360,7 +360,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             {
                 if (steamCMDProcess != null && Manager.props != null)
                 {
-                    steamCMDProcess.Kill();
+                    steamCMDProcess.WaitForExit();
                     steamCMDProcess = null;
                     Manager.props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
                 }

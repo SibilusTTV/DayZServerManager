@@ -204,5 +204,15 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             return rconClient.GetPlayers();
         }
+
+        public void KickPlayer(int id, string reason, string name)
+        {
+            rconClient.KickPlayer(id, reason, name);
+        }
+
+        public void BanPlayer(int id, string reason, int duration, string name)
+        {
+            rconClient.BanPlayer(id, reason, duration, name);
+        }
     }
 }

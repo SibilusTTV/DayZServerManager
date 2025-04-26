@@ -4,6 +4,7 @@ using DayZServerManager.Server.Classes.Helpers;
 using System.Numerics;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.StringInput;
 using DayZServerManager.Server.Classes.Handlers.SchedulerHandler;
+using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses;
 
 namespace DayZServerManager.Server.Controllers
 {
@@ -24,17 +25,10 @@ namespace DayZServerManager.Server.Controllers
             int playerCount = 0;
             if (Manager.dayZServer != null && Manager.dayZServer.scheduler != null)
             {
-                playerCount = Manager.dayZServer.scheduler.RconClient.PlayersCount;
+                playerCount = Manager.dayZServer.scheduler.GetPlayers();
             }
             
-            if (Manager.props == null)
-            {
-                Manager.props = new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount);
-            }
-            else
-            {
-                Manager.props.playersCount = playerCount;
-            }
+            Manager.props ??= new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount);
 
             return Manager.props;
         }
@@ -94,6 +88,18 @@ namespace DayZServerManager.Server.Controllers
             {
                 return false;
             }
+        }
+
+        [HttpPost("KickPlayer")]
+        public void KickPlayer([FromBody] RemovePlayerInput input)
+        {
+            Manager.dayZServer?.scheduler?.KickPlayer(input.id, input.reason, input.name);
+        }
+
+        [HttpPost("BanPlayer")]
+        public void BanPlayer([FromBody] RemovePlayerInput input)
+        {
+            Manager.dayZServer?.scheduler?.BanPlayer(input.id, input.reason, input.duration, input.name);
         }
     }
 }
