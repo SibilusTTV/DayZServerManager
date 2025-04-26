@@ -3,6 +3,7 @@ using DayZServerManager.Server.Classes;
 using DayZServerManager.Server.Classes.Helpers;
 using System.Numerics;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.StringInput;
+using DayZServerManager.Server.Classes.Handlers.SchedulerHandler;
 
 namespace DayZServerManager.Server.Controllers
 {
@@ -20,10 +21,21 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetServerStatus")]
         public ManagerProps GetServerStatus()
         {
+            int playerCount = 0;
+            if (Manager.dayZServer != null && Manager.dayZServer.scheduler != null)
+            {
+                playerCount = Manager.dayZServer.scheduler.RconClient.PlayersCount;
+            }
+            
             if (Manager.props == null)
             {
-                Manager.props = new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, 0);
+                Manager.props = new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount);
             }
+            else
+            {
+                Manager.props.playersCount = playerCount;
+            }
+
             return Manager.props;
         }
 

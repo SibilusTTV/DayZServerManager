@@ -169,7 +169,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClas
             int i;
             for (i = 0; i < Properties.Count; i++)
             {
-                if (Properties.Find(x => x.id == i) == null)
+                if (Properties.Find(x => x.Id == i) == null)
                 {
                     return i;
                 }

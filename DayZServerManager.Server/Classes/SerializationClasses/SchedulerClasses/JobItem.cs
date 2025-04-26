@@ -1,5 +1,5 @@
 ﻿
-namespace DayZScheduler.Classes.SerializationClasses.SchedulerConfigClasses
+namespace DayZScheduler.Classes.SerializationClasses.SchedulerClasses
 {
     public class JobItem
     {
@@ -9,8 +9,6 @@ namespace DayZScheduler.Classes.SerializationClasses.SchedulerConfigClasses
         public Dictionary<string,double> Interval { get; set; }
         public int Loop { get; set; }
         public string Cmd {  get; set; }
-
-        public JobItem() { }
 
         public JobItem(int id, bool timeofday, Dictionary<string,double> start, Dictionary<string,double> runtime, int loop, string cmd)
         {

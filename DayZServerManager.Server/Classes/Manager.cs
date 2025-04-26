@@ -4,6 +4,8 @@ using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.Manag
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
 using System.Text.Json;
+using DayZServerManager.Server.Classes.Handlers.ServerHandler;
+using DayZServerManager.Server.Classes.Handlers.SteamCMDHandler;
 
 namespace DayZServerManager.Server.Classes
 {
@@ -11,7 +13,7 @@ namespace DayZServerManager.Server.Classes
     {
         public static ManagerConfig? managerConfig;
         public static ServerConfig? serverConfig;
-        public static Server? dayZServer;
+        public static ServerManager? dayZServer;
         public static Task? serverLoop;
         public static ManagerProps? props;
         public static bool kill = false;
@@ -36,11 +38,7 @@ namespace DayZServerManager.Server.Classes
         public const string SCHEDULER_DOWNLOAD_URL = "https://github.com/SibilusTTV/DayZScheduler/releases/latest/download/";
         public static string SCHEDULER_ZIP_NAME = OperatingSystem.IsWindows() ? "windows.zip" : "linux.zip";
         public const string SCHEDULER_PATH = "scheduler";
-        public const string SCHEDULER_CONFIG_FOLDER = "config";
         public const string SCHEDULER_CONFIG_NAME = "config.json";
-        public const string SCHEDULER_CONFIG_UPDATE_NAME = "config-update.json";
-        public const string SCHEDULER_FILE_NAME = "scheduler.json";
-        public const string SCHEDULER_FILE_UPDATE_NAME = "scheduler-update.json";
         public static string SCHEDULER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZScheduler.exe" : "DayZScheduler";
         public const int DAYZ_SERVER_BRANCH = 223350;
         public const int DAYZ_GAME_BRANCH = 221100;
@@ -78,6 +76,7 @@ namespace DayZServerManager.Server.Classes
         public const string DAYZ_SETTINGS_FILE_NAME = "dayzsetting.xml";
         public const string MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME = "HardlineSettings.json";
         public const string STEAMCMD_ANONYMOUS_LOGIN = "anonymous";
+        public const string LOCALHOST = "127.0.0.1";
 
         // Mission rarity to numbers
         public const int EXOTIC_NOMINAL = 1;
@@ -196,7 +195,7 @@ namespace DayZServerManager.Server.Classes
                     return;
                 }
 
-                dayZServer ??= new Server();
+                dayZServer ??= new ServerManager();
 
                 if (serverConfig != null)
                 {
@@ -245,7 +244,7 @@ namespace DayZServerManager.Server.Classes
                         }
                         else
                         {
-                            WriteToConsole("The Server is still running");
+                            WriteToConsole($"The Server is still running with {dayZServer.scheduler?.GetPlayers()} players playing on it");
                         }
 
                         if (!dayZServer.CheckScheduler())
@@ -337,7 +336,7 @@ namespace DayZServerManager.Server.Classes
             {
                 if (dayZServer != null)
                 {
-                    return dayZServer.WriteSteamGuard(code);
+                    return SteamCMDManager.WriteSteamGuard(code);
                 }
                 else
                 {

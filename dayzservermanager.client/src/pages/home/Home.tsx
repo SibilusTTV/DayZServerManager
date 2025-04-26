@@ -41,25 +41,6 @@ export default function Home() {
         sendSteamGuard(steamGuardCode);
     };
 
-    let serverStatusString: string = "";
-
-    if (serverStatus) {
-        Object.entries(serverStatus!).map(([key, value]) => {
-            if (key == "players" && typeof value != "string") {
-            }
-            else {
-                (value as string[]).map(value => serverStatusString += value)
-            }
-        }
-    //        Object.entries(serverStatus!).map(([key, value]) => {
-    //            if (key == "players") {
-    //                (for (value: string in value))
-    //            }
-    //            else {
-    //                return (<p>{key}: {String(value)}</p>))
-    //            }
-    //}
-
     return (
         <div>
             <Button
