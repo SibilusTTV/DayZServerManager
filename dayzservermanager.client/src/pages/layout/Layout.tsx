@@ -1,12 +1,13 @@
 import { Box, Button, IconButton, Toolbar } from "@mui/material";
 import {Home} from "@mui/icons-material";
 import { Link, Outlet } from "react-router-dom";
+import "./Layout.css"
 
 
 export default function Layout() {
     return (
         <>
-            <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ flexGrow: 0 }} className="Layout-Box">
                 <Toolbar>
                     <Link to="/">
                         <IconButton

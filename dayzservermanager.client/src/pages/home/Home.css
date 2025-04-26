@@ -1,0 +1,21 @@
+body {
+}
+.HomeContainer {
+    padding: 10px 10px 10px 10px;
+    display: flex;
+    flex-direction: column;
+}
+.ButtonContainer {
+    display: flex;
+    flex-direction: row;
+}
+.Home-Status{
+    padding: 0px 0px 0px 0px;
+    margin: 5px 5px 5px 5px;
+}
+.Home-Message{
+    display: flex;
+}
+.Home-Message-TextField{
+    width: 400px;
+}

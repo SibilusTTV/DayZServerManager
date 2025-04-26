@@ -10,13 +10,15 @@ namespace DayZServerManager.Server.Classes.Helpers
         public string steamCMDStatus { get; set; }
         public int playersCount { get; set; }
         public List<PlayerProp> players {  get; set; }
-        public ManagerProps(string _managerStatus, string _dayzServerStatus, string _steamCMDStatus, int _playersCount) 
+        public string adminLog { get; set; }
+        public ManagerProps(string _managerStatus, string _dayzServerStatus, string _steamCMDStatus, int _playersCount, string _adminLog) 
         {
             managerStatus = _managerStatus;
             steamCMDStatus = _dayzServerStatus;
             dayzServerStatus = _dayzServerStatus;
             playersCount = _playersCount;
             players = new List<PlayerProp>();
+            adminLog = _adminLog;
         }
     }
 

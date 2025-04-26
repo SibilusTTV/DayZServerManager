@@ -23,12 +23,13 @@ namespace DayZServerManager.Server.Controllers
         public ManagerProps GetServerStatus()
         {
             int playerCount = 0;
+            string adminLog = Manager.GetAdminLog();
             if (Manager.dayZServer != null && Manager.dayZServer.scheduler != null)
             {
                 playerCount = Manager.dayZServer.scheduler.GetPlayers();
             }
             
-            Manager.props ??= new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount);
+            Manager.props ??= new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount, adminLog);
 
             return Manager.props;
         }
@@ -100,6 +101,12 @@ namespace DayZServerManager.Server.Controllers
         public void BanPlayer([FromBody] RemovePlayerInput input)
         {
             Manager.dayZServer?.scheduler?.BanPlayer(input.id, input.reason, input.duration, input.name);
+        }
+
+        [HttpPost("SendCommand")]
+        public void SendCommand([FromBody] StringInput input)
+        {
+            Manager.dayZServer?.scheduler?.SendCommand(input.value);
         }
     }
 }

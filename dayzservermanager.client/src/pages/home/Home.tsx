@@ -1,10 +1,11 @@
-import { Button, DialogActions, DialogContent, DialogContentText, TextField } from "@mui/material";
+import { Button, DialogActions, DialogContent, DialogContentText, MenuItem, Select, TextField } from "@mui/material";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
-import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid } from "@mui/x-data-grid";
+import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid, GridRowSelectionModel, GridCallbackDetails } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import GavelIcon from '@mui/icons-material/Gavel';
 import DoNotStepIcon from '@mui/icons-material/DoNotStep';
+import "./Home.css";
 
 
 interface ServerInfo{
@@ -13,6 +14,7 @@ interface ServerInfo{
     steamCMDStatus: string;
     playersCount: number;
     players: Player[];
+    adminLog: string;
 }
 
 interface Player {
@@ -30,6 +32,8 @@ export default function Home() {
     const [steamGuardCode, setSteamGuardCode] = useState("");
     const [serverStatus, setServerStatus] = useState<ServerInfo>();
     const [dialogTimeout, setDialogTimeout] = useState(0);
+    const [message, setMessage] = useState("");
+    const [selectedPlayer, setSelectedPlayer] = useState(-1);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -39,7 +43,7 @@ export default function Home() {
                 }
                 getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog, setDialogTimeout);
             }
-        }, 5000);
+        }, 1000);
         return () => clearInterval(timer);
     })
 
@@ -54,6 +58,13 @@ export default function Home() {
         setDialogTimeout(30);
         sendSteamGuard(steamGuardCode);
     };
+
+    const handleSendMessage = () => {
+        let command = "say";
+        command += " " + selectedPlayer + " " + message;
+        sendCommand(command);
+        setMessage("");
+    }
 
     const KickPlayer = (id: number, name: string) => {
         let reason = prompt("Please give a reason for the kick");
@@ -74,6 +85,24 @@ export default function Home() {
             duration = GetMinutes(durationString);
         }
         sendBanRequest(id, name, duration, reason);
+    }
+
+    const onSelectModelChange = (rowSelectionModel: GridRowSelectionModel, details: GridCallbackDetails<any>) => {
+        let rowId = rowSelectionModel.at(0)
+        if (rowId != null && serverStatus) {
+            let player = serverStatus.players.at(rowId.valueOf() as number)
+            if (player) {
+                setSelectedPlayer(
+                    player.id
+                );
+            }
+            else {
+                setSelectedPlayer(-1);
+            }
+        }
+        else {
+            setSelectedPlayer(-1);
+        }
     }
 
     const GetMinutes = (durationString: string): number => {
@@ -132,7 +161,6 @@ export default function Home() {
         }
         return finalvalue;
     }
-
 
     const columns: GridColDef[] = [
         {
@@ -231,45 +259,82 @@ export default function Home() {
     ];
 
     return (
-        <div>
-            <Button
-                onClick={() => { startDayZServer() }}
-            >
-                Start Server
-            </Button>
-            <Button
-                onClick={stopDayZServer}
-            >
-                Stop Server
-            </Button>
-            <Button
-                onClick={() => { restartDayZServer() } }
-            >
-                Restart Server
-            </Button>
-            {serverStatus && <>
-                <p>Manager Status: {serverStatus.managerStatus}</p>
-                <p>DayZ Server Status: {serverStatus.dayzServerStatus}</p>
-                <p>SteamCMD Status: {serverStatus.steamCMDStatus}</p>
-                <p>Players Count: {serverStatus.playersCount}</p>
+        <div className="HomeContainer">
+            <div className="ButtonContainer">
+                <Button
+                    onClick={() => { startDayZServer() }}
+                >
+                    Start Server
+                </Button>
+                <Button
+                    onClick={stopDayZServer}
+                >
+                    Stop Server
+                </Button>
+                <Button
+                    onClick={() => { restartDayZServer() } }
+                >
+                    Restart Server
+                </Button>
+            </div>
+            {serverStatus &&
+            <>
+                <h2>Statuses</h2>
+                <p className="Home-Status">Manager Status: {serverStatus.managerStatus}</p>
+                <p className="Home-Status">DayZ Server Status: {serverStatus.dayzServerStatus}</p>
+                <p className="Home-Status">SteamCMD Status: {serverStatus.steamCMDStatus}</p>
+                <p className="Home-Status">Players Count: {serverStatus.playersCount}</p>
                 {serverStatus.players.length > 0 &&
-                    <DataGrid
-                        rows={serverStatus.players}
-                        columns={columns}
-                        initialState={{
-                            pagination: {
-                                paginationModel: {
-                                    pageSize: 20,
-                                },
-                            }
+                    <>
+                        <h2>Playerlist</h2>
+                        <DataGrid
+                            rows={serverStatus.players}
+                            columns={columns}
+                            initialState={{
+                                pagination: {
+                                    paginationModel: {
+                                        pageSize: 20,
+                                    },
+                                }
                         }}
-                        pageSizeOptions={[5, 10, 20, 50, 100]}
-                        sx={{ border: 0 }}
-                    />
+                        checkboxSelection
+                            disableMultipleRowSelection
+                            onRowSelectionModelChange={onSelectModelChange}
+                            pageSizeOptions={[5, 10, 20, 50, 100]}
+                            sx={{ border: 0 }}
+                        />
+                    </>
                 }
+                <h4>Send Message</h4>
+                <p className="Home-Message">
+                    <TextField
+                        className="Home-Message-TextField"
+                        value={message}
+                        onChange={(event) => setMessage(event.target.value)}
+                        onKeyDown={(event) => event.key === "Enter" && handleSendMessage()}
+                        label="Send Message to selected player or to everyone"
+                    />
+                    <Button
+                        onClick={handleSendMessage}
+                    >
+                        Send Message
+                    </Button>
+                </p>
+                <h2>Admin Log</h2>
+                <TextField
+                    id="outlined-multiline"
+                    multiline
+                    rows={10}
+                    value={serverStatus.adminLog}
+                    fullWidth={true}
+                    inputProps={{
+                        input: {
+                            readOnly: true,
+                        },
+                    }}
+
+                />
             </>}
-
-
             <Dialog
                 open={openDialog}
                 onClose={handleClose}
@@ -431,6 +496,19 @@ async function sendBanRequest(_id: number, _name: string, _duration:number, _rea
             name: _name,
             duration: _duration,
             reason: _reason
+        })
+    });
+}
+
+async function sendCommand(command: string) {
+    await fetch('DayZServer/SendCommand', {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            value: command
         })
     });
 }

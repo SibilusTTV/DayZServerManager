@@ -6,6 +6,10 @@ using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
 using System.Text.Json;
 using DayZServerManager.Server.Classes.Handlers.ServerHandler;
 using DayZServerManager.Server.Classes.Handlers.SteamCMDHandler;
+using System.Net.NetworkInformation;
+using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using System.Text;
 
 namespace DayZServerManager.Server.Classes
 {
@@ -77,6 +81,8 @@ namespace DayZServerManager.Server.Classes
         public const string MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME = "HardlineSettings.json";
         public const string STEAMCMD_ANONYMOUS_LOGIN = "anonymous";
         public const string LOCALHOST = "127.0.0.1";
+        public const string ADMIN_LOG_NAME = "DayZServer.ADM";
+        public const string ADMIN_LOG_X64_NAME = "DayZServer_x64.ADM";
 
         // Mission rarity to numbers
         public const int EXOTIC_NOMINAL = 1;
@@ -136,7 +142,7 @@ namespace DayZServerManager.Server.Classes
         public static void InitiateManager()
         {
             LoadManagerConfig();
-            props = new ManagerProps(STATUS_LISTENING, STATUS_NOT_RUNNING, STATUS_NOT_RUNNING, 0);
+            props = new ManagerProps(STATUS_LISTENING, STATUS_NOT_RUNNING, STATUS_NOT_RUNNING, 0, string.Empty);
 
             if (managerConfig != null)
             {
@@ -244,6 +250,7 @@ namespace DayZServerManager.Server.Classes
                         }
                         else
                         {
+                            props.adminLog = GetAdminLog();
                             WriteToConsole($"The Server is still running with {dayZServer.scheduler?.GetPlayers()} players playing on it");
                         }
 
@@ -348,6 +355,42 @@ namespace DayZServerManager.Server.Classes
             {
                 WriteToConsole(ex.ToString());
                 return "Error";
+            }
+        }
+
+        public static string GetAdminLog()
+        {
+            try
+            {
+                string returnString = string.Empty;
+                if (managerConfig != null)
+                {
+                    string adminLogPath = Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_NAME);
+                    if (!File.Exists(adminLogPath) && File.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_X64_NAME)))
+                    {
+                        adminLogPath = Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_X64_NAME);
+                    }
+
+                    using (var fs = new FileStream(adminLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        using (var sr = new StreamReader(fs, Encoding.Default))
+                        {
+                            returnString = sr.ReadToEnd();
+                        }
+                    }
+
+                }
+
+                if (props != null)
+                {
+                    props.adminLog = returnString;
+                }
+                return returnString;
+            }
+            catch (Exception e)
+            {
+                WriteToConsole(e.ToString());
+                return string.Empty;
             }
         }
 
