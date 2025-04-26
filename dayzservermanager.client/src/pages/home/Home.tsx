@@ -1,7 +1,7 @@
-import { Button, DialogActions, DialogContent, DialogContentText, MenuItem, Select, TextField } from "@mui/material";
+import { Button, DialogActions, DialogContent, DialogContentText, TextField } from "@mui/material";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
-import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid, GridRowSelectionModel, GridCallbackDetails } from "@mui/x-data-grid";
+import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import GavelIcon from '@mui/icons-material/Gavel';
 import DoNotStepIcon from '@mui/icons-material/DoNotStep';
@@ -87,7 +87,7 @@ export default function Home() {
         sendBanRequest(id, name, duration, reason);
     }
 
-    const onSelectModelChange = (rowSelectionModel: GridRowSelectionModel, details: GridCallbackDetails<any>) => {
+    const onSelectModelChange = (rowSelectionModel: GridRowSelectionModel) => {
         let rowId = rowSelectionModel.at(0)
         if (rowId != null && serverStatus) {
             let player = serverStatus.players.at(rowId.valueOf() as number)
