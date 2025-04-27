@@ -27,7 +27,7 @@ async function getManagerLog(setManagerLog: Function, managerLog: string) {
         const response = await fetch('DayZServer/GetManagerLog');
         if (response.status == 200) {
             const result = await response.text();
-            setManagerLog(managerLog + result);
+            setManagerLog(result);
         }
     }
     catch (ex) {

@@ -112,9 +112,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetManagerLog")]
         public string GetManagerLog()
         {
-            string managerLog = Manager.managerLog;
-            Manager.managerLog = "";
-            return managerLog;
+            return Manager.managerLog;
         }
     }
 }
