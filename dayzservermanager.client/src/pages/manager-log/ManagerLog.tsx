@@ -7,7 +7,7 @@ export default function ManagerLog() {
 
     useEffect(() => {
         const timer = setInterval(() => {
-            getManagerLog(setManagerLog, managerLog);
+            getManagerLog(setManagerLog);
         }, 1000)
         return () => clearInterval(timer);
     })
@@ -22,7 +22,7 @@ export default function ManagerLog() {
     )
 }
 
-async function getManagerLog(setManagerLog: Function, managerLog: string) {
+async function getManagerLog(setManagerLog: Function) {
     try {
         const response = await fetch('DayZServer/GetManagerLog');
         if (response.status == 200) {
