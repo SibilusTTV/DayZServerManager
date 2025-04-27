@@ -264,7 +264,7 @@ namespace DayZServerManager.Server.Classes
                             WriteToConsole("Scheduler is still running");
                         }
 
-                        if (i % 30 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
+                        if (i % 300 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
                         {
                             serverUpdateTask = new Task(() => {
                                 dayZServer.UpdateAndBackupServer(props, true, false);
