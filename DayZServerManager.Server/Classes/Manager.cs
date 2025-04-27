@@ -21,6 +21,7 @@ namespace DayZServerManager.Server.Classes
         public static Task? serverLoop;
         public static ManagerProps? props;
         public static bool kill = false;
+        public static string managerLog = "";
 
         #region Constants
         public const string MANAGER_CONFIG_NAME = "config.json";
@@ -263,7 +264,7 @@ namespace DayZServerManager.Server.Classes
                             WriteToConsole("Scheduler is still running");
                         }
 
-                        if (i % 300 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
+                        if (i % 30 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
                         {
                             serverUpdateTask = new Task(() => {
                                 dayZServer.UpdateAndBackupServer(props, true, false);
@@ -557,7 +558,9 @@ namespace DayZServerManager.Server.Classes
 
         public static void WriteToConsole(string message)
         {
-            System.Console.WriteLine(Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message);
+            string managerMessage = Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message;
+            managerLog += managerMessage;
+            System.Console.WriteLine(managerMessage);
         }
     }
 }

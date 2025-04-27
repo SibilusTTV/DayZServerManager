@@ -332,7 +332,10 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                     }
                 }
 
-                steamCMDProcess.WaitForExit();
+                if (steamCMDProcess != null)
+                {
+                    steamCMDProcess.WaitForExit();
+                }
 
                 props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
             }

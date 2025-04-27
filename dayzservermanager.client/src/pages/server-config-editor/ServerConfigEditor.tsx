@@ -170,14 +170,16 @@ export default function ServerConfigEditor() {
         {
             field: 'dataType',
             headerName: 'Data Type',
-            width: 360,
+            width: 180,
             type: 'singleSelect',
+            resizable: false,
             editable: false,
             display: 'flex',
             renderCell: (params: GridRenderCellParams<any, Date>) => {
                 let row: PropertyValue = params.row;
                 return (
                     <Select
+                        style={{ display: "flex", flexGrow: 1 }}
                         value={row.dataType}
                         onChange={(event: SelectChangeEvent<DataType>) => handleDataTypeSelect(event, row)}
                     >

@@ -235,9 +235,11 @@ export default function RarityEditor(props: RarityEditorProps) {
 
     async function PopulateRarityFile() {
         const response = await fetch('/RarityEditor/GetRarityFile/' + props.name);
-        const result = (await response.json()) as RarityFile;
-        if (result != null) {
-            setRarities(result);
+        if (response.status == 200) {
+            const result = (await response.json()) as RarityFile;
+            if (result != null) {
+                setRarities(result);
+            }
         }
     }
 

@@ -108,5 +108,13 @@ namespace DayZServerManager.Server.Controllers
         {
             Manager.dayZServer?.scheduler?.SendCommand(input.value);
         }
+
+        [HttpGet("GetManagerLog")]
+        public string GetManagerLog()
+        {
+            string managerLog = Manager.managerLog;
+            Manager.managerLog = "";
+            return managerLog;
+        }
     }
 }

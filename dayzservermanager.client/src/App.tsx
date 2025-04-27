@@ -8,6 +8,7 @@ import RarityEditor from "./pages/rarity-editor/RarityEditor";
 import VanillaRaritiesEditor from "./pages/rarity-editor/components/vanilla-rarities-editor/VanillaRaritiesEditor"
 import CustomFilesRaritiesEditor from "./pages/rarity-editor/components/custom-files-rarities-editor/CustomFilesRaritiesEditor"
 import ExpansionRaritiesEditor from "./pages/rarity-editor/components/expansion-rarities-editor/ExpansionRaritiesEditor"
+import ManagerLog from "./pages/manager-log/ManagerLog";
 
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
                     <Route index element={<Home />} />
                     <Route path="/server-config" element={<ServerConfigEditor />} />
                     <Route path="/manager-config" element={<ManagerConfigEditor />} />
+                    <Route path="/manager-log" element={<ManagerLog />} />
                     <Route path="/rarity-editor" element={<RarityEditor />}>
                         <Route path="/rarity-editor/vanilla-rarities-editor" element={<VanillaRaritiesEditor/>} />
                         <Route path="/rarity-editor/custom-files-rarities-editor" element={<CustomFilesRaritiesEditor/>} />

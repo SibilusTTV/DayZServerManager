@@ -441,74 +441,99 @@ async function stopDayZServer() {
 }
 
 async function restartDayZServer() {
-    const stopMessage = await stopDayZServer();
-    if (stopMessage.toLocaleLowerCase() === "true") {
-        startDayZServer();
+    try {
+        const stopMessage = await stopDayZServer();
+        if (stopMessage.toLocaleLowerCase() === "true") {
+            startDayZServer();
+        }
+    }
+    catch (ex) {
+        alert(ex);
     }
 }
 
 async function sendSteamGuard(_code: string) {
-    const response = await fetch('DayZServer/SendSteamGuard', {
-        method: "POST",
-        mode: "cors",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            value: _code
-        })
-    });
-    const result = await response.text();
+    try {
+        const response = await fetch('DayZServer/SendSteamGuard', {
+            method: "POST",
+            mode: "cors",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                value: _code
+            })
+        });
+        const result = await response.text();
 
-    if (result.toLocaleLowerCase() === "true") {
-        alert("Steam Guard was sent");
+        if (result.toLocaleLowerCase() === "true") {
+            alert("Steam Guard was sent");
+        }
+        else {
+            alert("Steam Guard couldn't be sent");
+        }
     }
-    else {
-        alert("Steam Guard couldn't be sent");
+    catch (ex) {
+        alert(ex);
     }
 }
 
 async function sendKickRequest(_id: number, _name: string, _reason: string) {
-    await fetch('DayZServer/KickPlayer', {
-        method: "POST",
-        mode: "cors",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            id: _id,
-            name: _name,
-            duration: 0,
-            reason: _reason
-        })
-    });
+    try {
+        await fetch('DayZServer/KickPlayer', {
+            method: "POST",
+            mode: "cors",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: _id,
+                name: _name,
+                duration: 0,
+                reason: _reason
+            })
+        });
+    }
+    catch (ex) {
+        alert(ex);
+    }
 }
 
-async function sendBanRequest(_id: number, _name: string, _duration:number, _reason: string) {
-    await fetch('DayZServer/BanPlayer', {
-        method: "POST",
-        mode: "cors",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            id: _id,
-            name: _name,
-            duration: _duration,
-            reason: _reason
-        })
-    });
+async function sendBanRequest(_id: number, _name: string, _duration: number, _reason: string) {
+    try {
+        await fetch('DayZServer/BanPlayer', {
+            method: "POST",
+            mode: "cors",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: _id,
+                name: _name,
+                duration: _duration,
+                reason: _reason
+            })
+        });
+    }
+    catch (ex) {
+        alert(ex);
+    }
 }
 
 async function sendCommand(command: string) {
-    await fetch('DayZServer/SendCommand', {
-        method: "POST",
-        mode: "cors",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            value: command
-        })
-    });
+    try {
+        await fetch('DayZServer/SendCommand', {
+            method: "POST",
+            mode: "cors",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                value: command
+            })
+        });
+    }
+    catch (ex) {
+        alert(ex);
+    }
 }
