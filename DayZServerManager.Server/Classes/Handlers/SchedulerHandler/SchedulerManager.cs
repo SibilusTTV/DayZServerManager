@@ -1,5 +1,6 @@
 ﻿using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
 using DayZServerManager.Server.Classes.Helpers;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using Microsoft.VisualBasic.FileIO;
@@ -8,52 +9,48 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 {
     public class SchedulerManager
     {
-        private RCON rconClient;
-        private SchedulerConfig config;
-        private SchedulerFile scheduler;
-        private List<Timer> tasks;
+        private RCON _rconClient;
+        private SchedulerConfig _config;
+        private List<JobTimer> _automaticMessages;
+        private List<JobTimer> _customMessages;
+        private bool _onlyRestarts;
+        private int _interval;
 
-        private bool isOnUpdate;
-        private bool onlyRestarts;
-        private int interval;
+        public RCON RconClient { get { return _rconClient; } }
 
-        private static string BAN_PATH = Path.Combine(Manager.SERVER_PATH, Manager.BAN_FILE_NAME);
-
-        public RCON RconClient { get { return rconClient; } }
-
-        public SchedulerManager(string ip, int port, string password, bool isOnUpdate, bool onlyRestarts, int interval, List<JobItem> jobItems)
+        public SchedulerManager(string ip, int port, string password, int interval, bool onlyRestarts, List<CustomMessage> customMessages)
         {
-            this.isOnUpdate = isOnUpdate;
-            this.onlyRestarts = onlyRestarts;
+            _onlyRestarts = onlyRestarts;
 
-            if (interval <= 0)
+            if (interval < 1 && interval > 24)
             {
-                throw new Exception("The interval needs to be at least 1");
+                throw new Exception("The interval needs to be between 1 and 24");
             }
             else
             {
-                this.interval = interval;
+                _interval = interval;
             }
 
             SchedulerConfig? tempConfig = JSONSerializer.DeserializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME));
             if (tempConfig == null)
             {
-                config = new SchedulerConfig();
-                JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME), config);
+                _config = new SchedulerConfig();
+                JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME), _config);
             }
             else
             {
-                config = tempConfig;
+                _config = tempConfig;
             }
 
             List<string> bannedUsers = new List<string>();
-            if (!File.Exists(BAN_PATH))
+            string bansPath = OperatingSystem.IsWindows() ? Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_BANS_NAME) : Path.Combine(Manager.SERVER_PATH, Manager.BATTLEYE_FOLDER_NAME, Manager.BATTLEYE_BANS_NAME);
+            if (!File.Exists(bansPath))
             {
-                File.Create(BAN_PATH);
+                File.Create(bansPath);
             }
             else
             {
-                using (StreamReader sr = new StreamReader(BAN_PATH))
+                using (StreamReader sr = new StreamReader(bansPath))
                 {
                     string bansFile = sr.ReadToEnd();
                     bannedUsers = bansFile.Split("\n").ToList();
@@ -61,15 +58,15 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             }
 
             List<string> whitelistedUsers = new List<string>();
-            if (config.UseWhiteList)
+            if (_config.UseWhiteList)
             {
-                if (!File.Exists(Path.Combine(Manager.SCHEDULER_PATH, config.WhiteListFile)))
+                if (!File.Exists(Path.Combine(Manager.SCHEDULER_PATH, _config.WhiteListFile)))
                 {
-                    File.Create(Path.Combine(Manager.SCHEDULER_PATH, config.WhiteListFile));
+                    File.Create(Path.Combine(Manager.SCHEDULER_PATH, _config.WhiteListFile));
                 }
                 else
                 {
-                    using (StreamReader sr = new StreamReader(Path.Combine(Manager.SCHEDULER_PATH, config.WhiteListFile)))
+                    using (StreamReader sr = new StreamReader(Path.Combine(Manager.SCHEDULER_PATH, _config.WhiteListFile)))
                     {
                         string whitelistFile = sr.ReadToEnd();
                         whitelistedUsers = whitelistFile.Split("\n").ToList();
@@ -78,15 +75,15 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             }
 
             List<string> filteredNicks = new List<string>();
-            if (config.UseNickFilter)
+            if (_config.UseNickFilter)
             {
-                if (!File.Exists(Path.Combine(Manager.SCHEDULER_PATH, config.NickFilterFile)))
+                if (!File.Exists(Path.Combine(Manager.SCHEDULER_PATH, _config.NickFilterFile)))
                 {
-                    File.Create(Path.Combine(Manager.SCHEDULER_PATH, config.NickFilterFile));
+                    File.Create(Path.Combine(Manager.SCHEDULER_PATH, _config.NickFilterFile));
                 }
                 else
                 {
-                    using (StreamReader sr = new StreamReader(Path.Combine(Manager.SCHEDULER_PATH, config.NickFilterFile)))
+                    using (StreamReader sr = new StreamReader(Path.Combine(Manager.SCHEDULER_PATH, _config.NickFilterFile)))
                     {
                         string nickFilteFile = sr.ReadToEnd();
                         filteredNicks = nickFilteFile.Split("\n").ToList();
@@ -94,130 +91,74 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 }
             }
 
-            SchedulerFile? tempScheduler = RestartUpdater.CreateNewSchedulerFile(isOnUpdate, onlyRestarts, interval, jobItems);
-            if (tempScheduler == null)
-            {
-                throw new Exception("It's not a good time to update");
-            }
-            else
-            {
-                scheduler = tempScheduler;
-            }
+            _automaticMessages = RestartUpdater.CreateSchedule(false, _onlyRestarts, _interval, this);
+            _customMessages = RestartUpdater.CreateCustomJobTimers(_onlyRestarts, _interval, this, customMessages);
 
-            this.tasks = CreateTasks(scheduler.JobItems);
-
-            rconClient = new RCON(ip, port, password, whitelistedUsers, filteredNicks, bannedUsers, config);
+            _rconClient = new RCON(ip, port, password, whitelistedUsers, filteredNicks, bannedUsers, _config);
 
         }
 
         public bool Connect()
         {
-            Manager.WriteToConsole($"Waiting for {config.Timeout} seconds until TimeOut is over");
-            Thread.Sleep(config.Timeout * 1000);
+            Manager.WriteToConsole($"Waiting for {_config.Timeout} seconds until TimeOut is over");
+            Thread.Sleep(_config.Timeout * 1000);
             Manager.WriteToConsole("Connecting to the Server");
-            return rconClient.Connect();
-
+            return _rconClient.Connect();
         }
 
-        private List<Timer> CreateTasks(List<JobItem> items)
+        public void ChangeToNormalMode()
         {
-            List<Timer> tempTasks = new List<Timer>();
-            foreach (JobItem item in items)
-            {
-                DateTime now = DateTime.Now;
-                DateTime scheduledJob;
-                if (item.IsTimeOfDay)
-                {
-                    scheduledJob = DateTime.Today;
-                }
-                else
-                {
-                    scheduledJob = DateTime.Now;
-                }
-                scheduledJob = scheduledJob.AddHours(item.WaitTime["hours"]).AddMinutes(item.WaitTime["minutes"]).AddSeconds(item.WaitTime["seconds"]);
-
-                TimeSpan waitTime = scheduledJob - now;
-                if (waitTime.TotalSeconds < 0)
-                {
-                    scheduledJob = scheduledJob.AddDays(1);
-                    waitTime = scheduledJob - now;
-                }
-
-                TimeSpan sp;
-                if (item.Interval["hours"] == 0 && item.Interval["minutes"] == 0 && item.Interval["seconds"] == 0)
-                {
-                    sp = TimeSpan.FromDays(1);
-                }
-                else
-                {
-                    sp = TimeSpan.FromHours(item.Interval["hours"]);
-                    sp.Add(TimeSpan.FromMinutes(item.Interval["minutes"]));
-                    sp.Add(TimeSpan.FromSeconds(item.Interval["seconds"]));
-                }
-
-                if (item.Loop > 0)
-                {
-                    for (int i = 0; i < item.Loop; i++)
-                    {
-                        tempTasks.Add(new Timer((state) => { ExecuteFunction(item); }, null, waitTime.Add(TimeSpan.FromSeconds(i)), sp));
-                    }
-                }
-                else
-                {
-                    tempTasks.Add(new Timer((state) => { ExecuteFunction(item); }, null, waitTime, sp));
-                }
-            }
-            Manager.WriteToConsole($"{tempTasks.Count} tasks were created");
-            return tempTasks;
+            KillAutomaticTasks();
+            _automaticMessages = RestartUpdater.CreateSchedule(false, _onlyRestarts, _interval, this);
         }
 
-        private void ExecuteFunction(JobItem item)
+        public void ChangeToUpdateMode()
         {
-            Manager.WriteToConsole($"Sending command {item.Cmd}");
-            if (rconClient.IsConnected())
-            {
-                rconClient.SendCommand(item.Cmd);
-            }
+            KillAutomaticTasks();
+            _automaticMessages = RestartUpdater.CreateSchedule(true, _onlyRestarts, _interval, this);
         }
 
-        public void KillTasks()
+        public void KillAutomaticTasks()
         {
-            if (tasks != null)
+            foreach (JobTimer timer in _automaticMessages)
             {
-                foreach (Timer timer in tasks)
-                {
-                    if (timer != null)
-                    {
-                        timer.Dispose();
-                    }
-                }
-                tasks.Clear();
+                timer.Dispose();
             }
+            _automaticMessages.Clear();
+        }
+
+        public void KillCustomTasks()
+        {
+            foreach (JobTimer timer in _customMessages)
+            {
+                timer.Dispose();
+            }
+            _customMessages.Clear();
         }
 
         public bool IsConnected()
         {
-            return rconClient.IsConnected();
+            return _rconClient.IsConnected();
         }
 
         public int GetPlayers()
         {
-            return rconClient.GetPlayers();
+            return _rconClient.GetPlayers();
         }
 
         public void KickPlayer(int id, string reason, string name)
         {
-            rconClient.KickPlayer(id, reason, name);
+            _rconClient.KickPlayer(id, reason, name);
         }
 
         public void BanPlayer(int id, string reason, int duration, string name)
         {
-            rconClient.BanPlayer(id, reason, duration, name);
+            _rconClient.BanPlayer(id, reason, duration, name);
         }
 
         public void SendCommand(string command)
         {
-            rconClient.SendCommand(command);
+            _rconClient.SendCommand(command);
         }
     }
 }

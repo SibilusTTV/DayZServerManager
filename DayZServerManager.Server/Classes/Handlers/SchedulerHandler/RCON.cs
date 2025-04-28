@@ -182,16 +182,13 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 }
             }
 
-            if (Manager.props != null)
+            List<PlayerProp> playerProps = new List<PlayerProp>();
+            foreach (Player player in _players)
             {
-                List<PlayerProp> playerProps = new List<PlayerProp>();
-                foreach (Player player in _players)
-                {
-                    playerProps.Add(new PlayerProp(player));
-                }
-                Manager.props.players = playerProps;
-                Manager.props.playersCount = _players.Count;
+                playerProps.Add(new PlayerProp(player));
             }
+            Manager.props.players = playerProps;
+            Manager.props.playersCount = _players.Count;
 
             return _playersCount;
         }

@@ -10,118 +10,114 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
     {
         public static Process? steamCMDProcess;
 
-        public static void UpdateServer(ManagerProps props)
+        public static void UpdateServer()
         {
-            if (Manager.managerConfig != null && Manager.props != null)
+            Manager.props.managerStatus = Manager.STATUS_UPDATING_SERVER;
+            Manager.WriteToConsole(Manager.STATUS_UPDATING_SERVER);
+
+            try
             {
-                props.managerStatus = Manager.STATUS_UPDATING_SERVER;
-                Manager.WriteToConsole(Manager.STATUS_UPDATING_SERVER);
-
-                try
+                if (!Directory.Exists(Manager.STEAM_CMD_PATH))
                 {
-                    if (!Directory.Exists(Manager.STEAM_CMD_PATH))
-                    {
-                        Directory.CreateDirectory(Manager.STEAM_CMD_PATH);
-                    }
+                    Directory.CreateDirectory(Manager.STEAM_CMD_PATH);
                 }
-                catch (Exception ex)
-                {
-                    Manager.WriteToConsole(ex.ToString());
-                }
-
-                try
-                {
-                    if (!File.Exists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE)))
-                    {
-                        DownloadAndExctractSteamCMD(Manager.STEAM_CMD_ZIP_NAME);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Manager.WriteToConsole(ex.ToString());
-                }
-
-                try
-                {
-                    string serverUpdateArguments = $"\"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)}\" \"+login {Manager.managerConfig.steamUsername}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" -validate +quit";
-                    Manager.WriteToConsole("Updating the DayZ Server");
-                    StartSteamCMD(props, serverUpdateArguments);
-                    if (props.steamCMDStatus == Manager.STATUS_NOT_RUNNING)
-                    {
-                        CheckForUpdatedServer();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Manager.WriteToConsole(ex.ToString());
-                    props.managerStatus = Manager.STATUS_ERROR;
-                }
-
-                props.managerStatus = Manager.STATUS_SERVER_UPDATED;
-                Manager.WriteToConsole(Manager.STATUS_SERVER_UPDATED);
             }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+            }
+
+            try
+            {
+                if (!File.Exists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE)))
+                {
+                    DownloadAndExctractSteamCMD(Manager.STEAM_CMD_ZIP_NAME);
+                }
+            }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+            }
+
+            try
+            {
+                string serverUpdateArguments = $"\"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)}\" \"+login {Manager.managerConfig.steamUsername}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" -validate +quit";
+                Manager.WriteToConsole("Updating the DayZ Server");
+                StartSteamCMD(serverUpdateArguments);
+                if (Manager.props.steamCMDStatus == Manager.STATUS_NOT_RUNNING)
+                {
+                    CheckForUpdatedServer();
+                }
+            }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+                Manager.props.managerStatus = Manager.STATUS_ERROR;
+            }
+
+            Manager.props.managerStatus = Manager.STATUS_SERVER_UPDATED;
+            Manager.WriteToConsole(Manager.STATUS_SERVER_UPDATED);
         }
 
-        public static bool UpdateMods(ManagerProps props, List<Mod> mods, out List<long> updatedModsIDs)
+        public static bool UpdateMods(List<Mod> mods, out List<long> updatedModsIDs)
         {
             updatedModsIDs = new List<long>();
             bool updatedMods = false;
-            if (Manager.managerConfig != null)
+
+            Manager.props.managerStatus = Manager.STATUS_UPDATING_MODS;
+            Manager.WriteToConsole(Manager.STATUS_UPDATING_MODS);
+
+            try
             {
-                props.managerStatus = Manager.STATUS_UPDATING_MODS;
-                Manager.WriteToConsole(Manager.STATUS_UPDATING_MODS);
-
-                try
+                string modUpdateArguments = string.Empty;
+                if (mods.Count > 0)
                 {
-                    string modUpdateArguments = string.Empty;
-                    if (mods.Count > 0)
+                    foreach (Mod mod in mods)
                     {
-                        foreach (Mod mod in mods)
+                        modUpdateArguments += $" +workshop_download_item {Manager.DAYZ_GAME_BRANCH} {mod.workshopID.ToString()}";
+                    }
+                    string arguments = $"\"+force_install_dir {Path.Combine("..", Manager.MODS_PATH)}\" \"+login {Manager.managerConfig.steamUsername}\" {modUpdateArguments} +quit";
+
+                    StartSteamCMD(arguments);
+
+                    Manager.WriteToConsole($"All mods were downloaded");
+
+                    foreach (Mod mod in mods)
+                    {
+                        if (CompareForChanges(Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString()), Path.Combine(Manager.SERVER_PATH, mod.name)))
                         {
-                            modUpdateArguments += $" +workshop_download_item {Manager.DAYZ_GAME_BRANCH} {mod.workshopID.ToString()}";
-                        }
-                        string arguments = $"\"+force_install_dir {Path.Combine("..", Manager.MODS_PATH)}\" \"+login {Manager.managerConfig.steamUsername}\" {modUpdateArguments} +quit";
-
-                        StartSteamCMD(props, arguments);
-
-                        Manager.WriteToConsole($"All mods were downloaded");
-
-                        foreach (Mod mod in mods)
-                        {
-                            if (CompareForChanges(Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString()), Path.Combine(Manager.SERVER_PATH, mod.name)))
+                            if (updatedModsIDs.Contains(mod.workshopID))
                             {
-                                if (updatedModsIDs.Contains(mod.workshopID))
-                                {
-                                    updatedMods = true;
-                                }
-                                else
-                                {
-                                    Manager.WriteToConsole($"{mod.name} was updated");
-                                    updatedModsIDs.Add(mod.workshopID);
-                                    updatedMods = true;
-                                }
+                                updatedMods = true;
                             }
-                        }
-
-                        foreach (long key in updatedModsIDs)
-                        {
-                            Mod? mod = mods.Find(x => x.workshopID == key);
-                            if (mod != null)
+                            else
                             {
                                 Manager.WriteToConsole($"{mod.name} was updated");
+                                updatedModsIDs.Add(mod.workshopID);
+                                updatedMods = true;
                             }
                         }
                     }
-                    return updatedMods;
-                }
-                catch (Exception ex)
-                {
-                    Manager.WriteToConsole(ex.ToString());
-                }
 
-                props.managerStatus = Manager.STATUS_MODS_UPDATED;
-                Manager.WriteToConsole(Manager.STATUS_MODS_UPDATED);
+                    foreach (long key in updatedModsIDs)
+                    {
+                        Mod? mod = mods.Find(x => x.workshopID == key);
+                        if (mod != null)
+                        {
+                            Manager.WriteToConsole($"{mod.name} was updated");
+                        }
+                    }
+                }
+                return updatedMods;
             }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+            }
+
+            Manager.props.managerStatus = Manager.STATUS_MODS_UPDATED;
+            Manager.WriteToConsole(Manager.STATUS_MODS_UPDATED);
+
             return updatedMods;
         }
 
@@ -139,7 +135,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                 }
                 else
                 {
-                    if (Manager.props != null) Manager.props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
+                    Manager.props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
                     return "No SteamCMD Process";
                 }
 
@@ -265,7 +261,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
         }
 
-        private static void StartSteamCMD(ManagerProps props, string serverUpdateArguments)
+        private static void StartSteamCMD(string serverUpdateArguments)
         {
             try
             {
@@ -279,7 +275,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                 steamCMDProcess.StartInfo.FileName = Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE);
                 steamCMDProcess.Start();
 
-                props.steamCMDStatus = Manager.STATUS_RUNNING;
+                Manager.props.steamCMDStatus = Manager.STATUS_RUNNING;
 
                 int outputTime = 0;
                 Task task = ConsumeOutput(steamCMDProcess.StandardOutput, s =>
@@ -289,16 +285,16 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                         Manager.WriteToConsole(s);
                         if (s.ToLower().Contains(Manager.STATUS_CLIENT_CONFIG.ToLower()))
                         {
-                            props.steamCMDStatus = Manager.STATUS_CLIENT_CONFIG;
+                            Manager.props.steamCMDStatus = Manager.STATUS_CLIENT_CONFIG;
                             outputTime = -1;
                         }
                         else if (s.ToLower().Contains(Manager.STATUS_STEAM_GUARD.ToLower()))
                         {
-                            props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
+                            Manager.props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
                         }
                         else if (s.ToLower().Contains(Manager.STATUS_CACHED_CREDENTIALS.ToLower()))
                         {
-                            props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
+                            Manager.props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
                         }
                         else if (outputTime != -1)
                         {
@@ -312,17 +308,17 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                     Thread.Sleep(1000);
                     if (outputTime > 30)
                     {
-                        if (props.steamCMDStatus == Manager.STATUS_CACHED_CREDENTIALS)
+                        if (Manager.props.steamCMDStatus == Manager.STATUS_CACHED_CREDENTIALS)
                         {
                             Manager.WriteToConsole(Manager.STATUS_STEAM_GUARD);
-                            props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
+                            Manager.props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
                             outputTime = 0;
                         }
                         else
                         {
                             Manager.WriteToConsole(Manager.STATUS_CACHED_CREDENTIALS);
                             steamCMDProcess.StandardInput.WriteLine(Manager.managerConfig?.steamPassword);
-                            props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
+                            Manager.props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
                             outputTime = 0;
                         }
                     }
@@ -337,12 +333,12 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                     steamCMDProcess.WaitForExit();
                 }
 
-                props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
+                Manager.props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
             }
             catch (Exception ex)
             {
                 Manager.WriteToConsole(ex.ToString());
-                props.dayzServerStatus = Manager.STATUS_ERROR;
+                Manager.props.dayzServerStatus = Manager.STATUS_ERROR;
             }
         }
 
@@ -361,7 +357,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
         {
             try
             {
-                if (steamCMDProcess != null && Manager.props != null)
+                if (steamCMDProcess != null)
                 {
                     steamCMDProcess.WaitForExit();
                     steamCMDProcess = null;

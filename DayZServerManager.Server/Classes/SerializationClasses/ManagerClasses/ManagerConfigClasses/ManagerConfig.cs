@@ -83,7 +83,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.M
             mod2.name = "@Community-Online-Tools";
             clientMods.Add(mod2);
             customMessages = new List<CustomMessage>();
-            customMessages.Add(new CustomMessage(0, false, new Dictionary<string, double> { { "hours", 0 }, { "minutes", 5 }, { "seconds", 0 } }, new Dictionary<string, double> { { "hours", 0 }, { "minutes", 15 }, { "seconds", 0 } }, "Need Help?", "Make sure to join our Discord", "ExclamationMark", ""));
+            customMessages.Add(new CustomMessage(0, false, new Dictionary<string, int> { { "hours", 0 }, { "minutes", 5 }, { "seconds", 0 } }, new Dictionary<string, int> { { "hours", 0 }, { "minutes", 15 }, { "seconds", 0 } }, "Need Help?", "Make sure to join our Discord", "ExclamationMark", ""));
         }
     }
 }

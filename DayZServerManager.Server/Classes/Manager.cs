@@ -6,45 +6,51 @@ using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
 using System.Text.Json;
 using DayZServerManager.Server.Classes.Handlers.ServerHandler;
 using DayZServerManager.Server.Classes.Handlers.SteamCMDHandler;
-using System.Net.NetworkInformation;
-using Microsoft.AspNetCore.Mvc;
-using System.IO;
 using System.Text;
+using DayZServerManager.Server.Classes.Handlers.SchedulerHandler;
+using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
+using Microsoft.VisualBasic.FileIO;
+using System.IO;
 
 namespace DayZServerManager.Server.Classes
 {
     internal static class Manager
     {
-        public static ManagerConfig? managerConfig;
-        public static ServerConfig? serverConfig;
-        public static ServerManager? dayZServer;
+        public static ManagerConfig managerConfig = new ManagerConfig();
+        public static ServerManager dayZServer = new ServerManager(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
         public static Task? serverLoop;
-        public static ManagerProps? props;
+        public static ManagerProps props = new ManagerProps(string.Empty, string.Empty, string.Empty, 0, string.Empty);
         public static bool kill = false;
         public static string managerLog = "";
+
+        public static SchedulerManager? scheduler;
+        private static Task? connectTask;
 
         #region Constants
         public const string MANAGER_CONFIG_NAME = "config.json";
         public const string SERVER_PATH = "server";
+        public static string PROFILE_PATH = Path.Combine(SERVER_PATH, managerConfig.profileName);
         public const string SERVER_DEPLOY = "deploy";
-        public static string SERVER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
+        public static readonly string SERVER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
         public const string STEAM_CMD_PATH = "steamcmd";
-        public static string STEAM_CMD_EXECUTABLE = OperatingSystem.IsWindows() ? "steamcmd.exe" : "steamcmd.sh";
-        public static string STEAM_CMD_ZIP_NAME = OperatingSystem.IsWindows() ? "steamcmd.zip" : "steamcmd.tar.gz";
+        public static readonly string STEAM_CMD_EXECUTABLE = OperatingSystem.IsWindows() ? "steamcmd.exe" : "steamcmd.sh";
+        public static readonly string STEAM_CMD_ZIP_NAME = OperatingSystem.IsWindows() ? "steamcmd.zip" : "steamcmd.tar.gz";
         public const string STEAMCMD_DOWNLOAD_URL = "https://steamcdn-a.akamaihd.net/client/installer/";
         public const string STEAMCMD_TAR_FILE_NAME = "steamcmd.tar";
         public const string MODS_PATH = "mods";
-        public static string WORKSHOP_PATH = Path.Combine("steamapps", "workshop", "content", "221100");
-        public static string MPMISSIONS_PATH = Path.Combine(SERVER_PATH, "mpmissions");
-        public static string EXPANSION_DOWNLOAD_PATH = Path.Combine(MPMISSIONS_PATH, "DayZ-Expansion-Missions");
-        public static string BATTLEYE_FOLDER_NAME = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
-        public static string BATTLEYE_CONFIG_NAME = OperatingSystem.IsWindows() ? "BEServer_x64.cfg" : "beserver_x64.cfg";
+        public static readonly string WORKSHOP_PATH = Path.Combine("steamapps", "workshop", "content", "221100");
+        public static readonly string MPMISSIONS_PATH = Path.Combine(SERVER_PATH, "mpmissions");
+        public static readonly string EXPANSION_DOWNLOAD_PATH = Path.Combine(MPMISSIONS_PATH, "DayZ-Expansion-Missions");
+        public static readonly string BATTLEYE_FOLDER_NAME = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
+        public static readonly string BATTLEYE_CONFIG_NAME = OperatingSystem.IsWindows() ? "BEServer_x64.cfg" : "beserver_x64.cfg";
+        public static string BATTLEYE_FOLDER_PATH = OperatingSystem.IsWindows() ? Path.Combine(PROFILE_PATH, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
         public const string BATTLEYE_BANS_NAME = "Bans.txt";
         public const string SCHEDULER_DOWNLOAD_URL = "https://github.com/SibilusTTV/DayZScheduler/releases/latest/download/";
-        public static string SCHEDULER_ZIP_NAME = OperatingSystem.IsWindows() ? "windows.zip" : "linux.zip";
+        public static readonly string SCHEDULER_ZIP_NAME = OperatingSystem.IsWindows() ? "windows.zip" : "linux.zip";
         public const string SCHEDULER_PATH = "scheduler";
         public const string SCHEDULER_CONFIG_NAME = "config.json";
-        public static string SCHEDULER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZScheduler.exe" : "DayZScheduler";
+        public static readonly string SCHEDULER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZScheduler.exe" : "DayZScheduler";
         public const int DAYZ_SERVER_BRANCH = 223350;
         public const int DAYZ_GAME_BRANCH = 221100;
 
@@ -145,184 +151,223 @@ namespace DayZServerManager.Server.Classes
             LoadManagerConfig();
             props = new ManagerProps(STATUS_LISTENING, STATUS_NOT_RUNNING, STATUS_NOT_RUNNING, 0, string.Empty);
 
-            if (managerConfig != null)
+            if (!Directory.Exists(SERVER_PATH))
             {
-                if (!Directory.Exists(SERVER_PATH))
-                {
-                    Directory.CreateDirectory(SERVER_PATH);
-                }
-                if (!Directory.Exists(STEAM_CMD_PATH))
-                {
-                    Directory.CreateDirectory(STEAM_CMD_PATH);
-                }
-                if (!Directory.Exists(MODS_PATH))
-                {
-                    Directory.CreateDirectory(MODS_PATH);
-                }
-                if (!Directory.Exists(SCHEDULER_PATH))
-                {
-                    Directory.CreateDirectory(SCHEDULER_PATH);
-                }
-                if (!Directory.Exists(SERVER_DEPLOY))
-                {
-                    Directory.CreateDirectory(SERVER_DEPLOY);
-                }
+                Directory.CreateDirectory(SERVER_PATH);
+            }
 
-                if (!Directory.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName)))
-                {
-                    Directory.CreateDirectory(Path.Combine(SERVER_PATH, managerConfig.profileName));
-                }
+            if (!Directory.Exists(STEAM_CMD_PATH))
+            {
+                Directory.CreateDirectory(STEAM_CMD_PATH);
+            }
 
-                LoadServerConfig();
-                AdjustServerConfig();
-                SaveManagerConfig();
-                SaveServerConfig();
+            if (!Directory.Exists(MODS_PATH))
+            {
+                Directory.CreateDirectory(MODS_PATH);
+            }
 
-                if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
-                {
-                    props.managerStatus = STATUS_CREDENTIALS;
-                    return;
-                }
+            if (!Directory.Exists(SCHEDULER_PATH))
+            {
+                Directory.CreateDirectory(SCHEDULER_PATH);
+            }
 
-                if (managerConfig.autoStartServer)
-                {
-                    Task task = new Task(() => { StartServer(); });
-                    task.Start();
-                }
+            if (!Directory.Exists(SERVER_DEPLOY))
+            {
+                Directory.CreateDirectory(SERVER_DEPLOY);
+            }
+
+            if (!Directory.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName)))
+            {
+                Directory.CreateDirectory(Path.Combine(SERVER_PATH, managerConfig.profileName));
+            }
+
+            if (!Directory.Exists(BATTLEYE_FOLDER_PATH))
+            {
+                Directory.CreateDirectory(BATTLEYE_FOLDER_PATH);
+            }
+
+            if (File.Exists(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME)))
+            {
+                File.Create(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME));
+            }
+
+            dayZServer = new ServerManager(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
+
+            dayZServer.AdjustServerConfig(managerConfig.missionName, managerConfig.instanceId, managerConfig.steamQueryPort);
+            dayZServer.SaveServerConfig(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
+
+            if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
+            {
+                props.managerStatus = STATUS_CREDENTIALS;
+                return;
+            }
+
+            if (managerConfig.autoStartServer)
+            {
+                Task task = new Task(() => { StartServer(); });
+                task.Start();
             }
         }
 
         public static void StartServer()
         {
-            if (props != null && managerConfig != null)
+            PROFILE_PATH = Path.Combine(SERVER_PATH, managerConfig.profileName);
+            BATTLEYE_FOLDER_PATH = OperatingSystem.IsWindows() ? Path.Combine(PROFILE_PATH, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
+            
+            if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
             {
-                if (string.IsNullOrEmpty(managerConfig.steamUsername) || string.IsNullOrEmpty(managerConfig.steamPassword))
-                {
-                    props.managerStatus = STATUS_CREDENTIALS;
-                    return;
-                }
-
-                dayZServer ??= new ServerManager();
-
-                if (serverConfig != null)
-                {
-                    SaveServerConfig();
-                }
-
-                dayZServer.UpdateAndBackupServer(props, true, true);
-
-                kill = false;
-                props.managerStatus = STATUS_STARTING_SERVER;
-                dayZServer.StartServer();
-
-                props.managerStatus = STATUS_STARTING_SCHEDULER;
-                dayZServer.StartScheduler();
-
-                props.managerStatus = STATUS_LISTENING;
-                props.dayzServerStatus = STATUS_STARTED;
-
-                serverLoop = new Task(() => { StartServerLoop(); });
-                serverLoop.Start();
+                props.managerStatus = STATUS_CREDENTIALS;
+                return;
             }
+
+            dayZServer.AdjustServerConfig(managerConfig.missionName, managerConfig.instanceId, managerConfig.steamQueryPort);
+            dayZServer.SaveServerConfig(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
+
+            dayZServer.UpdateAndBackupServer(true, true);
+
+            kill = false;
+            props.managerStatus = STATUS_STARTING_SERVER;
+            dayZServer.StartServer();
+
+            props.managerStatus = STATUS_STARTING_SCHEDULER;
+            StartScheduler();
+
+            props.managerStatus = STATUS_LISTENING;
+            props.dayzServerStatus = STATUS_STARTED;
+
+            serverLoop = new Task(() => { StartServerLoop(); });
+            serverLoop.Start();
         }
 
         private static void StartServerLoop()
         {
-            if (props != null)
+            Task? serverUpdateTask = null;
+
+            Thread.Sleep(10000);
+
+            double i = 10;
+            while (!kill)
             {
-                Task? serverUpdateTask = null;
-
-                Thread.Sleep(10000);
-
-                double i = 10;
-                while (!kill)
+                if (!dayZServer.CheckServer())
                 {
-                    if (dayZServer != null)
+                    Thread.Sleep(10000);
+                    i += 10;
+
+                    PROFILE_PATH = Path.Combine(SERVER_PATH, managerConfig.profileName);
+                    BATTLEYE_FOLDER_PATH = OperatingSystem.IsWindows() ? Path.Combine(PROFILE_PATH, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
+
+                    dayZServer.AdjustServerConfig(managerConfig.missionName, managerConfig.instanceId, managerConfig.steamQueryPort);
+                    dayZServer.SaveServerConfig(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
+
+                    dayZServer.UpdateAndBackupServer(false, true);
+
+                    dayZServer.StartServer();
+                }
+                else
+                {
+                    props.adminLog = GetAdminLog();
+                    int players = 0;
+                    if (scheduler != null)
                     {
-                        if (!dayZServer.CheckServer())
-                        {
-                            Thread.Sleep(10000);
-                            i += 10;
-                            SaveServerConfig();
-
-                            dayZServer.UpdateAndBackupServer(props, false, true);
-
-                            dayZServer.StartServer();
-                        }
-                        else
-                        {
-                            props.adminLog = GetAdminLog();
-                            WriteToConsole($"The Server is still running with {dayZServer.scheduler?.GetPlayers()} players playing on it");
-                        }
-
-                        if (!dayZServer.CheckScheduler())
-                        {
-                            dayZServer.StartScheduler();
-                        }
-                        else
-                        {
-                            WriteToConsole("Scheduler is still running");
-                        }
-
-                        if (i % 300 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
-                        {
-                            serverUpdateTask = new Task(() => {
-                                dayZServer.UpdateAndBackupServer(props, true, false);
-                                dayZServer.RestartForUpdates();
-                            });
-                            serverUpdateTask.Start();
-                        }
-                        i += 10;
-                        props.managerStatus = STATUS_LISTENING;
-                        Thread.Sleep(10000);
+                        players = scheduler.GetPlayers();
                     }
+                    WriteToConsole($"The Server is still running with {players} players playing on it");
                 }
 
-                serverUpdateTask = null;
+                if (!CheckScheduler())
+                {
+                    StartScheduler();
+                }
+                else
+                {
+                    WriteToConsole("Scheduler is still running");
+                }
 
-                WriteToConsole(STATUS_STOPPING_SERVER);
-
-                KillServerProcesses();
-
-                Thread.Sleep(10000);
-
-                SaveServerConfig();
-
+                if (i % 300 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
+                {
+                    serverUpdateTask = new Task(() => {
+                        dayZServer.UpdateAndBackupServer(true, false);
+                        dayZServer.RestartForUpdates();
+                    });
+                    serverUpdateTask.Start();
+                }
+                i += 10;
                 props.managerStatus = STATUS_LISTENING;
-
-                WriteToConsole("Server was stopped");
+                Thread.Sleep(10000);
             }
+
+            serverUpdateTask = null;
+
+            WriteToConsole(STATUS_STOPPING_SERVER);
+
+            KillServerProcesses();
+
+            props.managerStatus = STATUS_LISTENING;
+
+            WriteToConsole("Server was stopped");
         }
 
         public static void StopServer()
         {
-            if (props != null)
+            if (serverLoop != null)
             {
-                if (dayZServer != null && serverLoop != null)
-                {
-                    kill = true;
-                    props.managerStatus = STATUS_STOPPING_SERVER;
-                }
-                else
-                {
-                    KillServerProcesses();
-                }
+                kill = true;
+                props.managerStatus = STATUS_STOPPING_SERVER;
+            }
+            else
+            {
+                KillServerProcesses();
             }
         }
 
         public static void KillServerProcesses()
         {
-            if (dayZServer != null)
+            try
             {
-                dayZServer.KillServerProcesses();
-                SteamCMDManager.KillSteamCMD();
-                Thread.Sleep(10000);
-                dayZServer = null;
-
-                if (serverConfig != null)
+                if (scheduler != null)
                 {
-                    SaveServerConfig();
+                    scheduler.KillAutomaticTasks();
+                    scheduler.KillCustomTasks();
+                    scheduler = null;
                 }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
+                scheduler = null;
+            }
+
+            try
+            {
+                if (dayZServer.CheckServer())
+                {
+                    dayZServer.KillServerProcess();
+
+                    Thread.Sleep(10000);
+
+                    PROFILE_PATH = Path.Combine(SERVER_PATH, managerConfig.profileName);
+                    BATTLEYE_FOLDER_PATH = OperatingSystem.IsWindows() ? Path.Combine(PROFILE_PATH, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
+
+                    dayZServer.AdjustServerConfig(managerConfig.missionName, managerConfig.instanceId, managerConfig.steamQueryPort);
+                    dayZServer.SaveServerConfig(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
+
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
+            }
+
+            try
+            {
+                if (SteamCMDManager.CheckSteamCMD())
+                {
+                    SteamCMDManager.KillSteamCMD();
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
             }
         }
 
@@ -331,7 +376,21 @@ namespace DayZServerManager.Server.Classes
             kill = true;
             if (dayZServer != null)
             {
-                dayZServer.KillServerProcesses();
+                dayZServer.KillServerProcess();
+
+                try
+                {
+                    if (scheduler != null)
+                    {
+                        scheduler.KillAutomaticTasks();
+                        scheduler = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Manager.WriteToConsole(ex.ToString());
+                    scheduler = null;
+                }
             }
             if (serverLoop != null)
             {
@@ -364,28 +423,20 @@ namespace DayZServerManager.Server.Classes
             try
             {
                 string returnString = string.Empty;
-                if (managerConfig != null)
+                string adminLogPath = Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_NAME);
+                if (!File.Exists(adminLogPath) && File.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_X64_NAME)))
                 {
-                    string adminLogPath = Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_NAME);
-                    if (!File.Exists(adminLogPath) && File.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_X64_NAME)))
-                    {
-                        adminLogPath = Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_X64_NAME);
-                    }
-
-                    using (var fs = new FileStream(adminLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        using (var sr = new StreamReader(fs, Encoding.Default))
-                        {
-                            returnString = sr.ReadToEnd();
-                        }
-                    }
-
+                    adminLogPath = Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_X64_NAME);
                 }
 
-                if (props != null)
+                using (var fs = new FileStream(adminLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    props.adminLog = returnString;
+                    using (var sr = new StreamReader(fs, Encoding.Default))
+                    {
+                        returnString = sr.ReadToEnd();
+                    }
                 }
+                props.adminLog = returnString;
                 return returnString;
             }
             catch (Exception e)
@@ -395,129 +446,127 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        #region ServerConfig
-        public static string GetServerConfig()
-        {
-            if (serverConfig != null)
-            {
-                return ServerConfigSerializer.Serialize(serverConfig);
-            }
-            else
-            {
-                return "";
-            }
-        }
-
-        public static void PostServerConfig(string newServerConfig)
-        {
-            serverConfig = ServerConfigSerializer.Deserialize(newServerConfig);
-        }
-
-        public static void LoadServerConfig()
-        {
-            if (managerConfig != null && File.Exists(Path.Combine(SERVER_PATH, managerConfig.serverConfigName)))
-            {
-                try
-                {
-                    using (StreamReader reader = new StreamReader(Path.Combine(SERVER_PATH, managerConfig.serverConfigName)))
-                    {
-                        string serverConfigText = reader.ReadToEnd();
-                        serverConfig = ServerConfigSerializer.Deserialize(serverConfigText);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteToConsole(ex.ToString());
-                }
-            }
-            else
-            {
-                try
-                {
-                    if (!Directory.Exists(SERVER_PATH))
-                    {
-                        Directory.CreateDirectory(SERVER_PATH);
-                    }
-                    serverConfig = new ServerConfig();
-                    serverConfig.SetDefaultValues();
-                }
-                catch (Exception ex)
-                {
-                    WriteToConsole(ex.ToString());
-                }
-            }
-        }
-
-        public static void AdjustServerConfig()
-        {
-            if (serverConfig != null && managerConfig != null)
-            {
-                PropertyValue? template = serverConfig.GetPropertyValue("template");
-                if (template != null)
-                {
-                    template.Value = managerConfig.missionName;
-                }
-                else
-                {
-                    serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "template", DataType.Text, managerConfig.missionName, ""));
-                }
-
-                PropertyValue? instanceId = serverConfig.GetPropertyValue("instanceId");
-                if (instanceId != null)
-                {
-                    instanceId.Value = managerConfig.instanceId;
-                }
-                else
-                {
-                    serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "instanceId", DataType.Text, managerConfig.instanceId, "")); 
-                }
-
-                PropertyValue? steamQueryPort = serverConfig.GetPropertyValue("steamQueryPort");
-                if (steamQueryPort != null)
-                {
-                    steamQueryPort.Value = managerConfig.steamQueryPort;
-                }
-                else
-                {
-                    serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "steamQueryPort", DataType.Text, managerConfig.steamQueryPort, ""));
-                }
-            }
-        }
-
-        public static void SaveServerConfig()
+        public static bool CheckScheduler()
         {
             try
             {
-                if (serverConfig != null && managerConfig != null)
+                if (scheduler != null && !(dayZServer != null && dayZServer.RestartingForUpdates))
                 {
-                    using (StreamWriter writer = new StreamWriter(Path.Combine(SERVER_PATH, managerConfig.serverConfigName)))
+                    if (!scheduler.IsConnected() && (connectTask == null || connectTask.IsCompleted))
                     {
-                        string serverConfigText = ServerConfigSerializer.Serialize(serverConfig);
-                        writer.Write(serverConfigText);
-                        writer.Close();
+                        scheduler.KillAutomaticTasks();
+                        scheduler = null;
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
                     }
                 }
+                else if (dayZServer != null && dayZServer.RestartingForUpdates)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+                scheduler = null;
+                return false;
+            }
+        }
+
+        public static void StartScheduler()
+        {
+            try
+            {
+                bool onlyRestarts = managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains(EXPANSION_MOD_SEARCH)).Count > 0;
+
+                try
+                {
+                    string battleyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(SERVER_PATH, managerConfig.profileName, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
+
+                    List<string> beFiles = FileSystem.GetFiles(battleyeFolderPath).ToList();
+                    foreach (string beFile in beFiles)
+                    {
+                        if (Path.GetExtension(beFile) == ".cfg" && Path.GetFileNameWithoutExtension(beFile).Contains(Path.GetFileNameWithoutExtension(BATTLEYE_CONFIG_NAME)))
+                        {
+                            UpdateBeConfig(beFile);
+                        }
+                    }
+
+                    WriteToConsole(STATUS_SCHEDULER_UPDATED);
+                    props.managerStatus = STATUS_SCHEDULER_UPDATED;
+                }
+                catch (Exception ex)
+                {
+                    WriteToConsole(ex.ToString());
+                }
+
+                scheduler = new SchedulerManager(LOCALHOST, managerConfig.RConPort, managerConfig.RConPassword, managerConfig.restartInterval, onlyRestarts, managerConfig.customMessages);
+                connectTask = new Task(() => { scheduler.Connect(); });
+                connectTask.Start();
             }
             catch (Exception ex)
             {
                 WriteToConsole(ex.ToString());
             }
         }
-        #endregion ServerConfig
+
+        public static void UpdateExpansionNotificationFile()
+        {
+            if (managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains(EXPANSION_MOD_SEARCH)).Count > 0)
+            {
+                if (!Directory.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME)))
+                {
+                    Directory.CreateDirectory(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME));
+                }
+
+                if (!Directory.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME)))
+                {
+                    Directory.CreateDirectory(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME));
+                }
+
+                NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME));
+                if (notFile == null)
+                {
+                    notFile = new NotificationSchedulerFile();
+                }
+                RestartUpdater.UpdateExpansionScheduler(managerConfig, notFile);
+                JSONSerializer.SerializeJSONFile(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME), notFile);
+            }
+        }
+
+        private static void UpdateBeConfig(string path)
+        {
+            try
+            {
+                string beConfig = $"RConPassword {Manager.managerConfig.RConPassword}";
+                beConfig += $"{Environment.NewLine}RConPort {Manager.managerConfig.RConPort}";
+                beConfig += $"{Environment.NewLine}RestrictRCon 0";
+
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    writer.Write(beConfig);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Manager.WriteToConsole(ex.ToString());
+            }
+        }
 
         #region ManagerConfig
         public static string GetManagerConfig()
         {
-            if (Manager.managerConfig != null)
-            {
-                JsonSerializerOptions options = new JsonSerializerOptions();
-                options.WriteIndented = true;
-                return JsonSerializer.Serialize(Manager.managerConfig, options);
-            }
-            else
-            {
-                return "";
-            }
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.WriteIndented = true;
+            return JsonSerializer.Serialize(Manager.managerConfig, options);
         }
 
         public static void PostManagerConfig(string newConfig)
@@ -549,10 +598,7 @@ namespace DayZServerManager.Server.Classes
 
         public static void SaveManagerConfig()
         {
-            if (managerConfig != null)
-            {
-                JSONSerializer.SerializeJSONFile<ManagerConfig>(MANAGER_CONFIG_NAME, managerConfig);
-            }
+            JSONSerializer.SerializeJSONFile<ManagerConfig>(MANAGER_CONFIG_NAME, managerConfig);
         }
         #endregion ManagerConfig
 

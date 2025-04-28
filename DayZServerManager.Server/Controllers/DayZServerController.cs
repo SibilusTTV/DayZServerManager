@@ -24,9 +24,9 @@ namespace DayZServerManager.Server.Controllers
         {
             int playerCount = 0;
             string adminLog = Manager.GetAdminLog();
-            if (Manager.dayZServer != null && Manager.dayZServer.scheduler != null)
+            if (Manager.scheduler != null)
             {
-                playerCount = Manager.dayZServer.scheduler.GetPlayers();
+                playerCount = Manager.scheduler.GetPlayers();
             }
             
             Manager.props ??= new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount, adminLog);
@@ -37,7 +37,10 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("StartServer")]
         public bool StartDayZServer()
         {
-            if (Manager.props != null && (Manager.props.managerStatus == Manager.STATUS_LISTENING || Manager.props.managerStatus == Manager.STATUS_SERVER_STOPPED) && Manager.props.dayzServerStatus == Manager.STATUS_NOT_RUNNING)
+            if ((Manager.props.managerStatus == Manager.STATUS_LISTENING
+                || Manager.props.managerStatus == Manager.STATUS_SERVER_STOPPED
+                || Manager.props.managerStatus == Manager.STATUS_ERROR)
+                && Manager.props.dayzServerStatus == Manager.STATUS_NOT_RUNNING)
             {
                 Task startTask = new Task(() => { Manager.StartServer(); });
                 startTask.Start();
@@ -50,24 +53,20 @@ namespace DayZServerManager.Server.Controllers
         public bool StopDayZServer()
         {
             Manager.StopServer();
-            if (Manager.props != null)
+            while (Manager.props.managerStatus == Manager.STATUS_STOPPING_SERVER ||
+                (Manager.props.managerStatus != Manager.STATUS_LISTENING
+                && Manager.props.managerStatus != Manager.STATUS_ERROR))
             {
-                while (Manager.props.managerStatus == Manager.STATUS_STOPPING_SERVER ||
-                    (Manager.props.managerStatus != Manager.STATUS_LISTENING
-                    && Manager.props.managerStatus != Manager.STATUS_ERROR))
-                {
-                    Thread.Sleep(1000);
-                }
-                if (Manager.props.managerStatus == Manager.STATUS_LISTENING)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                Thread.Sleep(1000);
             }
-            return false;
+            if (Manager.props.managerStatus == Manager.STATUS_LISTENING)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         [HttpPost("SendSteamGuard")]
@@ -94,19 +93,19 @@ namespace DayZServerManager.Server.Controllers
         [HttpPost("KickPlayer")]
         public void KickPlayer([FromBody] RemovePlayerInput input)
         {
-            Manager.dayZServer?.scheduler?.KickPlayer(input.id, input.reason, input.name);
+            Manager.scheduler?.KickPlayer(input.id, input.reason, input.name);
         }
 
         [HttpPost("BanPlayer")]
         public void BanPlayer([FromBody] RemovePlayerInput input)
         {
-            Manager.dayZServer?.scheduler?.BanPlayer(input.id, input.reason, input.duration, input.name);
+            Manager.scheduler?.BanPlayer(input.id, input.reason, input.duration, input.name);
         }
 
         [HttpPost("SendCommand")]
         public void SendCommand([FromBody] StringInput input)
         {
-            Manager.dayZServer?.scheduler?.SendCommand(input.value);
+            Manager.scheduler?.SendCommand(input.value);
         }
 
         [HttpGet("GetManagerLog")]

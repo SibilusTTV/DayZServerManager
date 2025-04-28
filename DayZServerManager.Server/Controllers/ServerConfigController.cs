@@ -20,19 +20,19 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetServerConfig")]
         public JsonResult GetServerConfig()
         {
-            return new JsonResult(Manager.serverConfig);
+            return new JsonResult(Manager.dayZServer.ServerConfig);
         }
 
         [HttpPost("PostServerConfig")]
         public void PostServerConfig([FromBody] ServerConfig config)
         {
-            Manager.serverConfig = config;
+            Manager.dayZServer.ServerConfig = config;
         }
 
         [HttpGet("SaveServerConfig")]
         public bool SaveServerConfig()
         {
-            Manager.SaveServerConfig();
+            Manager.dayZServer.SaveServerConfig(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.serverConfigName));
             return true;
         }
     }
