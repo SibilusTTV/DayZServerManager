@@ -1,0 +1,21 @@
+﻿using System.Text.Json.Serialization;
+
+namespace DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB
+{
+    public class Player
+    {
+        public string Name { get; set; }
+        public string Guid { get; set; }
+        public bool IsVerified { get; set; }
+        public string IP { get; set; }
+
+        [JsonConstructor]
+        public Player(string name, string guid, bool isVerified, string ip)
+        {
+            Name = name;
+            Guid = guid;
+            IsVerified = isVerified;
+            IP = ip;
+        }
+    }
+}

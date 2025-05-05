@@ -9,6 +9,8 @@ import VanillaRaritiesEditor from "./pages/rarity-editor/components/vanilla-rari
 import CustomFilesRaritiesEditor from "./pages/rarity-editor/components/custom-files-rarities-editor/CustomFilesRaritiesEditor"
 import ExpansionRaritiesEditor from "./pages/rarity-editor/components/expansion-rarities-editor/ExpansionRaritiesEditor"
 import ManagerLog from "./pages/manager-log/ManagerLog";
+import SchedulerConfigEditor from "./pages/scheduler-config-editor/SchedulerConfigEditor"
+import PlayerDatabase from "./pages/player-database/PlayerDatabase"
 
 
 export default function App() {
@@ -17,9 +19,11 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
+                    <Route path="/manager-log" element={<ManagerLog />} />
+                    <Route path="/player-database" element={<PlayerDatabase />} />
                     <Route path="/server-config" element={<ServerConfigEditor />} />
                     <Route path="/manager-config" element={<ManagerConfigEditor />} />
-                    <Route path="/manager-log" element={<ManagerLog />} />
+                    <Route path="/scheduler-config" element={<SchedulerConfigEditor />} />
                     <Route path="/rarity-editor" element={<RarityEditor />}>
                         <Route path="/rarity-editor/vanilla-rarities-editor" element={<VanillaRaritiesEditor/>} />
                         <Route path="/rarity-editor/custom-files-rarities-editor" element={<CustomFilesRaritiesEditor/>} />

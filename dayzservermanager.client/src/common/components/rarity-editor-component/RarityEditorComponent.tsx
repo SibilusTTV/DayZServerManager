@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import "./RarityEditorComponent.css";
+import SaveButton from "../save-button/SaveButton";
+import ReloadButton from "../reload-button/ReloadButton";
 
 interface RarityFile {
     itemRarity: RarityItem[];
@@ -113,7 +115,7 @@ export default function RarityEditor(props: RarityEditorProps) {
     const [checkedItems, setCheckedItems] = useState<number[]>([])
 
     useEffect(() => {
-        PopulateRarityFile();
+        PopulateRarityFile(setRarities, '/RarityEditor/GetRarityFile/' + props.name);
     }, []);
 
     const columns: GridColDef[] = [
@@ -221,38 +223,43 @@ export default function RarityEditor(props: RarityEditorProps) {
         <div>
             <h1 id="tableLabel">{props.name}</h1>
             <div id="SaveButton">
-                <Button
-                    onClick={PostRarityFile}
-                >
-                    Save Rarity File!
-                </Button>
+                <SaveButton
+                    postFunction={PostRarityFile}
+                    data={JSON.stringify(rarities)}
+                    endpoint={'/RarityEditor/PostRarityFile/' + props.name}
+                />
+                <ReloadButton
+                    populateFunction={PopulateRarityFile}
+                    setFunction={setRarities}
+                    endpoint={'/RarityEditor/GetRarityFile/' + props.name}
+                />
             </div>
             <div id="Contents">
                 {contents}
             </div>
         </div>
     )
+}
 
-    async function PopulateRarityFile() {
-        const response = await fetch('/RarityEditor/GetRarityFile/' + props.name);
-        if (response.status == 200) {
-            const result = (await response.json()) as RarityFile;
-            if (result != null) {
-                setRarities(result);
-            }
+async function PopulateRarityFile(setRarities: Function, endpoint: string) {
+    const response = await fetch(endpoint);
+    if (response.status == 200) {
+        const result = (await response.json()) as RarityFile;
+        if (result != null) {
+            setRarities(result);
         }
     }
+}
 
-    async function PostRarityFile() {
-        const response = await fetch('/RarityEditor/PostRarityFile/' + props.name, {
-            method: "POST",
-            mode: "cors",
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(rarities)
-        });
-        const result = await response.text();
-        if (result != null) {
-            alert(result);
-        }
+async function PostRarityFile(endpoint: string, data: string) {
+    const response = await fetch(endpoint, {
+        method: "POST",
+        mode: "cors",
+        headers: { 'Content-Type': 'application/json' },
+        body: data
+    });
+    const result = await response.text();
+    if (result != null) {
+        alert(result);
     }
 }

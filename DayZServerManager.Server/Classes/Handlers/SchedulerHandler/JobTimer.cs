@@ -5,6 +5,8 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 {
     public class JobTimer
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private Timer _timer;
         private SchedulerManager _scheduler;
 
@@ -39,7 +41,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             if (_scheduler.IsConnected())
             {
-                Manager.WriteToConsole($"Sending command {cmd}");
+                Logger.Info($"Sending command {cmd}");
                 _scheduler.SendCommand(cmd);
             }
 
@@ -53,10 +55,12 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 
                 DateTime now = DateTime.Now;
 
-                if (now.Day != now.AddHours(interval).Day && ((isRestart && now.AddHours(interval).Hour > 0) || (!isRestart && now.AddHours(interval).Hour >= 0)))
+                if (interval > 0 && now.Day != now.AddHours(interval).Day && ((isRestart && now.AddHours(interval).Hour > 0) || (!isRestart && now.AddHours(interval).Hour >= 0)))
                 {
+                    DateTime nextDay = new DateTime(now.Year, now.Month, now.Day + 1, 0, 0, 0);
+                    TimeSpan nextRestart = nextDay - now;
                     _timer.Change(
-                        new DateTime(now.Year, now.Month, now.Day + 1, 0, 0, 0) - now - timeToRestart,
+                        nextRestart - timeToRestart,
                         new TimeSpan(interval, 0, 0)
                     );
                 }
@@ -67,7 +71,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             if (_scheduler.IsConnected())
             {
-                Manager.WriteToConsole($"Sending command {cmd}");
+                Logger.Info($"Sending command {cmd}");
                 _scheduler.SendCommand(cmd);
             }
 

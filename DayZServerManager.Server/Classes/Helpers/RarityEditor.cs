@@ -10,6 +10,8 @@ namespace DayZServerManager.Server.Classes.Helpers
 {
     public static class RarityEditor
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public static RarityFile? GetRarityFile(string name)
         {
             if (File.Exists(Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionTemplateName, name)))
@@ -21,24 +23,24 @@ namespace DayZServerManager.Server.Classes.Helpers
 
         public static void UpdateRaritiesAndTypes(string name, RarityFile rarityFile)
         {
-            Manager.WriteToConsole("Updating Rarity, Hardline and Types");
+            Logger.Info("Updating Rarity, Hardline and Types");
 
             UpdateRarities(Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionTemplateName), name, rarityFile);
             UpdateHardlineAndTypes(Manager.MPMISSIONS_PATH, name, rarityFile);
 
-            Manager.WriteToConsole("Rarity, Hardline and Types updated");
+            Logger.Info("Rarity, Hardline and Types updated");
         }
 
         private static void UpdateRarities(string missionFolder, string name, RarityFile rarityFile)
         {
-            Manager.WriteToConsole("Updating Rarities");
+            Logger.Info("Updating Rarities");
             JSONSerializer.SerializeJSONFile(Path.Combine(missionFolder, name), rarityFile);
-            Manager.WriteToConsole("Rarities Updated");
+            Logger.Info("Rarities Updated");
         }
 
         private static void UpdateHardlineAndTypes(string mpmissionsFolder, string name, RarityFile rarityFile)
         {
-            Manager.WriteToConsole("Updating Hardline and Types");
+            Logger.Info("Updating Hardline and Types");
             switch (name)
             {
                 case "vanillaRarities.json":
@@ -53,7 +55,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                     break;
             }
             UpdateHardline(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName), rarityFile);
-            Manager.WriteToConsole("Hardline and Types updated");
+            Logger.Info("Hardline and Types updated");
         }
 
         private static void UpdateHardline(string missionPath, string missionTemplatePath, RarityFile rarityFile)
@@ -84,7 +86,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating RarityFile", ex);
             }
         }
 

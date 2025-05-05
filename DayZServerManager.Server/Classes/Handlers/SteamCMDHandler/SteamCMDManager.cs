@@ -8,12 +8,14 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
 {
     public static class SteamCMDManager
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public static Process? steamCMDProcess;
 
         public static void UpdateServer()
         {
             Manager.props.managerStatus = Manager.STATUS_UPDATING_SERVER;
-            Manager.WriteToConsole(Manager.STATUS_UPDATING_SERVER);
+            Logger.Info(Manager.STATUS_UPDATING_SERVER);
 
             try
             {
@@ -24,7 +26,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when creating steamCmd path", ex);
             }
 
             try
@@ -36,13 +38,13 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when downloading and extracting steamCmd", ex);
             }
 
             try
             {
                 string serverUpdateArguments = $"\"+force_install_dir {Path.Combine("..", Manager.SERVER_DEPLOY)}\" \"+login {Manager.managerConfig.steamUsername}\" \"+app_update {Manager.DAYZ_SERVER_BRANCH}\" -validate +quit";
-                Manager.WriteToConsole("Updating the DayZ Server");
+                Logger.Info("Updating the DayZ Server");
                 StartSteamCMD(serverUpdateArguments);
                 if (Manager.props.steamCMDStatus == Manager.STATUS_NOT_RUNNING)
                 {
@@ -51,12 +53,12 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating server", ex);
                 Manager.props.managerStatus = Manager.STATUS_ERROR;
             }
 
             Manager.props.managerStatus = Manager.STATUS_SERVER_UPDATED;
-            Manager.WriteToConsole(Manager.STATUS_SERVER_UPDATED);
+            Logger.Info(Manager.STATUS_SERVER_UPDATED);
         }
 
         public static bool UpdateMods(List<Mod> mods, out List<long> updatedModsIDs)
@@ -65,7 +67,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             bool updatedMods = false;
 
             Manager.props.managerStatus = Manager.STATUS_UPDATING_MODS;
-            Manager.WriteToConsole(Manager.STATUS_UPDATING_MODS);
+            Logger.Info(Manager.STATUS_UPDATING_MODS);
 
             try
             {
@@ -80,7 +82,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
 
                     StartSteamCMD(arguments);
 
-                    Manager.WriteToConsole($"All mods were downloaded");
+                    Logger.Info($"All mods were downloaded");
 
                     foreach (Mod mod in mods)
                     {
@@ -92,7 +94,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                             }
                             else
                             {
-                                Manager.WriteToConsole($"{mod.name} was updated");
+                                Logger.Info($"{mod.name} was updated");
                                 updatedModsIDs.Add(mod.workshopID);
                                 updatedMods = true;
                             }
@@ -104,7 +106,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                         Mod? mod = mods.Find(x => x.workshopID == key);
                         if (mod != null)
                         {
-                            Manager.WriteToConsole($"{mod.name} was updated");
+                            Logger.Info($"{mod.name} was updated");
                         }
                     }
                 }
@@ -112,11 +114,11 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating mods", ex);
             }
 
             Manager.props.managerStatus = Manager.STATUS_MODS_UPDATED;
-            Manager.WriteToConsole(Manager.STATUS_MODS_UPDATED);
+            Logger.Info(Manager.STATUS_MODS_UPDATED);
 
             return updatedMods;
         }
@@ -143,7 +145,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when writing SteamGuard", ex);
                 return "Error";
             }
         }
@@ -174,18 +176,18 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
 
                 if (dateBeforeUpdate < dateAfterUpdate)
                 {
-                    Manager.WriteToConsole("DayZ Server updated");
+                    Logger.Info("DayZ Server updated");
                     return true;
                 }
                 else
                 {
-                    Manager.WriteToConsole("Server was already up-to-date");
+                    Logger.Info("Server was already up-to-date");
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when checking updated status of the server", ex);
                 return false;
             }
         }
@@ -257,7 +259,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when downloading and extracting steamCmd", ex);
             }
         }
 
@@ -271,7 +273,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                 steamCMDProcess.StartInfo.RedirectStandardError = true;
                 steamCMDProcess.StartInfo.RedirectStandardInput = true;
                 steamCMDProcess.StartInfo.RedirectStandardOutput = true;
-                Manager.WriteToConsole(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE) + " " + serverUpdateArguments);
+                Logger.Info(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE) + " " + serverUpdateArguments);
                 steamCMDProcess.StartInfo.FileName = Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE);
                 steamCMDProcess.Start();
 
@@ -282,7 +284,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                 {
                     if (s != null)
                     {
-                        Manager.WriteToConsole(s);
+                        Logger.Info(s);
                         if (s.ToLower().Contains(Manager.STATUS_CLIENT_CONFIG.ToLower()))
                         {
                             Manager.props.steamCMDStatus = Manager.STATUS_CLIENT_CONFIG;
@@ -310,13 +312,13 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                     {
                         if (Manager.props.steamCMDStatus == Manager.STATUS_CACHED_CREDENTIALS)
                         {
-                            Manager.WriteToConsole(Manager.STATUS_STEAM_GUARD);
+                            Logger.Info(Manager.STATUS_STEAM_GUARD);
                             Manager.props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
                             outputTime = 0;
                         }
                         else
                         {
-                            Manager.WriteToConsole(Manager.STATUS_CACHED_CREDENTIALS);
+                            Logger.Info(Manager.STATUS_CACHED_CREDENTIALS);
                             steamCMDProcess.StandardInput.WriteLine(Manager.managerConfig?.steamPassword);
                             Manager.props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
                             outputTime = 0;
@@ -337,7 +339,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when starting steam", ex);
                 Manager.props.dayzServerStatus = Manager.STATUS_ERROR;
             }
         }
@@ -366,7 +368,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when killing steamCmd", ex);
                 steamCMDProcess = null;
             }
         }
@@ -409,7 +411,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when checking directories", ex);
                 return false;
             }
         }
@@ -443,7 +445,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when checking file", ex);
                 return false;
             }
         }

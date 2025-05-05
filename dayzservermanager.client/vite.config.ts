@@ -72,6 +72,10 @@ export default defineConfig({
                 target,
                 secure: false
             },
+            '/SchedulerConfig': {
+                target,
+                secure: false
+            },
             '/RarityEditor': {
                 target,
                 secure: false

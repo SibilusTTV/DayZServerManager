@@ -1,12 +1,11 @@
 import { Button, DialogActions, DialogContent, DialogContentText, TextField } from "@mui/material";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
-import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
-import { useEffect, useState } from "react";
-import GavelIcon from '@mui/icons-material/Gavel';
-import DoNotStepIcon from '@mui/icons-material/DoNotStep';
+import { GridColDef, GridRenderCellParams, DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
+import { useLayoutEffect, useState } from "react";
 import "./Home.css";
-
+import KickButton from "../../common/components/kick-button/KickButton";
+import BanButton from "../../common/components/ban-button/BanButton";
 
 interface ServerInfo{
     managerStatus: string;
@@ -14,6 +13,7 @@ interface ServerInfo{
     steamCMDStatus: string;
     playersCount: number;
     players: Player[];
+    chatLog: string;
     adminLog: string;
 }
 
@@ -25,6 +25,7 @@ interface Player {
     isVerified: boolean;
     isInLobby: boolean;
     ip: string;
+    isBanned: boolean;
 }
 
 export default function Home() {
@@ -35,7 +36,13 @@ export default function Home() {
     const [message, setMessage] = useState("");
     const [selectedPlayer, setSelectedPlayer] = useState(-1);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
+        if (!openDialog) {
+            if (dialogTimeout > 0) {
+                setDialogTimeout(dialogTimeout - 1);
+            }
+            getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog, setDialogTimeout);
+        }
         const timer = setInterval(() => {
             if (!openDialog) {
                 if (dialogTimeout > 0) {
@@ -43,9 +50,9 @@ export default function Home() {
                 }
                 getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog, setDialogTimeout);
             }
-        }, 1000);
+        }, 5000);
         return () => clearInterval(timer);
-    })
+    }, [])
 
     const handleClose = () => {
         setOpenDialog(false);
@@ -66,27 +73,6 @@ export default function Home() {
         setMessage("");
     }
 
-    const KickPlayer = (id: number, name: string) => {
-        let reason = prompt("Please give a reason for the kick");
-        if (reason == null) {
-            reason = "";
-        }
-        sendKickRequest(id, name, reason);
-    }
-
-    const BanPlayer = (id: number, name: string) => {
-        let reason = prompt("Please give a reason for the ban");
-        if (reason == null) {
-            reason = "";
-        }
-        let durationString = prompt("Please give a duration for the ban or leave it empty for a permanent ban");
-        let duration = -1;
-        if (durationString != null && durationString != "") {
-            duration = GetMinutes(durationString);
-        }
-        sendBanRequest(id, name, duration, reason);
-    }
-
     const onSelectModelChange = (rowSelectionModel: GridRowSelectionModel) => {
         let rowId = rowSelectionModel.at(0)
         if (rowId != null && serverStatus) {
@@ -103,63 +89,6 @@ export default function Home() {
         else {
             setSelectedPlayer(-1);
         }
-    }
-
-    const GetMinutes = (durationString: string): number => {
-        let pattern = /([0-9]+)[^\S\n]*([Yy]ears?|[Yy]|[Mm]onths?|[Dd]ays?|[Dd]|[Hh]ours?|[Hh]|[Mm]inutes?|[Mm]ins?|[Mm]|)/gm
-        let matches = durationString.matchAll(pattern);
-        let finalvalue = 0;
-        for (let match of matches) {
-            let number = parseInt(match[1].valueOf());
-            let type = match[2].valueOf();
-            switch (type) {
-                case "Year":
-                case "Years":
-                case "year":
-                case "years":
-                case "Y":
-                case "y":
-                    finalvalue += number * 365 * 24 * 60;
-                    break;
-                case "Month":
-                case "Months":
-                case "month":
-                case "months":
-                    finalvalue += number * 30 * 24 * 60;
-                    break;
-                case "Day":
-                case "Days":
-                case "day":
-                case "days":
-                case "D":
-                case "d":
-                    finalvalue += number * 24 * 60;
-                    break;
-                case "Hour":
-                case "Hours":
-                case "hour":
-                case "hours":
-                case "H":
-                case "h":
-                    finalvalue += number * 60;
-                    break;
-                case "Minute":
-                case "Minutes":
-                case "minute":
-                case "minutes":
-                case "Min":
-                case "Mins":
-                case "min":
-                case "mins":
-                case "M":
-                case "m":
-                default:
-                    finalvalue += number;
-                    break;
-
-            }
-        }
-        return finalvalue;
     }
 
     const columns: GridColDef[] = [
@@ -215,7 +144,7 @@ export default function Home() {
         {
             field: 'kick',
             headerName: 'Kick',
-            width: 80,
+            width: 100,
             editable: false,
             display: 'flex',
             disableReorder: true,
@@ -225,11 +154,9 @@ export default function Home() {
             renderCell: (params: GridRenderCellParams<any, Date>) => {
                 let row: Player = params.row;
                 return (
-                    <GridActionsCellItem
-                        icon={<DoNotStepIcon />}
-                        label="Kick"
-                        onClick={() => KickPlayer(row.id, row.name)}
-                        color="inherit"
+                    <KickButton
+                        guid={row.guid}
+                        name={row.name}
                     />
                 );
             }
@@ -237,7 +164,7 @@ export default function Home() {
         {
             field: 'ban',
             headerName: 'Ban',
-            width: 80,
+            width: 100,
             editable: false,
             display: 'flex',
             disableReorder: true,
@@ -247,11 +174,9 @@ export default function Home() {
             renderCell: (params: GridRenderCellParams<any, Date>) => {
                 let row: Player = params.row;
                 return (
-                    <GridActionsCellItem
-                        icon={<GavelIcon />}
-                        label="Ban"
-                        onClick={() => BanPlayer(row.id, row.name)}
-                        color="inherit"
+                    <BanButton
+                        guid={row.guid}
+                        name={row.name}
                     />
                 );
             }
@@ -320,8 +245,24 @@ export default function Home() {
                         Send Message
                     </Button>
                 </p>
+                <h2>Chat Log</h2>
+                <TextField
+                    key="chatLog"
+                    id="outlined-multiline"
+                    multiline
+                    rows={10}
+                    value={serverStatus.chatLog}
+                    fullWidth={true}
+                    inputProps={{
+                        input: {
+                            readOnly: true,
+                        },
+                    }}
+
+                />
                 <h2>Admin Log</h2>
                 <TextField
+                    key="adminLog"
                     id="outlined-multiline"
                     multiline
                     rows={10}
@@ -472,48 +413,6 @@ async function sendSteamGuard(_code: string) {
         else {
             alert("Steam Guard couldn't be sent");
         }
-    }
-    catch (ex) {
-        alert(ex);
-    }
-}
-
-async function sendKickRequest(_id: number, _name: string, _reason: string) {
-    try {
-        await fetch('DayZServer/KickPlayer', {
-            method: "POST",
-            mode: "cors",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id: _id,
-                name: _name,
-                duration: 0,
-                reason: _reason
-            })
-        });
-    }
-    catch (ex) {
-        alert(ex);
-    }
-}
-
-async function sendBanRequest(_id: number, _name: string, _duration: number, _reason: string) {
-    try {
-        await fetch('DayZServer/BanPlayer', {
-            method: "POST",
-            mode: "cors",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id: _id,
-                name: _name,
-                duration: _duration,
-                reason: _reason
-            })
-        });
     }
     catch (ex) {
         alert(ex);

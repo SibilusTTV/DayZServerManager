@@ -2,6 +2,8 @@
 {
     public static class InitFileSerializer
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public static void SerializeInitFile(string path, string initFile)
         {
             try
@@ -14,7 +16,7 @@
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when serializing init file", ex);
             }
         }
         public static string DeserializeInitFile(string path)
@@ -28,7 +30,7 @@
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when deserializing init file", ex);
                 return string.Empty;
             }
         }

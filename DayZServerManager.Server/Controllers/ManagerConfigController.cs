@@ -26,8 +26,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpPost("PostManagerConfig")]
         public bool PostManagerConfig([FromBody] ManagerConfig config)
         {
-            Manager.managerConfig = config;
-            Manager.SaveManagerConfig();
+            Manager.PostManagerConfig(config);
             Manager.props.managerStatus = Manager.STATUS_LISTENING;
             return true;
         }

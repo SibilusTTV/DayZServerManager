@@ -1,14 +1,14 @@
-﻿namespace DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses
+﻿namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 {
-    public class RemovePlayerInput
+    public class BanPlayerProps
     {
-        public int id { get; set; }
+        public string guid { get; set; }
         public string name { get; set; }
         public int duration { get; set; }
         public string reason { get; set; }
-        public RemovePlayerInput(int id, string name, int duration, string reason)
+        public BanPlayerProps(string guid, string name, int duration, string reason)
         {
-            this.id = id;
+            this.guid = guid;
             this.name = name;
             this.duration = duration;
             this.reason = reason;

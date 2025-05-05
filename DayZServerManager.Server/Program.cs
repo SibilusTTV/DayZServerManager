@@ -1,4 +1,13 @@
 using DayZServerManager.Server.Classes;
+using NLog;
+using LogLevel = NLog.LogLevel;
+
+NLog.LogManager.Setup().LoadConfiguration(LogBuilder => {
+    LogBuilder.ForLogger().FilterMinLevel(LogLevel.Info).WriteToConsole();
+    LogBuilder.ForLogger().FilterMinLevel(LogLevel.Debug).WriteToFile(fileName: "manager.log");
+});
+
+NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,8 +38,9 @@ app.MapFallbackToFile("/index.html");
 
 AppDomain.CurrentDomain.ProcessExit += new EventHandler((s, e) => { Manager.KillServerOnClose(); });
 
-Manager.WriteToConsole("Initializing Manager");
+// Fully replace Console with logger
+Logger.Info("Initializing Manager");
 Manager.InitiateManager();
-Manager.WriteToConsole(Manager.STATUS_LISTENING);
+Logger.Info(Manager.STATUS_LISTENING);
 
 app.Run("http://0.0.0.0:" + (Manager.managerConfig != null ? Manager.managerConfig.managerPort : 5172));

@@ -5,6 +5,8 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
 {
     public class JSONSerializer
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public static void SerializeJSONFile<JSONFile>(string path, JSONFile jsonfile)
         {
             try
@@ -19,7 +21,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when serializing json file", ex);
             }
         }
 
@@ -43,7 +45,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when deserializing json file", ex);
                 return default(JSONFile);
             }
         }

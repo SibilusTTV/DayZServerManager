@@ -1,0 +1,39 @@
+﻿using BytexDigital.BattlEye.Rcon.Domain;
+using System.Text.Json.Serialization;
+
+namespace DayZServerManager.Server.Classes.Helpers
+{
+    public class ConnectedPlayer
+    {
+        public string Name { get; set; }
+        public string Guid { get; set; }
+        public int Id { get; set; }
+        public int Ping { get; set; }
+        public bool IsVerified { get; set; }
+        public bool IsInLobby { get; set; }
+        public string IP { get; set; }
+
+        [JsonConstructor]
+        public ConnectedPlayer(string name, string guid, int id, int ping, bool isVerified, bool isInLobby, string ip)
+        {
+            Name = name;
+            Guid = guid;
+            Id = id;
+            Ping = ping;
+            IsVerified = isVerified;
+            IsInLobby = isInLobby;
+            IP = ip;
+        }
+
+        public ConnectedPlayer(Player player)
+        {
+            Name = player.Name;
+            Guid = player.Guid;
+            Id = player.Id;
+            Ping = player.Ping;
+            IsVerified = player.IsVerified;
+            IsInLobby = player.IsInLobby;
+            IP = player.RemoteEndpoint.ToString();
+        }
+    }
+}

@@ -7,6 +7,8 @@ namespace DayZServerManager.Server.Classes.Helpers
 {
     public static class RestartUpdater
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         #region Constants
         private const string CMD_SHUTDOWN = "#shutdown";
         private const string CMD_LOCK = "#lock";

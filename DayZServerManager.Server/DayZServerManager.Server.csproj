@@ -56,8 +56,9 @@
     <PackageReference Include="BytexDigital.BattlEye.Rcon" Version="1.0.2" />
     <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-      <Version>9.0.4</Version>
+      <Version>8.0.15</Version>
     </PackageReference>
+    <PackageReference Include="NLog" Version="5.4.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
   </ItemGroup>
 

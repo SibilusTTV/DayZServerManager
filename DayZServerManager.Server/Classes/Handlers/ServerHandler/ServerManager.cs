@@ -20,6 +20,8 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
 {
     internal class ServerManager
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         // Other Variables
         private bool _updatedMods;
         private bool _restartingForUpdates;
@@ -61,7 +63,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             catch (Exception ex)
             {
                 Manager.props.dayzServerStatus = Manager.STATUS_NOT_RUNNING;
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when accessing getting server status", ex);
                 _serverProcess = null;
                 return false;
             }
@@ -113,14 +115,14 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                 procInf.Arguments = startParameters;
                 procInf.FileName = Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE);
                 _serverProcess.StartInfo = procInf;
-                Manager.WriteToConsole(Manager.STATUS_STARTING_SERVER);
+                Logger.Info(Manager.STATUS_STARTING_SERVER);
                 _serverProcess.Start();
                 Manager.props.dayzServerStatus = Manager.STATUS_RUNNING;
-                Manager.WriteToConsole($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
+                Logger.Info($"Server starting at {Path.Combine(Manager.SERVER_PATH, Manager.SERVER_EXECUTABLE)} with the parameters {startParameters}");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when starting server process", ex);
             }
         }
 
@@ -170,7 +172,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when killing the server process", ex);
                 _serverProcess = null;
             }
         }
@@ -210,7 +212,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             if (_updatedServer)
             {
                 Manager.props.managerStatus = Manager.STATUS_MOVING_SERVER;
-                Manager.WriteToConsole(Manager.STATUS_MOVING_SERVER);
+                Logger.Info(Manager.STATUS_MOVING_SERVER);
 
                 List<string> serverDeployDirectories = Directory.GetDirectories(Manager.SERVER_DEPLOY).ToList();
                 List<string> serverDeployFiles = Directory.GetFiles(Manager.SERVER_DEPLOY).ToList();
@@ -226,7 +228,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                     }
                     catch (Exception ex)
                     {
-                        Manager.WriteToConsole(ex.ToString());
+                        Logger.Error("Error copying a directory", ex);
                     }
                 }
 
@@ -238,12 +240,12 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                     }
                     catch (Exception ex)
                     {
-                        Manager.WriteToConsole(ex.ToString());
+                        Logger.Error("Error copying a file", ex);
                     }
                 }
 
                 Manager.props.managerStatus = Manager.STATUS_SERVER_MOVED;
-                Manager.WriteToConsole(Manager.STATUS_SERVER_MOVED);
+                Logger.Info(Manager.STATUS_SERVER_MOVED);
             }
         }
 
@@ -252,7 +254,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             if (_updatedMods)
             {
                 Manager.props.managerStatus = Manager.STATUS_MOVING_MODS;
-                Manager.WriteToConsole(Manager.STATUS_MOVING_MODS);
+                Logger.Info(Manager.STATUS_MOVING_MODS);
 
                 foreach (long key in _updatedModsIDs)
                 {
@@ -264,7 +266,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                             string steamModPath = Path.Combine(Manager.MODS_PATH, Manager.WORKSHOP_PATH, mod.workshopID.ToString());
                             string serverModPath = Path.Combine(Manager.SERVER_PATH, mod.name);
 
-                            Manager.WriteToConsole($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
+                            Logger.Info($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
                             if (Directory.Exists(steamModPath))
                             {
                                 FileSystem.CopyDirectory(steamModPath, serverModPath, true);
@@ -276,18 +278,18 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                                 {
                                     FileSystem.CopyDirectory(modKeysPath, serverKeysPath, true);
                                 }
-                                Manager.WriteToConsole($"Mod was moved to {mod.name}");
+                                Logger.Info($"Mod was moved to {mod.name}");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Manager.WriteToConsole(ex.ToString());
+                        Logger.Error("Error moving mods", ex);
                     }
                 }
 
                 Manager.props.managerStatus = Manager.STATUS_MODS_MOVED;
-                Manager.WriteToConsole(Manager.STATUS_MODS_MOVED);
+                Logger.Info(Manager.STATUS_MODS_MOVED);
             }
         }
 
@@ -299,10 +301,10 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             {
                 _updatedMods = false;
                 _updatedServer = false;
-                Manager.WriteToConsole(Manager.STATUS_UPDATING_MISSION);
+                Logger.Info(Manager.STATUS_UPDATING_MISSION);
                 Manager.props.managerStatus = Manager.STATUS_UPDATING_MISSION;
                 MissionUpdater.Update();
-                Manager.WriteToConsole(Manager.STATUS_MISSION_UPDATED);
+                Logger.Info(Manager.STATUS_MISSION_UPDATED);
                 Manager.props.managerStatus = Manager.STATUS_MISSION_UPDATED;
             }
         }
@@ -316,7 +318,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                     if (RestartUpdater.IsTimeToRestart(Manager.managerConfig.restartInterval))
                     {
                         _restartingForUpdates = true;
-                        Manager.scheduler?.ChangeToUpdateMode();
+                        Manager.scheduler.ChangeToUpdateMode();
                         return true;
                     }
                     else
@@ -326,7 +328,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                 }
                 catch (Exception ex)
                 {
-                    Manager.WriteToConsole(ex.ToString());
+                    Logger.Error("Error when changing to update mode", ex);
                     return false;
                 }
             }
@@ -341,13 +343,13 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
         public void BackupServerData()
         {
             Manager.props.managerStatus = Manager.STATUS_BACKING_UP_SERVER;
-            Manager.WriteToConsole(Manager.STATUS_BACKING_UP_SERVER);
+            Logger.Info(Manager.STATUS_BACKING_UP_SERVER);
             BackupManager.MakeBackup(Manager.managerConfig.backupPath, Manager.managerConfig.profileName, Manager.managerConfig.missionName);
             if (Manager.managerConfig.deleteBackups)
             {
                 BackupManager.DeleteOldBackups(Manager.managerConfig.backupPath, Manager.managerConfig.maxKeepTime);
             }
-            Manager.WriteToConsole(Manager.STATUS_SERVER_BACKED_UP);
+            Logger.Info(Manager.STATUS_SERVER_BACKED_UP);
             Manager.props.managerStatus = Manager.STATUS_SERVER_BACKED_UP;
         }
 
@@ -367,7 +369,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                 }
                 catch (Exception ex)
                 {
-                    Manager.WriteToConsole(ex.ToString());
+                    Logger.Error("Error when loading server config", ex);
                 }
             }
 
@@ -422,7 +424,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error saving the server config", ex);
             }
         }
         #endregion ServerConfig
@@ -447,7 +449,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error getting keys folder", ex);
                 return string.Empty;
             }
         }

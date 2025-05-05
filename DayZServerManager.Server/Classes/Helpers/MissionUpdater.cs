@@ -15,6 +15,8 @@ namespace DayZServerManager.Server.Classes.Helpers
 {
     public class MissionUpdater
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public static void Update()
         {
             try
@@ -485,7 +487,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating the mission", ex);
             }
         }
 
@@ -506,7 +508,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when searching for CeItem", ex);
                 return null;
             }
         }
@@ -527,7 +529,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when searching for FileItem", ex);
                 return false;
             }
         }
@@ -548,7 +550,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when searching for EventItem", ex);
                 return null;
             }
         }
@@ -569,7 +571,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when searching for PosItem", ex);
                 return false;
             }
         }
@@ -590,7 +592,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when searching for TypesItem", ex);
                 return null;
             }
         }
@@ -618,7 +620,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when searching for the expansion template", ex);
             }
             return string.Empty;
         }
@@ -629,7 +631,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Updating init");
+                Logger.Info("Updating init");
                 int initStartIndex = init.IndexOf("{") + 1;
                 int templateStartIndex = templateInit.IndexOf("{") + 1;
                 int templateEndIndex = templateInit.LastIndexOf("}") - 1;
@@ -637,18 +639,18 @@ namespace DayZServerManager.Server.Classes.Helpers
                 if (templateLength > 0)
                 {
                     string insertionString = templateInit.Substring(templateStartIndex, templateLength);
-                    Manager.WriteToConsole("Finished updating init");
+                    Logger.Info("Finished updating init");
                     return init.Insert(initStartIndex, insertionString);
                 }
                 else
                 {
-                    Manager.WriteToConsole("Finished updating init");
+                    Logger.Info("Finished updating init");
                     return init;
                 }
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.Message);
+                Logger.Error("Error when updating init", ex);
                 return init;
             }
         }
@@ -657,7 +659,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Updating globals");
+                Logger.Info("Updating globals");
                 foreach (VarItem item in globals.varItems)
                 {
                     if (item != null && item.name == "TimeLogin")
@@ -669,11 +671,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                         item.value = "500";
                     }
                 }
-                Manager.WriteToConsole("Finished updating globals"); 
+                Logger.Info("Finished updating globals"); 
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error updating globals", ex);
             }
         }
 
@@ -684,7 +686,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             {
                 if (newRarities.ItemRarity != null && hardlineFile.ItemRarity != null)
                 {
-                    Manager.WriteToConsole("Added rarities to hardline file");
+                    Logger.Info("Added rarities to hardline file");
                     foreach (RarityItem item in newRarities.ItemRarity)
                     {
                         if (hardlineFile.ItemRarity.ContainsKey(item.name.ToLower()))
@@ -700,12 +702,12 @@ namespace DayZServerManager.Server.Classes.Helpers
                             hardlineFile.ItemRarity.Add(item.name, item.rarity);
                         }
                     }
-                    Manager.WriteToConsole("Finished adding rarities to hardline file");
+                    Logger.Info("Finished adding rarities to hardline file");
                 }
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating hardline rarity", ex);
             }
         }
 
@@ -716,7 +718,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             {
                 if (rarityFile.ItemRarity != null)
                 {
-                    Manager.WriteToConsole("Updating types with rarity");
+                    Logger.Info("Updating types with rarity");
                     foreach (RarityItem rarityitem in rarityFile.ItemRarity)
                     {
                         TypesItem? item = SearchForTypesItem(rarityitem.name, typesFile);
@@ -763,12 +765,12 @@ namespace DayZServerManager.Server.Classes.Helpers
                             }
                         }
                     }
-                    Manager.WriteToConsole("Finished updating types with rarity");
+                    Logger.Info("Finished updating types with rarity");
                 }
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating types with rarity", ex);
             }
         }
         
@@ -777,7 +779,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Updating lifetimes");
+                Logger.Info("Updating lifetimes");
                 foreach (TypesChangesItem change in changesFile.types)
                 {
                     TypesItem? item = SearchForTypesItem(change.name, typesFile);
@@ -854,11 +856,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                         }
                     }
                 }
-                Manager.WriteToConsole("Finished updating lifetimes");
+                Logger.Info("Finished updating lifetimes");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating lifetimes", ex);
             }
         }
 
@@ -866,7 +868,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try 
             {
-                Manager.WriteToConsole("Updating event spawns");
+                Logger.Info("Updating event spawns");
                 foreach (EventItem eventItem in templateEventSpawns.eventItems)
                 {
                     EventItem? eventItemInMission = SearchForEventItem(eventItem, missionEventSpawns);
@@ -885,11 +887,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                         missionEventSpawns.eventItems.Add(eventItem);
                     }
                 }
-                Manager.WriteToConsole("Finished updating event spawns");
+                Logger.Info("Finished updating event spawns");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString()); 
+                Logger.Error("Error when updating EventSpawns", ex);
             }
         }
 
@@ -897,7 +899,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Updating environment file");
+                Logger.Info("Updating environment file");
                 if (missionEnvironmentFile.Territories != null && tempalteEnvironmentFile.Territories != null)
                 {
                     if (missionEnvironmentFile.Territories.Files != null && tempalteEnvironmentFile.Territories.Files != null)
@@ -915,11 +917,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                         }
                     }
                 }
-                Manager.WriteToConsole("Finished updating environment file");
+                Logger.Info("Finished updating environment file");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating EnvironmentFile", ex);
             }
         }
 
@@ -927,7 +929,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Updating economy core");
+                Logger.Info("Updating economy core");
                 foreach (CeItem ceItem in templateEconomyCoreFile.ceItems)
                 {
                     CeItem? ceItemInMission = SearchForCeItem(ceItem, economyCoreFile);
@@ -946,11 +948,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                         economyCoreFile.ceItems.Add(ceItem);
                     }
                 }
-                Manager.WriteToConsole("Finsihed updating Economy Core");
+                Logger.Info("Finsihed updating Economy Core");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating EconomyCore", ex);
             }
         }
         #endregion UpdateFunctions
@@ -960,7 +962,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Copying vanilla mission files and folders");
+                Logger.Info("Copying vanilla mission files and folders");
                 if (Directory.Exists(vanillaMissionPath))
                 {
                     if (Directory.Exists(missionPath))
@@ -973,11 +975,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                     }
                     FileSystem.CopyDirectory(vanillaMissionPath, missionPath, true);
                 }
-                Manager.WriteToConsole("Finished copying vanilla mission files and folders");
+                Logger.Info("Finished copying vanilla mission files and folders");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when copying vanilla mission folder", ex);
             }
         }
         
@@ -985,7 +987,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Copying expansion template files");
+                Logger.Info("Copying expansion template files");
                 if (Directory.Exists(Path.Combine(expansionTemplatePath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME)))
                 {
                     FileSystem.CopyDirectory(Path.Combine(expansionTemplatePath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME), Path.Combine(missionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME), true);
@@ -994,11 +996,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                 {
                     FileSystem.CopyDirectory(Path.Combine(oldMissionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME), Path.Combine(missionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME), true);
                 }
-                Manager.WriteToConsole("Finished copying expansion template files");
+                Logger.Info("Finished copying expansion template files");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when copying expansion template files", ex);
             }
         }
 
@@ -1006,7 +1008,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Moving mission template files and folders");
+                Logger.Info("Moving mission template files and folders");
                 List<string> templateDirectories = Directory.GetDirectories(missionTemplatePath).ToList<string>();
                 List<string> templateFiles = Directory.GetFiles(missionTemplatePath).ToList<string>();
 
@@ -1031,11 +1033,11 @@ namespace DayZServerManager.Server.Classes.Helpers
                         File.Copy(file, Path.Combine(missionPath, Path.GetFileName(file)), true);
                     }
                 }
-                Manager.WriteToConsole("Finshed moving mission template files and folders");
+                Logger.Info("Finshed moving mission template files and folders");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when copying mission template files and folders", ex);
             }
         }
         
@@ -1043,13 +1045,13 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Copying old persistance data");
+                Logger.Info("Copying old persistance data");
                 FileSystem.CopyDirectory(Path.Combine(oldMissionPath, Manager.PERSISTANCE_FOLDER_NAME), Path.Combine(missionPath, Manager.PERSISTANCE_FOLDER_NAME), true);
-                Manager.WriteToConsole("Finished copy old persistance data");
+                Logger.Info("Finished copy old persistance data");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when copying persistance data", ex);
             }
         }
 
@@ -1057,18 +1059,18 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Moving old mission");
+                Logger.Info("Moving old mission");
                 string newPath = Path.Combine(backupPath, Manager.BACKUPS_FULL_MISSION_BACKUPS_FOLDER_NAME, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
                 if (!Directory.Exists(Path.Combine(backupPath, Manager.BACKUPS_FULL_MISSION_BACKUPS_FOLDER_NAME)))
                 {
                     Directory.CreateDirectory(Path.Combine(backupPath, Manager.BACKUPS_FULL_MISSION_BACKUPS_FOLDER_NAME));
                 }
                 Directory.Move(oldPath, newPath);
-                Manager.WriteToConsole("Finished moving old mission");
+                Logger.Info("Finished moving old mission");
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when moving the old mission", ex);
             }
         }
         #endregion CopyFunctions
@@ -1078,7 +1080,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                Manager.WriteToConsole("Downloading expansion template");
+                Logger.Info("Downloading expansion template");
                 if (Directory.Exists(Manager.EXPANSION_DOWNLOAD_PATH))
                 {
                     Repository rep = new Repository(Manager.EXPANSION_DOWNLOAD_PATH);
@@ -1086,20 +1088,20 @@ namespace DayZServerManager.Server.Classes.Helpers
                     pullOptions.FetchOptions = new FetchOptions();
                     Commands.Pull(rep, new Signature("username", "email", new DateTimeOffset(DateTime.Now)), pullOptions);
 
-                    Manager.WriteToConsole("Finished downloading expansion template");
+                    Logger.Info("Finished downloading expansion template");
                     return SearchForExpansionTemplate(Manager.EXPANSION_DOWNLOAD_PATH);
                 }
                 else
                 {
                     Repository.Clone("https://github.com/ExpansionModTeam/DayZ-Expansion-Missions.git", Manager.EXPANSION_DOWNLOAD_PATH);
 
-                    Manager.WriteToConsole("Finished downloading expansion template");
+                    Logger.Info("Finished downloading expansion template");
                     return SearchForExpansionTemplate(Manager.EXPANSION_DOWNLOAD_PATH);
                 }
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when downloading the expansion template", ex);
             }
             return string.Empty;
         }

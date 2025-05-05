@@ -3,6 +3,8 @@ import { Button, MenuItem, Paper, Select, SelectChangeEvent } from '@mui/materia
 import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid, GridToolbarContainer } from "@mui/x-data-grid";
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import AddIcon from '@mui/icons-material/Add';
+import SaveButton from "../../common/components/save-button/SaveButton";
+import ReloadButton from "../../common/components/reload-button/ReloadButton";
 
 
 
@@ -120,7 +122,7 @@ export default function ServerConfigEditor() {
     const [serverConfig, setServerConfig] = useState<ServerConfig>();
 
     useEffect(() => {
-        populateServerConfig();
+        populateServerConfig(setServerConfig, 'ServerConfig/GetServerConfig');
     }, []);
 
     const arrayColumns: GridColDef[] = [
@@ -448,51 +450,41 @@ export default function ServerConfigEditor() {
         <div>
             <h1 id="tableLabel">Server Configurations</h1>
             <div>
-                <Button
-                    onClick={postServerConfig}
-                >
-                    Save Config!
-                </Button>
-                <Button
-                    onClick={saveServerConfig}
-                >
-                    Manually save Server Config to files!
-                </Button>
+                <SaveButton
+                    postFunction={postServerConfig}
+                    data={JSON.stringify(serverConfig)}
+                    endpoint='ServerConfig/PostServerConfig'
+                />
+                <ReloadButton
+                    populateFunction={populateServerConfig}
+                    setFunction={setServerConfig}
+                    endpoint='ServerConfig/GetServerConfig'
+                />
             </div>
             <div>
                 {contents}
             </div>
         </div>
     )
+}
 
-    async function populateServerConfig() {
-        const response = await fetch('ServerConfig/GetServerConfig');
-        const result = (await response.json()) as ServerConfig;
-        if (result != null) {
-            setServerConfig(result);
-        }
+async function populateServerConfig(setServerConfig: Function, endpoint: string) {
+    const response = await fetch(endpoint);
+    const result = (await response.json()) as ServerConfig;
+    if (result != null) {
+        setServerConfig(result);
     }
+}
 
-    async function postServerConfig() {
-        const response = await fetch('ServerConfig/PostServerConfig', {
-            method: "POST",
-            mode: "cors",
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(serverConfig)
-        });
-        const result = await response.text()
-        if (result != null) {
-            alert(result);
-        }
+async function postServerConfig(endpoint: string, data: string) {
+    const response = await fetch(endpoint, {
+        method: "POST",
+        mode: "cors",
+        headers: { 'Content-Type': 'application/json' },
+        body: data
+    });
+    const result = await response.text()
+    if (result != null) {
+        alert(result);
     }
-
-    async function saveServerConfig() {
-        const response = await fetch('ServerConfig/SaveServerConfig');
-        const result = await response.text();
-        if (result != null) {
-            alert(result);
-        }
-    }
-
-
 }

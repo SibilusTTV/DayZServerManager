@@ -5,6 +5,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
 {
     public class XMLSerializer
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         public static void SerializeXMLFile<XMLFile>(string path, XMLFile? xmlFile)
         {
@@ -22,7 +23,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when serializing xml file", ex);
             }
         }
 
@@ -47,7 +48,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when deserializing xml file", ex);
                 return default(XMLFile);
             }
         }

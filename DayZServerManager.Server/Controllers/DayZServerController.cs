@@ -4,7 +4,6 @@ using DayZServerManager.Server.Classes.Helpers;
 using System.Numerics;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.StringInput;
 using DayZServerManager.Server.Classes.Handlers.SchedulerHandler;
-using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses;
 
 namespace DayZServerManager.Server.Controllers
 {
@@ -29,7 +28,7 @@ namespace DayZServerManager.Server.Controllers
                 playerCount = Manager.scheduler.GetPlayers();
             }
             
-            Manager.props ??= new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount, adminLog);
+            Manager.props ??= new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount, string.Empty, adminLog);
 
             return Manager.props;
         }
@@ -91,15 +90,21 @@ namespace DayZServerManager.Server.Controllers
         }
 
         [HttpPost("KickPlayer")]
-        public void KickPlayer([FromBody] RemovePlayerInput input)
+        public void KickPlayer([FromBody] KickPlayerProps input)
         {
-            Manager.scheduler?.KickPlayer(input.id, input.reason, input.name);
+            Manager.scheduler?.KickPlayer(input.guid, input.reason, input.name);
         }
 
         [HttpPost("BanPlayer")]
-        public void BanPlayer([FromBody] RemovePlayerInput input)
+        public void BanPlayer([FromBody] BanPlayerProps input)
         {
-            Manager.scheduler?.BanPlayer(input.id, input.reason, input.duration, input.name);
+            Manager.scheduler?.BanPlayer(input.guid, input.reason, input.duration, input.name);
+        }
+
+        [HttpPost("UnbanPlayer")]
+        public void UnbanPlayer([FromBody] UnbanPlayerProps input)
+        {
+            Manager.scheduler?.UnbanPlayer(input.guid, input.name);
         }
 
         [HttpPost("SendCommand")]
@@ -111,7 +116,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetManagerLog")]
         public string GetManagerLog()
         {
-            return Manager.managerLog;
+            return "Not implemented yet";
         }
     }
 }

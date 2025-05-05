@@ -4,6 +4,8 @@ import { Box, Button, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Dict } from "styled-components/dist/types";
 import "./ManagerConfigEditor.css";
+import SaveButton from '../../common/components/save-button/SaveButton';
+import ReloadButton from '../../common/components/reload-button/ReloadButton';
 
 interface ManagerConfig {
     steamUsername: string;
@@ -55,7 +57,7 @@ export default function ManagerConfigEditor() {
     const [managerConfig, setManagerConfig] = useState<ManagerConfig>();
 
     useEffect(() => {
-        populateManagerConfig();
+        PopulateManagerConfig(setManagerConfig, 'ManagerConfig/GetManagerConfig');
     }, []);
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -501,37 +503,41 @@ export default function ManagerConfigEditor() {
         <div>
             <h1 id="tableLabel">Manager Configurations</h1>
             <div>
-                <Button
-                    onClick={postManagerConfig}
-                >
-                    Save Config!
-                </Button>
+                <SaveButton
+                    postFunction={PostManagerConfig}
+                    data={JSON.stringify(managerConfig)}
+                    endpoint='ManagerConfig/PostManagerConfig'
+                />
+                <ReloadButton
+                    populateFunction={PopulateManagerConfig}
+                    setFunction={setManagerConfig}
+                    endpoint='ManagerConfig/GetManagerConfig'
+                />
             </div>
             <div>
                 {contents}
             </div>
         </div>
     );
+}
 
-    async function populateManagerConfig() {
-        const response = await fetch('ManagerConfig/GetManagerConfig');
-        const result = (await response.json()) as ManagerConfig;
-        if (result != null) {
-            setManagerConfig(result);
-        }
+async function PopulateManagerConfig(setManagerConfig: Function, endpoint: string) {
+    const response = await fetch(endpoint);
+    const result = (await response.json()) as ManagerConfig;
+    if (result != null) {
+        setManagerConfig(result);
     }
+}
 
-    async function postManagerConfig() {
-        let json = JSON.stringify(managerConfig);
-        const response = await fetch('ManagerConfig/PostManagerConfig', {
-            method: "POST",
-            mode: "cors",
-            headers: { 'Content-Type': 'application/json' },
-            body: json
-        });
-        const result = await response.text();
-        if (result != null) {
-            alert(result);
-        }
+async function PostManagerConfig(endpoint: string, json: string) {
+    const response = await fetch(endpoint, {
+        method: "POST",
+        mode: "cors",
+        headers: { 'Content-Type': 'application/json' },
+        body: json
+    });
+    const result = await response.text();
+    if (result != null) {
+        alert(result);
     }
 }

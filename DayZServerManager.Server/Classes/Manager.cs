@@ -17,15 +17,9 @@ namespace DayZServerManager.Server.Classes
 {
     internal static class Manager
     {
-        public static ManagerConfig managerConfig = new ManagerConfig();
-        public static ServerManager dayZServer = new ServerManager(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
-        public static Task? serverLoop;
-        public static ManagerProps props = new ManagerProps(string.Empty, string.Empty, string.Empty, 0, string.Empty);
-        public static bool kill = false;
-        public static string managerLog = "";
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public static SchedulerManager? scheduler;
-        private static Task? connectTask;
+        public static ManagerConfig managerConfig = new ManagerConfig();
 
         #region Constants
         public const string MANAGER_CONFIG_NAME = "config.json";
@@ -45,7 +39,7 @@ namespace DayZServerManager.Server.Classes
         public static readonly string BATTLEYE_FOLDER_NAME = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
         public static readonly string BATTLEYE_CONFIG_NAME = OperatingSystem.IsWindows() ? "BEServer_x64.cfg" : "beserver_x64.cfg";
         public static string BATTLEYE_FOLDER_PATH = OperatingSystem.IsWindows() ? Path.Combine(PROFILE_PATH, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
-        public const string BATTLEYE_BANS_NAME = "Bans.txt";
+        public const string BATTLEYE_BANS_NAME = "bans.txt";
         public const string SCHEDULER_DOWNLOAD_URL = "https://github.com/SibilusTTV/DayZScheduler/releases/latest/download/";
         public static readonly string SCHEDULER_ZIP_NAME = OperatingSystem.IsWindows() ? "windows.zip" : "linux.zip";
         public const string SCHEDULER_PATH = "scheduler";
@@ -53,6 +47,7 @@ namespace DayZServerManager.Server.Classes
         public static readonly string SCHEDULER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZScheduler.exe" : "DayZScheduler";
         public const int DAYZ_SERVER_BRANCH = 223350;
         public const int DAYZ_GAME_BRANCH = 221100;
+        public const string PLAYER_DATABASE_NAME = "players_db.json";
 
         public const string PERSISTANCE_FOLDER_NAME = "storage_1";
         public const string BACKUP_DATA_FOLDER_NAME = "data";
@@ -146,10 +141,23 @@ namespace DayZServerManager.Server.Classes
         public const string STATUS_CACHED_CREDENTIALS = "Cached Credentials";
         #endregion Constants
 
+        public static ServerManager dayZServer = new ServerManager(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
+        public static SchedulerManager scheduler = new SchedulerManager(LOCALHOST, managerConfig.RConPort, managerConfig.RConPassword, managerConfig.restartInterval, false, managerConfig.customMessages);
+        public static Task? serverLoop;
+        public static ManagerProps props = new ManagerProps(string.Empty, string.Empty, string.Empty, 0, string.Empty, string.Empty);
+        public static bool kill = false;
+        public static string managerLog = "";
+
+        private static Task? connectTask;
+
         public static void InitiateManager()
         {
             LoadManagerConfig();
-            props = new ManagerProps(STATUS_LISTENING, STATUS_NOT_RUNNING, STATUS_NOT_RUNNING, 0, string.Empty);
+
+            PROFILE_PATH = Path.Combine(SERVER_PATH, managerConfig.profileName);
+            BATTLEYE_FOLDER_PATH = OperatingSystem.IsWindows() ? Path.Combine(PROFILE_PATH, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
+
+            props = new ManagerProps(STATUS_LISTENING, STATUS_NOT_RUNNING, STATUS_NOT_RUNNING, 0, string.Empty, string.Empty);
 
             if (!Directory.Exists(SERVER_PATH))
             {
@@ -188,7 +196,10 @@ namespace DayZServerManager.Server.Classes
 
             if (File.Exists(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME)))
             {
-                File.Create(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME));
+                using (FileStream fs = File.Create(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME))){
+                    
+                }
+
             }
 
             dayZServer = new ServerManager(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
@@ -271,7 +282,7 @@ namespace DayZServerManager.Server.Classes
                     {
                         players = scheduler.GetPlayers();
                     }
-                    WriteToConsole($"The Server is still running with {players} players playing on it");
+                    Logger.Info($"The Server is still running with {players} players playing on it");
                 }
 
                 if (!CheckScheduler())
@@ -280,7 +291,7 @@ namespace DayZServerManager.Server.Classes
                 }
                 else
                 {
-                    WriteToConsole("Scheduler is still running");
+                    Logger.Info("Scheduler is still running");
                 }
 
                 if (i % 300 == 0 && (serverUpdateTask == null || serverUpdateTask.IsCompleted))
@@ -298,13 +309,13 @@ namespace DayZServerManager.Server.Classes
 
             serverUpdateTask = null;
 
-            WriteToConsole(STATUS_STOPPING_SERVER);
+            Logger.Info(STATUS_STOPPING_SERVER);
 
             KillServerProcesses();
 
             props.managerStatus = STATUS_LISTENING;
 
-            WriteToConsole("Server was stopped");
+            Logger.Info("Server was stopped");
         }
 
         public static void StopServer()
@@ -328,13 +339,11 @@ namespace DayZServerManager.Server.Classes
                 {
                     scheduler.KillAutomaticTasks();
                     scheduler.KillCustomTasks();
-                    scheduler = null;
                 }
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
-                scheduler = null;
+                Logger.Error("Error when killing scheduler",ex);
             }
 
             try
@@ -355,7 +364,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Logger.Error("Error when killing server and ajdusting and saving the server config",ex);
             }
 
             try
@@ -367,7 +376,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Logger.Error("Error when killing steamCmd",ex);
             }
         }
 
@@ -383,13 +392,11 @@ namespace DayZServerManager.Server.Classes
                     if (scheduler != null)
                     {
                         scheduler.KillAutomaticTasks();
-                        scheduler = null;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Manager.WriteToConsole(ex.ToString());
-                    scheduler = null;
+                    Logger.Error("Error when killing server on close", ex);
                 }
             }
             if (serverLoop != null)
@@ -413,7 +420,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Logger.Error("Error when setting SteamGuard",ex);
                 return "Error";
             }
         }
@@ -439,9 +446,9 @@ namespace DayZServerManager.Server.Classes
                 props.adminLog = returnString;
                 return returnString;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                WriteToConsole(e.ToString());
+                Logger.Error("Error when getting admin log", ex);
                 return string.Empty;
             }
         }
@@ -455,7 +462,6 @@ namespace DayZServerManager.Server.Classes
                     if (!scheduler.IsConnected() && (connectTask == null || connectTask.IsCompleted))
                     {
                         scheduler.KillAutomaticTasks();
-                        scheduler = null;
                         return false;
                     }
                     else
@@ -474,8 +480,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
-                scheduler = null;
+                Logger.Error("Error when schecking scheduler", ex);
                 return false;
             }
         }
@@ -499,12 +504,12 @@ namespace DayZServerManager.Server.Classes
                         }
                     }
 
-                    WriteToConsole(STATUS_SCHEDULER_UPDATED);
+                    Logger.Info(STATUS_SCHEDULER_UPDATED);
                     props.managerStatus = STATUS_SCHEDULER_UPDATED;
                 }
                 catch (Exception ex)
                 {
-                    WriteToConsole(ex.ToString());
+                    Logger.Error("Error when updating be file",ex);
                 }
 
                 scheduler = new SchedulerManager(LOCALHOST, managerConfig.RConPort, managerConfig.RConPassword, managerConfig.restartInterval, onlyRestarts, managerConfig.customMessages);
@@ -513,7 +518,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Logger.Error("Error when starting scheduler",ex);
             }
         }
 
@@ -557,25 +562,16 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                Manager.WriteToConsole(ex.ToString());
+                Logger.Error("Error when updating be config", ex);
             }
         }
 
         #region ManagerConfig
-        public static string GetManagerConfig()
-        {
-            JsonSerializerOptions options = new JsonSerializerOptions();
-            options.WriteIndented = true;
-            return JsonSerializer.Serialize(Manager.managerConfig, options);
-        }
 
-        public static void PostManagerConfig(string newConfig)
+        public static void PostManagerConfig(ManagerConfig config)
         {
-            ManagerConfig? newConfigObject = JsonSerializer.Deserialize<ManagerConfig>(newConfig);
-            if (newConfigObject != null)
-            {
-                managerConfig = newConfigObject;
-            }
+            managerConfig = config;
+            SaveManagerConfig();
         }
 
         public static void LoadManagerConfig()
@@ -596,17 +592,10 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        public static void SaveManagerConfig()
+        private static void SaveManagerConfig()
         {
             JSONSerializer.SerializeJSONFile<ManagerConfig>(MANAGER_CONFIG_NAME, managerConfig);
         }
         #endregion ManagerConfig
-
-        public static void WriteToConsole(string message)
-        {
-            string managerMessage = Environment.NewLine + DateTime.Now.ToString("[HH:mm:ss]") + message;
-            managerLog += managerMessage;
-            System.Console.WriteLine(managerMessage);
-        }
     }
 }
