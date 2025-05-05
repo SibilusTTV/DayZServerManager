@@ -71,6 +71,8 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
 
         public void StartServer()
         {
+            Manager.props.chatLog = "";
+
             _updatedModsIDs = new List<long>();
             _updatedMods = false;
             _restartingForUpdates = false;

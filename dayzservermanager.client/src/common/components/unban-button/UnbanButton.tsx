@@ -31,6 +31,7 @@ async function sendUnbanRequest(_guid: string, _name: string) {
                 name: _name
             })
         });
+        alert("Unban sent");
     }
     catch (ex) {
         alert(ex);

@@ -223,7 +223,11 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 Regex regex = new Regex(pattern);
                 MatchCollection matches = regex.Matches(bans);
 
-                List<BannedPlayer> bannedPlayers = new List<BannedPlayer>();
+                if (matches.Count <= 0)
+                {
+                    _bannedPlayers = new List<BannedPlayer>();
+                    return _bannedPlayers;
+                }
 
                 foreach (Match match in matches)
                 {
