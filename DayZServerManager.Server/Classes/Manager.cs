@@ -149,6 +149,7 @@ namespace DayZServerManager.Server.Classes
         public static string managerLog = "";
 
         private static Task? connectTask;
+        private static Task? serverUpdateTask;
 
         public static void InitiateManager()
         {
@@ -252,8 +253,6 @@ namespace DayZServerManager.Server.Classes
 
         private static void StartServerLoop()
         {
-            Task? serverUpdateTask = null;
-
             Thread.Sleep(10000);
 
             double i = 10;
@@ -277,16 +276,14 @@ namespace DayZServerManager.Server.Classes
                 else
                 {
                     props.adminLog = GetAdminLog();
-                    int players = 0;
-                    if (scheduler != null)
-                    {
-                        players = scheduler.GetPlayers();
-                    }
+                    int players = scheduler.GetPlayers();
                     Logger.Info($"The Server is still running with {players} players playing on it");
                 }
 
                 if (!CheckScheduler())
                 {
+                    scheduler.KillAutomaticTasks();
+                    scheduler.KillCustomTasks();
                     StartScheduler();
                 }
                 else
@@ -306,8 +303,6 @@ namespace DayZServerManager.Server.Classes
                 props.managerStatus = STATUS_LISTENING;
                 Thread.Sleep(10000);
             }
-
-            serverUpdateTask = null;
 
             Logger.Info(STATUS_STOPPING_SERVER);
 
@@ -369,7 +364,11 @@ namespace DayZServerManager.Server.Classes
 
             try
             {
-                if (SteamCMDManager.CheckSteamCMD())
+                if (serverUpdateTask != null && serverUpdateTask.IsCompleted)
+                {
+                    serverUpdateTask.Dispose();
+                }
+                else if (SteamCMDManager.CheckSteamCMD())
                 {
                     SteamCMDManager.KillSteamCMD();
                 }

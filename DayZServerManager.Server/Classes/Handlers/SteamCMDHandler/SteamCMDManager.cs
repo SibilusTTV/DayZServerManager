@@ -361,7 +361,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             {
                 if (steamCMDProcess != null)
                 {
-                    steamCMDProcess.WaitForExit();
+                    steamCMDProcess.Dispose();
                     steamCMDProcess = null;
                     Manager.props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
                 }
