@@ -47,8 +47,8 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         public bool Connect()
         {
             Logger.Info($"Connecting the RconClient");
-            _client.Connect();
-            return _client.WaitUntilConnected(config.ConnectTimeout * 1000);
+            return _client.Connect();
+            //return _client.WaitUntilConnected(config.ConnectTimeout * 1000);
         }
 
         public int PlayersCount { get { return _playersCount; } }
@@ -105,7 +105,6 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         private void _client_MessageReceived(object? sender, string e)
         {
             // Add a filter for bad words inside the program and an editor to the UI
-            // Add a Chat log to the UI
             Logger.Info(e);
             Manager.props.chatLog += e + "\n";
         }

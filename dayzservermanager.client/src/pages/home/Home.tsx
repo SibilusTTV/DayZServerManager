@@ -245,7 +245,7 @@ export default function Home() {
                         Send Message
                     </Button>
                 </p>
-                <h2>Chat Log</h2>
+                <h2>Scheduler Log</h2>
                 <TextField
                     key="chatLog"
                     id="outlined-multiline"

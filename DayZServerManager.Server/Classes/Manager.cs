@@ -195,7 +195,7 @@ namespace DayZServerManager.Server.Classes
                 Directory.CreateDirectory(BATTLEYE_FOLDER_PATH);
             }
 
-            if (File.Exists(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME)))
+            if (!File.Exists(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME)))
             {
                 using (FileStream fs = File.Create(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME))){
                     
@@ -284,6 +284,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     scheduler.KillAutomaticTasks();
                     scheduler.KillCustomTasks();
+                    scheduler.Disconnect();
                     StartScheduler();
                 }
                 else
@@ -334,6 +335,7 @@ namespace DayZServerManager.Server.Classes
                 {
                     scheduler.KillAutomaticTasks();
                     scheduler.KillCustomTasks();
+                    scheduler.Disconnect();
                 }
             }
             catch (Exception ex)
@@ -384,19 +386,7 @@ namespace DayZServerManager.Server.Classes
             kill = true;
             if (dayZServer != null)
             {
-                dayZServer.KillServerProcess();
-
-                try
-                {
-                    if (scheduler != null)
-                    {
-                        scheduler.KillAutomaticTasks();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Error when killing server on close", ex);
-                }
+                KillServerProcesses();
             }
             if (serverLoop != null)
             {
@@ -460,7 +450,6 @@ namespace DayZServerManager.Server.Classes
                 {
                     if (!scheduler.IsConnected() && (connectTask == null || connectTask.IsCompleted))
                     {
-                        scheduler.KillAutomaticTasks();
                         return false;
                     }
                     else

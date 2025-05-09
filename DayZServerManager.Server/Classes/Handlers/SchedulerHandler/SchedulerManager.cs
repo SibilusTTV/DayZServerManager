@@ -118,6 +118,11 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             return _rconClient.Connect();
         }
 
+        public void Disconnect()
+        {
+            _rconClient.Disconnect();
+        }
+
         public void ChangeToNormalMode()
         {
             KillAutomaticTasks();
