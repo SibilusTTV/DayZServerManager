@@ -24,11 +24,10 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         private PlayersDB _playersdb;
         private bool _onlyRestarts;
         private int _interval;
-        private List<BannedPlayer> _bannedPlayers;
 
-        public List<BannedPlayer> BannedPlayers { get { return _bannedPlayers; } }
         public PlayersDB PlayersDB { get { return _playersdb; } }
         public SchedulerConfig Config { get { return _config; } }
+        public RCON RconClient { get { return _rconClient; } }
 
         public SchedulerManager(string ip, int port, string password, int interval, bool onlyRestarts, List<CustomMessage> customMessages)
         {
@@ -104,8 +103,6 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             _automaticMessages = RestartUpdater.CreateSchedule(false, _onlyRestarts, _interval, this);
             _customMessages = RestartUpdater.CreateCustomJobTimers(_onlyRestarts, _interval, this, customMessages);
 
-            _bannedPlayers = LoadBans();
-
             _rconClient = new RCON(ip, port, password, whitelistedUsers, filteredNicks, _config, _playersdb);
 
         }
@@ -115,12 +112,16 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             Logger.Info($"Waiting for {_config.Timeout} seconds until TimeOut is over");
             Thread.Sleep(_config.Timeout * 1000);
             Logger.Info("Connecting to the Server");
-            return _rconClient.Connect();
+            _rconClient.Connect();
+            return true;
         }
 
         public void Disconnect()
         {
-            _rconClient.Disconnect();
+            if (IsConnected())
+            {
+                _rconClient.Disconnect();
+            }
         }
 
         public void ChangeToNormalMode()
@@ -158,19 +159,18 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             return _rconClient != null ? _rconClient.IsConnected() : false;
         }
 
-        public int GetPlayers()
+        public void GetPlayers()
         {
-            int players = _rconClient.GetPlayers();
+            _rconClient.GetPlayers();
             Task t = new Task(() => {
                 JSONSerializer.SerializeJSONFile<PlayersDB>(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME), _playersdb);
             });
             t.Start();
-            return players;
         }
 
         public void KickPlayer(string guid, string reason, string name)
         {
-            ConnectedPlayer? connectedPlayer = Manager.props.players.Find(x => x.Guid == guid);
+            ConnectedPlayer? connectedPlayer = _rconClient.ConnectedPlayers.Find(x => x.Guid == guid);
             if (connectedPlayer != null)
             {
                 _rconClient.KickPlayer(connectedPlayer.Id, reason, name);
@@ -179,7 +179,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 
         public void BanPlayer(string guid, string reason, int duration, string name)
         {
-            ConnectedPlayer? connectedPlayer = Manager.props.players.Find(x => x.Guid == guid);
+            ConnectedPlayer? connectedPlayer = _rconClient.ConnectedPlayers.Find(x => x.Guid == guid);
             if (connectedPlayer != null)
             {
                 _rconClient.BanOnlinePlayer(connectedPlayer.Id, reason, duration, name);
@@ -192,7 +192,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 
         public void UnbanPlayer(string guid, string name)
         {
-            List<BannedPlayer> bannedPlayers = _bannedPlayers.FindAll(x => x.Guid == guid);
+            List<BannedPlayer> bannedPlayers = _rconClient.BannedPlayers.FindAll(x => x.Guid == guid);
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
             {
                 _rconClient.UnbanPlayer(bannedPlayer.BanId, name);
@@ -210,63 +210,19 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME), _config);
         }
 
-        public List<BannedPlayer> LoadBans()
+        public void LoadBans()
         {
-            if (_bannedPlayers == null)
+            if (IsConnected())
             {
-                _bannedPlayers = new List<BannedPlayer>();
-            }
-
-            if (!IsConnected())
-            {
-                return _bannedPlayers;
-            }
-
-            try
-            {
-                _rconClient.ReloadBans();
-                string bans = _rconClient.GetBans();
-                string pattern = @"(?'banid'[0-9]+)[^\S\n]+(?'guid'[0-9A-Fa-f]+)[^\S\n]+(?'remainingTime'[0-9]+)[^\S\n]+\""(?'reason'[^\n]*)\""";
-                Regex regex = new Regex(pattern);
-                MatchCollection matches = regex.Matches(bans);
-
-                if (matches.Count <= 0)
+                try
                 {
-                    _bannedPlayers = new List<BannedPlayer>();
-                    return _bannedPlayers;
+                    _rconClient.ReloadBans();
+                    _rconClient.GetBans();
                 }
-
-                foreach (Match match in matches)
+                catch (Exception ex)
                 {
-                    int banId = int.Parse(match.Groups["banid"].Value);
-                    string guid = match.Groups["guid"].Value;
-                    int remainingTime = int.Parse(match.Groups["remainingTime"].Value);
-                    string reason = match.Groups["reason"].Value;
-
-                    BannedPlayer? bannedPlayer = _bannedPlayers.Find(x => x.BanId == banId && x.Guid == guid && x.Reason == reason);
-                    if (bannedPlayer == null && remainingTime > 0)
-                    {
-                        _bannedPlayers.Add(new BannedPlayer(banId, guid, remainingTime, reason));
-                    }
-                    else if (bannedPlayer != null)
-                    {
-                        if (remainingTime <= 0)
-                        {
-                            _bannedPlayers.Remove(bannedPlayer);
-                        }
-                        else
-                        {
-                            bannedPlayer.RemainingTime = remainingTime;
-                        }
-                    }
+                    Logger.Error("Error when getting bans", ex);
                 }
-
-                return _bannedPlayers;
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Error when getting bans", ex);
-                return _bannedPlayers;
             }
         }
     }

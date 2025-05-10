@@ -1,11 +1,9 @@
 ﻿
-using BytexDigital.BattlEye.Rcon;
-using BytexDigital.BattlEye.Rcon.Commands;
-using BytexDigital.BattlEye.Rcon.Requests;
-using BytexDigital.BattlEye.Rcon.Responses;
+using BattleNET;
 using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
 using DayZServerManager.Server.Classes.Helpers;
 using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB;
+using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -17,9 +15,10 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private RconClient _client;
+        private BattlEyeClient _client;
         private int _playersCount;
         private List<ConnectedPlayer> _players;
+        private List<BannedPlayer> _bannedPlayers;
         private PlayersDB _playersDB;
 
         private List<string> whitelistedUsers;
@@ -33,85 +32,28 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             config = Config;
             _playersCount = 0;
             _players = new List<ConnectedPlayer>();
+            _bannedPlayers = new List<BannedPlayer>();
             whitelistedUsers = WhitelistedUsers;
             filteredNicks = FilteredNicks;
             Logger.Info($"Creating new RconClient to {ip}:{port} with password {password}");
-            _client = new RconClient(ip, port, password);
-            //_client.PlayerDisconnected += _client_PlayerDisconnected;
-            //_client.PlayerRemoved += _client_PlayerRemoved;
-            _client.MessageReceived += _client_MessageReceived;
-            _client.PlayerConnected += _client_PlayerConnected;
-            _client.ReconnectOnFailure = true;
+            _client = new BattlEyeClient(new BattlEyeLoginCredentials(IPAddress.Parse(ip), port, password));
+            _client.ReconnectOnPacketLoss = true;
+            _client.BattlEyeMessageReceived += _client_BattlEyeMessageReceived;
         }
 
-        public bool Connect()
+        public BattlEyeConnectionResult Connect()
         {
             Logger.Info($"Connecting the RconClient");
             return _client.Connect();
-            //return _client.WaitUntilConnected(config.ConnectTimeout * 1000);
         }
 
         public int PlayersCount { get { return _playersCount; } }
-        public List<ConnectedPlayer> Players { get { return _players; } }
+        public List<ConnectedPlayer> ConnectedPlayers { get { return _players; } }
+        public List<BannedPlayer> BannedPlayers { get { return _bannedPlayers; } }
 
-        //private void _client_PlayerRemoved(object? sender, BytexDigital.BattlEye.Rcon.Events.PlayerRemovedArgs e)
-        //{
-        //    Manager.WriteToConsole($"Player {e.Name} was removed");
-        //}
-
-        //private void _client_PlayerDisconnected(object? sender, BytexDigital.BattlEye.Rcon.Events.PlayerDisconnectedArgs e)
-        //{
-        //    Manager.WriteToConsole($"Player {e.Name} disconnected");
-        //}
-
-        private void _client_PlayerConnected(object? sender, BytexDigital.BattlEye.Rcon.Events.PlayerConnectedArgs e)
+        public int SendCommand(string command)
         {
-            // Add a bad words list editor to the UI
-            if (config.UseNickFilter && filteredNicks.Count > 0)
-            {
-                foreach (string filteredNick in filteredNicks)
-                {
-                    if (!string.IsNullOrEmpty(filteredNick) && e.Name.ToLower().Contains(filteredNick.ToLower()))
-                    {
-                        _client.Send($"kick {e.Id} \"{config.FilteredNickMsg}\"");
-                        Logger.Info($"Player {e.Name} was kicked, because they are using forbidden words in their user name");
-                        return;
-                    }
-                }
-            }
-            else if (config.UseWhiteList && whitelistedUsers.Count > 0)
-            {
-                // Add a whitelist field and button to the Playerdatabase
-                bool isWhitelisted = false;
-                foreach (string whitelistedUser in whitelistedUsers)
-                {
-                    if (!string.IsNullOrEmpty(whitelistedUser) && e.Name.ToLower().Contains(whitelistedUser.ToLower()))
-                    {
-                        isWhitelisted = true;
-                    }
-                }
-
-                if (!isWhitelisted)
-                {
-                    _client.Send($"kick {e.Id} \"{config.WhiteListKickMsg}\"");
-                    Logger.Info($"Player {e.Name} was kicked, because they aren't whitelisted");
-                    return;
-                }
-            }
-
-            GetPlayers();
-        }
-
-        private void _client_MessageReceived(object? sender, string e)
-        {
-            // Add a filter for bad words inside the program and an editor to the UI
-            Logger.Info(e);
-            Manager.props.chatLog += e + "\n";
-        }
-
-        public void SendCommand(string command)
-        {
-            _client.Send(command);
+            return _client.SendCommand(command);
         }
 
         public void Disconnect()
@@ -121,114 +63,49 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 
         public bool IsConnected()
         {
-            return _client.IsConnected;
+            return _client.Connected;
         }
 
-        public int GetPlayers()
+        public void GetPlayers()
         {
-            if (_client.IsConnected)
+            if (IsConnected())
             {
-                CommandNetworkRequest request = _client.Send(new GetPlayersRequest());
-                bool success = request.WaitUntilResponseReceived(config.ConnectTimeout * 1000);
-                if (success)
-                {
-                    NetworkResponse response = request.Response;
-                    string responseString = "";
-                    if (response is CommandNetworkResponse)
-                    {
-                        responseString = ((CommandNetworkResponse)response).Content;
-                    }
-                    if (!string.IsNullOrEmpty(responseString))
-                    {
-                        string playerCountRegexPattern = "\\((?'playerCount'[0-9]+) players in total\\)";
-                        Regex playerCountRegex = new Regex(playerCountRegexPattern);
-                        Match playerCountMatch = playerCountRegex.Match(responseString);
-                        if (playerCountMatch.Success)
-                        {
-                            _playersCount = int.Parse(playerCountMatch.Groups["playerCount"].Value);
-                        }
-
-                        string regexPattern = @"(?'id'[0-9]+)[^\S\n]+((?'ip'[0-9]+(?:.[0-9]+)+):(?'port'[0-9]+))[^\S\n]+(?'ping'[0-9]+)[^\S\n]+(?'guid'[0-9a-fA-F]+)\((?'verified'\S+)\)[^\S\n]+(?'name'[^\n]+)";
-                        Regex regex = new Regex(regexPattern);
-                        MatchCollection matches = regex.Matches(responseString);
-                        List<ConnectedPlayer> onlinePlayers = new List<ConnectedPlayer>();
-                        foreach (Match match in matches)
-                        {
-                            string endString = match.Groups["name"].Value;
-                            string name = "";
-                            bool isInLobby = false;
-
-                            if (endString.EndsWith("(Lobby)"))
-                            {
-                                name = endString.Substring(0, endString.LastIndexOf("(Lobby)") - 1);
-                                isInLobby = true;
-                            }
-                            else
-                            {
-                                name = endString;
-                            }
-
-                            string guid = match.Groups["guid"].Value;
-                            int id = int.Parse(match.Groups["id"].Value);
-                            int ping = int.Parse(match.Groups["ping"].Value);
-                            bool isVerified = match.Groups["verified"].Value == "OK";
-                            string ip = match.Groups["ip"].Value + ":" + match.Groups["port"].Value;
-
-                            onlinePlayers.Add(new ConnectedPlayer(name, guid, id, ping, isVerified, isInLobby, ip));
-
-                            Player? player = _playersDB.Players.Find(x => x.Guid == guid);
-                            if (player == null)
-                            {
-                                _playersDB.Players.Add(new Player(name, guid, isVerified, ip));
-                            }
-                        }
-                        _players = onlinePlayers;
-                    }
-                }
+                SendCommand("players");
             }
-
-            Manager.props.players = _players;
-            Manager.props.playersCount = _players.Count;
-
-            return _playersCount;
         }
 
         public void KickPlayer(int id, string reason, string name)
         {
-            if (_client.IsConnected)
+            if (IsConnected())
             {
-                CommandNetworkRequest request = _client.Send($"kick {id} \"{reason}\"");
-                request.WaitUntilAcknowledged(config.ConnectTimeout * 1000);
+                SendCommand($"kick {id} \"{reason}\"");
                 Logger.Info($"The player {name} was kicked for reason \"{reason}\"");
             }
         }
 
         public void BanOnlinePlayer(int id, string reason, int duration, string name)
         {
-            if (_client.IsConnected)
+            if (IsConnected())
             {
-                CommandNetworkRequest request = _client.Send($"ban {id} {duration} \"{reason}\"");
-                request.WaitUntilAcknowledged(config.ConnectTimeout * 1000);
+                SendCommand($"ban {id} {duration} \"{reason}\"");
                 Logger.Info($"The player {name} was banned for reason \"{reason}\"");
             }
         }
 
         public void BanOfflinePlayer(string guid, string reason, int duration, string name)
         {
-            if (_client.IsConnected)
+            if (IsConnected())
             {
-                CommandNetworkRequest request = _client.Send($"addBan {guid} {duration} \"{reason}\"");
-                request.WaitUntilAcknowledged(config.ConnectTimeout * 1000);
+                SendCommand($"addBan {guid} {duration} \"{reason}\"");
                 Logger.Info($"The player {name} was banned for reason \"{reason}\"");
             }
         }
 
         public void UnbanPlayer(int banId, string name)
         {
-            if (_client.IsConnected)
+            if (IsConnected())
             {
-                CommandNetworkRequest request = _client.Send($"removeBan {banId}");
-                request.WaitUntilAcknowledged(config.ConnectTimeout * 1000);
+                SendCommand($"removeBan {banId}");
                 Logger.Info($"The player {name} was unbanned");
                 ReloadBans();
             }
@@ -236,25 +113,191 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 
         public void ReloadBans()
         {
-            if (_client.IsConnected)
+            if (IsConnected())
             {
-                CommandNetworkRequest reloadBansRequest = _client.Send("loadBans");
-                reloadBansRequest.WaitUntilAcknowledged(config.ConnectTimeout * 1000);
+                SendCommand("loadBans");
             }
         }
 
-        public string GetBans()
+        public void GetBans()
         {
-            if (_client.IsConnected)
+            if (IsConnected())
             {
-                CommandNetworkRequest getBansRequest = _client.Send("bans");
-                getBansRequest.WaitUntilResponseReceived(config.ConnectTimeout * 1000);
-                if (getBansRequest.Response != null && getBansRequest.Response is CommandNetworkResponse)
+                SendCommand("bans");
+            }
+        }
+
+        private void _client_BattlEyeMessageReceived(BattlEyeMessageEventArgs args)
+        {
+            if (args.Message.Contains("GUID Bans"))
+            {
+                RecievedBans(args.Message);
+            }
+            else if (args.Message.Contains("Players on server:"))
+            {
+                RecievedPlayers(args.Message);
+            }
+            else if (args.Message.Contains("BE GUID"))
+            {
+                RecievedPlayerConnected(args.Message);
+
+                // Add a filter for bad words inside the program and an editor to the UI
+                Logger.Info(args.Message);
+                Manager.props.chatLog += $"[{DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")}] {args.Message} \n";
+            }
+            else
+            {
+                // Add a filter for bad words inside the program and an editor to the UI
+                Logger.Info(args.Message);
+                Manager.props.chatLog += $"[{DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")}] {args.Message} \n";
+            }
+        }
+
+        private void RecievedBans(string message)
+        {
+            string pattern = @"(?'banid'[0-9]+)[^\S\n]+(?'guid'[0-9A-Fa-f]+)[^\S\n]+(?'remainingTime'[0-9]+)[^\S\n]+\""(?'reason'[^\n]*)\""";
+            Regex regex = new Regex(pattern);
+            MatchCollection matches = regex.Matches(message);
+
+            if (matches.Count <= 0)
+            {
+                _bannedPlayers = new List<BannedPlayer>();
+                return;
+            }
+
+            foreach (Match match in matches)
+            {
+                int banId = int.Parse(match.Groups["banid"].Value);
+                string guid = match.Groups["guid"].Value;
+                int remainingTime = int.Parse(match.Groups["remainingTime"].Value);
+                string reason = match.Groups["reason"].Value;
+
+                BannedPlayer? bannedPlayer = _bannedPlayers.Find(x => x.BanId == banId && x.Guid == guid && x.Reason == reason);
+                if (bannedPlayer == null && remainingTime > 0)
                 {
-                    return ((CommandNetworkResponse)getBansRequest.Response).Content;
+                    _bannedPlayers.Add(new BannedPlayer(banId, guid, remainingTime, reason));
+                }
+                else if (bannedPlayer != null)
+                {
+                    if (remainingTime <= 0)
+                    {
+                        _bannedPlayers.Remove(bannedPlayer);
+                    }
+                    else
+                    {
+                        bannedPlayer.RemainingTime = remainingTime;
+                    }
                 }
             }
-            return string.Empty;
+        }
+
+        private void RecievedPlayers(string message)
+        {
+            string playerCountRegexPattern = "\\((?'playerCount'[0-9]+) players in total\\)";
+            Regex playerCountRegex = new Regex(playerCountRegexPattern);
+            Match playerCountMatch = playerCountRegex.Match(message);
+            if (playerCountMatch.Success)
+            {
+                _playersCount = int.Parse(playerCountMatch.Groups["playerCount"].Value);
+            }
+
+            string regexPattern = @"(?'id'[0-9]+)[^\S\n]+((?'ip'[0-9]+(?:.[0-9]+)+):(?'port'[0-9]+))[^\S\n]+(?'ping'[0-9]+)[^\S\n]+(?'guid'[0-9a-fA-F]+)\((?'verified'\S+)\)[^\S\n]+(?'name'[^\n]+)";
+            Regex regex = new Regex(regexPattern);
+            MatchCollection matches = regex.Matches(message);
+            List<ConnectedPlayer> onlinePlayers = new List<ConnectedPlayer>();
+            foreach (Match match in matches)
+            {
+                string endString = match.Groups["name"].Value;
+                string name = "";
+                bool isInLobby = false;
+
+                if (endString.EndsWith("(Lobby)"))
+                {
+                    name = endString.Substring(0, endString.LastIndexOf("(Lobby)") - 1);
+                    isInLobby = true;
+                }
+                else
+                {
+                    name = endString;
+                }
+
+                string guid = match.Groups["guid"].Value;
+                int id = int.Parse(match.Groups["id"].Value);
+                int ping = int.Parse(match.Groups["ping"].Value);
+                bool isVerified = match.Groups["verified"].Value == "OK";
+                string ip = match.Groups["ip"].Value + ":" + match.Groups["port"].Value;
+
+                onlinePlayers.Add(new ConnectedPlayer(name, guid, id, ping, isVerified, isInLobby, ip));
+
+                Player? player = _playersDB.Players.Find(x => x.Guid == guid);
+                if (player == null)
+                {
+                    _playersDB.Players.Add(new Player(name, guid, isVerified, ip));
+                }
+            }
+            _players = onlinePlayers;
+
+            Manager.props.players = _players;
+            Manager.props.playersCount = _players.Count;
+
+            try
+            {
+                JSONSerializer.SerializeJSONFile<PlayersDB>(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME), _playersDB);
+            }
+            catch (Exception e)
+            {
+                Logger.Error("Error when saving the playersDB", e);
+            }
+        }
+
+        private void RecievedPlayerConnected(string message)
+        {
+            string pattern = @"Player #(?'id'[0-9]+) (?'name'[^\n]+) - BE GUID: (?'guid'[A-Fa-f0-9]+)";
+            Regex regex = new Regex(pattern);
+            Match match = regex.Match(message);
+
+            if (match.Success)
+            {
+                string id = match.Groups["id"].Value;
+                string name = match.Groups["name"].Value;
+                string guid = match.Groups["guid"].Value;
+
+                // Add a bad words list editor to the UI
+                if (config.UseNickFilter && filteredNicks.Count > 0)
+                {
+                    foreach (string filteredNick in filteredNicks)
+                    {
+                        if (!string.IsNullOrEmpty(filteredNick) && name.ToLower().Contains(filteredNick.ToLower()))
+                        {
+                            SendCommand($"kick {id} \"{config.FilteredNickMsg}\"");
+                            Logger.Info($"Player {name} was kicked, because they are using forbidden words in their user name");
+                            return;
+                        }
+                    }
+                }
+                
+                if (config.UseWhiteList && whitelistedUsers.Count > 0)
+                {
+                    // Add a whitelist field and button to the Playerdatabase
+                    bool isWhitelisted = false;
+                    foreach (string whitelistedUser in whitelistedUsers)
+                    {
+                        if (!string.IsNullOrEmpty(whitelistedUser) && name.ToLower().Contains(whitelistedUser.ToLower()))
+                        {
+                            isWhitelisted = true;
+                        }
+                    }
+
+                    if (!isWhitelisted)
+                    {
+                        SendCommand($"kick {id} \"{config.WhiteListKickMsg}\"");
+                        Logger.Info($"Player {name} was kicked, because they aren't whitelisted");
+                        return;
+                    }
+                }
+            }
+
+            GetPlayers();
         }
     }
 }

@@ -25,7 +25,8 @@ namespace DayZServerManager.Server.Controllers
             string adminLog = Manager.GetAdminLog();
             if (Manager.scheduler != null)
             {
-                playerCount = Manager.scheduler.GetPlayers();
+                Manager.scheduler.GetPlayers();
+                playerCount = Manager.scheduler.RconClient.PlayersCount;
             }
             
             Manager.props ??= new ManagerProps(Manager.STATUS_LISTENING, Manager.STATUS_NOT_RUNNING, Manager.STATUS_NOT_RUNNING, playerCount, string.Empty, adminLog);

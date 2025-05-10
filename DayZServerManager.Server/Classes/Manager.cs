@@ -242,6 +242,9 @@ namespace DayZServerManager.Server.Classes
             dayZServer.StartServer();
 
             props.managerStatus = STATUS_STARTING_SCHEDULER;
+            scheduler.KillAutomaticTasks();
+            scheduler.KillCustomTasks();
+            scheduler.Disconnect();
             StartScheduler();
 
             props.managerStatus = STATUS_LISTENING;
@@ -276,8 +279,8 @@ namespace DayZServerManager.Server.Classes
                 else
                 {
                     props.adminLog = GetAdminLog();
-                    int players = scheduler.GetPlayers();
-                    Logger.Info($"The Server is still running with {players} players playing on it");
+                    scheduler.GetPlayers();
+                    Logger.Info($"The Server is still running with {scheduler.RconClient.PlayersCount} players playing on it");
                 }
 
                 if (!CheckScheduler())

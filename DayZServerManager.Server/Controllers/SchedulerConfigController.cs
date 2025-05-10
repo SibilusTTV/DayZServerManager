@@ -39,7 +39,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetBannedPlayers")]
         public JsonResult GetBannedPlayers()
         {
-            return new JsonResult(Manager.scheduler.BannedPlayers);
+            return new JsonResult(Manager.scheduler.RconClient.BannedPlayers);
         }
 
     }

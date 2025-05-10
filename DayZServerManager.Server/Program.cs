@@ -1,5 +1,6 @@
 using DayZServerManager.Server.Classes;
 using NLog;
+using System.Text;
 using LogLevel = NLog.LogLevel;
 
 NLog.LogManager.Setup().LoadConfiguration(LogBuilder => {
@@ -35,6 +36,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapFallbackToFile("/index.html");
+
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+var enc1252 = Encoding.GetEncoding(1252);
 
 AppDomain.CurrentDomain.ProcessExit += new EventHandler((s, e) => { Manager.KillServerOnClose(); });
 

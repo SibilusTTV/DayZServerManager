@@ -1,4 +1,4 @@
-﻿using BytexDigital.BattlEye.Rcon;
+﻿
 using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
 
 namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler

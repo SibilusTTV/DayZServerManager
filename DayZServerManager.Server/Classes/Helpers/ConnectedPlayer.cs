@@ -1,4 +1,4 @@
-﻿using BytexDigital.BattlEye.Rcon.Domain;
+﻿
 using System.Text.Json.Serialization;
 
 namespace DayZServerManager.Server.Classes.Helpers
@@ -23,17 +23,6 @@ namespace DayZServerManager.Server.Classes.Helpers
             IsVerified = isVerified;
             IsInLobby = isInLobby;
             IP = ip;
-        }
-
-        public ConnectedPlayer(Player player)
-        {
-            Name = player.Name;
-            Guid = player.Guid;
-            Id = player.Id;
-            Ping = player.Ping;
-            IsVerified = player.IsVerified;
-            IsInLobby = player.IsInLobby;
-            IP = player.RemoteEndpoint.ToString();
         }
     }
 }
