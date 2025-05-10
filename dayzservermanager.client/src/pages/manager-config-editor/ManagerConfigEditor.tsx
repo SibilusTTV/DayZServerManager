@@ -500,7 +500,7 @@ export default function ManagerConfigEditor() {
         </Box>
 
     return (
-        <div>
+        <div style={{padding: "10px 10px 10px 10px"} }>
             <h1 id="tableLabel">Manager Configurations</h1>
             <div>
                 <SaveButton

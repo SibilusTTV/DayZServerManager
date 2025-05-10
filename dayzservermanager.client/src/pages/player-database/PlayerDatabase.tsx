@@ -7,6 +7,7 @@ import BanButton from "../../common/components/ban-button/BanButton";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import UnpublishedIcon from '@mui/icons-material/Unpublished';
 import { ColumnActionsMode, ContextualMenu, DirectionalHint, IColumn, IContextualMenuItem, IContextualMenuProps, initializeIcons, SelectionMode, ShimmeredDetailsList, TextField } from "@fluentui/react";
+import ReloadButton from "../../common/components/reload-button/ReloadButton";
 
 interface PlayersDB {
     players: Player[];
@@ -58,7 +59,6 @@ export default function PlayerDatabase() {
     const onColumnClick = (ev: React.MouseEvent<HTMLElement>, column: IColumn): void => {
         if (column.columnActionsMode !== ColumnActionsMode.disabled) {
             setContextualMenuProps(getContextualMenuProps(column, ev));
-            //_onSortColumn(column, sortKey === column.key ? !column.isSortedDescending : false);
         }
     }
 
@@ -197,12 +197,9 @@ export default function PlayerDatabase() {
         }
     ]
 
-
     React.useEffect(() => {
-        getAllPlayers(setListItems, setUnsortedListItems);
+        getAllPlayers(setListItems, setUnsortedListItems, 'SchedulerConfig/GetPlayers');
     }, []);
-
-
 
     const onContextualMenuDismissed = (): void => {
         setContextualMenuProps(undefined);
@@ -314,6 +311,13 @@ export default function PlayerDatabase() {
 
     return (
         <div style={{ display: "flex", flexDirection: "column", padding: "10px 10px 10px 10px", flexGrow: 1 }}>
+            <div>
+                <ReloadButton
+                    populateFunction={getAllPlayers}
+                    setFunction={setListItems}
+                    setFunctionUnsorted={setUnsortedListItems}
+                />
+            </div>
             <ShimmeredDetailsList
                 items={listItems || []}
                 columns={columns}
@@ -326,7 +330,7 @@ export default function PlayerDatabase() {
     )
 }
 
-async function getAllPlayers(setListItems: Function, setUnsortedListItems: Function) {
+async function getAllPlayers(setListItems: Function, setUnsortedListItems: Function, endpoint: string) {
     let players: Player[] = [];
     try {
         const response = await fetch('SchedulerConfig/GetPlayers');
@@ -379,46 +383,7 @@ async function getAllPlayers(setListItems: Function, setUnsortedListItems: Funct
         setListItems(listItems);
         setUnsortedListItems(listItems);
     }
-
 }
-
-//async function getPlayers(setUnsortedPlayers: Function) {
-//    try {
-//        const response = await fetch('SchedulerConfig/GetPlayers');
-//        if (response.status == 200) {
-//            const result = (await response.json()) as PlayersDB;
-//            setUnsortedPlayers(result.players);
-//            return result.players;
-//        }
-//    }
-//    catch (ex) {
-//        if (typeof ex === "string") {
-//            alert(ex);
-//        }
-//        else if (ex instanceof Error) {
-//            alert(ex.message);
-//        }
-//    }
-//}
-
-//async function getBannedPlayers(setBannedPlayers: Function) {
-//    try {
-//        const response = await fetch('SchedulerConfig/GetBannedPlayers');
-//        if (response.status == 200) {
-//            const result = (await response.json()) as BannedPlayer[];
-//            setBannedPlayers(result);
-//            return result;
-//        }
-//    }
-//    catch (ex) {
-//        if (typeof ex === "string") {
-//            alert(ex);
-//        }
-//        else if (ex instanceof Error) {
-//            alert(ex.message);
-//        }
-//    }
-//}
 
 function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
     const key = columnKey as keyof T;

@@ -220,7 +220,7 @@ export default function RarityEditor(props: RarityEditorProps) {
 
 
     return (
-        <div>
+        <div style={{padding: "10px 10px 10px 10px"} }>
             <h1 id="tableLabel">{props.name}</h1>
             <div id="SaveButton">
                 <SaveButton

@@ -37,7 +37,7 @@ export default function SchedulerConfigEditor() {
     }
 
     return (
-        <div>
+        <div style={{padding: "10px 10px 10px 10px"} }>
             <h1 id="tableLabel">Scheduler Configurations</h1>
             <div>
                 <SaveButton
@@ -51,7 +51,7 @@ export default function SchedulerConfigEditor() {
                     endpoint='SchedulerConfig/GetSchedulerConfig'
                 />
             </div>
-            <div>
+            <div style={{padding: "10px 0px 0px 0px"} }>
                 {
                     schedulerConfig && Object.entries(schedulerConfig).map(([key, value]) => <TextField key={key} id={key} label={key} onBlur={handleBlur} defaultValue={value} />)
                 }
