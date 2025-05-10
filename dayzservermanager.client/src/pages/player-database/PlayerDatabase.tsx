@@ -198,7 +198,7 @@ export default function PlayerDatabase() {
     ]
 
     React.useEffect(() => {
-        getAllPlayers(setListItems, setUnsortedListItems, 'SchedulerConfig/GetPlayers');
+        getAllPlayers(setListItems, setUnsortedListItems);
     }, []);
 
     const onContextualMenuDismissed = (): void => {
@@ -330,7 +330,7 @@ export default function PlayerDatabase() {
     )
 }
 
-async function getAllPlayers(setListItems: Function, setUnsortedListItems: Function, endpoint: string) {
+async function getAllPlayers(setListItems: Function, setUnsortedListItems: Function) {
     let players: Player[] = [];
     try {
         const response = await fetch('SchedulerConfig/GetPlayers');
