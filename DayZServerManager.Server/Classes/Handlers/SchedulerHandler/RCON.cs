@@ -1,7 +1,7 @@
 ﻿
 using BattleNET;
 using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
-using DayZServerManager.Server.Classes.Helpers;
+using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -21,20 +21,15 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         private List<BannedPlayer> _bannedPlayers;
         private PlayersDB _playersDB;
 
-        private List<string> whitelistedUsers;
-        private List<string> filteredNicks;
-
         private SchedulerConfig config;
 
-        public RCON(string ip, int port, string password, List<string> WhitelistedUsers, List<string> FilteredNicks, SchedulerConfig Config, PlayersDB playersDB)
+        public RCON(string ip, int port, string password, SchedulerConfig Config, PlayersDB playersDB)
         {
             _playersDB = playersDB;
             config = Config;
             _playersCount = 0;
             _players = new List<ConnectedPlayer>();
             _bannedPlayers = new List<BannedPlayer>();
-            whitelistedUsers = WhitelistedUsers;
-            filteredNicks = FilteredNicks;
             Logger.Info($"Creating new RconClient to {ip}:{port} with password {password}");
             _client = new BattlEyeClient(new BattlEyeLoginCredentials(IPAddress.Parse(ip), port, password));
             _client.ReconnectOnPacketLoss = true;
@@ -116,6 +111,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             if (IsConnected())
             {
                 SendCommand("loadBans");
+                SendCommand("writeBans");
             }
         }
 
@@ -263,36 +259,16 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 string guid = match.Groups["guid"].Value;
 
                 // Add a bad words list editor to the UI
-                if (config.UseNickFilter && filteredNicks.Count > 0)
+                if (config.UseNickFilter && config.BadNames.Count > 0)
                 {
-                    foreach (string filteredNick in filteredNicks)
+                    foreach (string badName in config.BadNames)
                     {
-                        if (!string.IsNullOrEmpty(filteredNick) && name.ToLower().Contains(filteredNick.ToLower()))
+                        if (!string.IsNullOrEmpty(badName) && name.ToLower().Contains(badName.ToLower()))
                         {
                             SendCommand($"kick {id} \"{config.FilteredNickMsg}\"");
                             Logger.Info($"Player {name} was kicked, because they are using forbidden words in their user name");
                             return;
                         }
-                    }
-                }
-                
-                if (config.UseWhiteList && whitelistedUsers.Count > 0)
-                {
-                    // Add a whitelist field and button to the Playerdatabase
-                    bool isWhitelisted = false;
-                    foreach (string whitelistedUser in whitelistedUsers)
-                    {
-                        if (!string.IsNullOrEmpty(whitelistedUser) && name.ToLower().Contains(whitelistedUser.ToLower()))
-                        {
-                            isWhitelisted = true;
-                        }
-                    }
-
-                    if (!isWhitelisted)
-                    {
-                        SendCommand($"kick {id} \"{config.WhiteListKickMsg}\"");
-                        Logger.Info($"Player {name} was kicked, because they aren't whitelisted");
-                        return;
                     }
                 }
             }

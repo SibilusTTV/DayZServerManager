@@ -1,7 +1,6 @@
-﻿
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace DayZServerManager.Server.Classes.Helpers
+namespace DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses
 {
     public class ConnectedPlayer
     {

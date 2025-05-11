@@ -37,22 +37,21 @@ export default function Home() {
     const [selectedPlayer, setSelectedPlayer] = useState(-1);
 
     useLayoutEffect(() => {
+        reload();
+        const timer = setInterval(() => {
+            reload();
+        }, 5000);
+        return () => clearInterval(timer);
+    }, [])
+
+    const reload = () => {
         if (!openDialog) {
             if (dialogTimeout > 0) {
                 setDialogTimeout(dialogTimeout - 1);
             }
             getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog, setDialogTimeout);
         }
-        const timer = setInterval(() => {
-            if (!openDialog) {
-                if (dialogTimeout > 0) {
-                    setDialogTimeout(dialogTimeout - 1);
-                }
-                getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog, setDialogTimeout);
-            }
-        }, 5000);
-        return () => clearInterval(timer);
-    }, [])
+    }
 
     const handleClose = () => {
         setOpenDialog(false);
@@ -157,6 +156,7 @@ export default function Home() {
                     <KickButton
                         guid={row.guid}
                         name={row.name}
+                        reload={reload}
                     />
                 );
             }
@@ -177,6 +177,7 @@ export default function Home() {
                     <BanButton
                         guid={row.guid}
                         name={row.name}
+                        reload={reload}
                     />
                 );
             }
@@ -313,7 +314,7 @@ export default function Home() {
 
 async function getServerStatus(setOpen: Function, setServerStatus: Function, dialogTimeout: number, open: boolean, setDialogTimeout: Function) {
     try {
-        const response = await fetch('DayZServer/GetServerStatus');
+        const response = await fetch('Manager/GetServerStatus');
         if (response.ok) {
             const result = (await response.json()) as ServerInfo;
             setServerStatus(result);
@@ -337,7 +338,7 @@ async function getServerStatus(setOpen: Function, setServerStatus: Function, dia
 
 async function startDayZServer() {
     try {
-        const response = await fetch('DayZServer/StartServer');
+        const response = await fetch('Manager/StartServer');
         const result = await response.text();
         if (result.toLocaleLowerCase() === "true") {
             alert("Server is starting");
@@ -360,7 +361,7 @@ async function startDayZServer() {
 
 async function stopDayZServer() {
     try {
-        const response = await fetch('DayZServer/StopServer');
+        const response = await fetch('Manager/StopServer');
         const result = await response.text();
         if (result.toLocaleLowerCase() === "true") {
             alert("Server was stopped");
@@ -395,7 +396,7 @@ async function restartDayZServer() {
 
 async function sendSteamGuard(_code: string) {
     try {
-        const response = await fetch('DayZServer/SendSteamGuard', {
+        const response = await fetch('Manager/SendSteamGuard', {
             method: "POST",
             mode: "cors",
             headers: {
@@ -421,7 +422,7 @@ async function sendSteamGuard(_code: string) {
 
 async function sendCommand(command: string) {
     try {
-        await fetch('DayZServer/SendCommand', {
+        await fetch('Scheduler/SendCommand', {
             method: "POST",
             mode: "cors",
             headers: {

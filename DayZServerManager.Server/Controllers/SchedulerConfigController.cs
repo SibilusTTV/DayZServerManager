@@ -10,13 +10,12 @@ namespace DayZServerManager.Server.Controllers
     [Route("[controller]")]
     public class SchedulerConfigController : ControllerBase
     {
-        private readonly ILogger<DayZServerController> _logger;
+        private readonly ILogger<ManagerController> _logger;
 
-        public SchedulerConfigController(ILogger<DayZServerController> logger)
+        public SchedulerConfigController(ILogger<ManagerController> logger)
         {
             _logger = logger;
         }
-
 
         [HttpGet("GetSchedulerConfig")]
         public JsonResult GetSchedulerConfig()
@@ -29,18 +28,5 @@ namespace DayZServerManager.Server.Controllers
         {
             Manager.scheduler.SaveSchedulerConfig(config);
         }
-
-        [HttpGet("GetPlayers")]
-        public JsonResult GetPlayers()
-        {
-            return new JsonResult(Manager.scheduler.PlayersDB);
-        }
-
-        [HttpGet("GetBannedPlayers")]
-        public JsonResult GetBannedPlayers()
-        {
-            return new JsonResult(Manager.scheduler.RconClient.BannedPlayers);
-        }
-
     }
 }

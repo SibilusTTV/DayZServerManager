@@ -1,4 +1,4 @@
-﻿namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
+﻿namespace DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses
 {
     public class BannedPlayer
     {

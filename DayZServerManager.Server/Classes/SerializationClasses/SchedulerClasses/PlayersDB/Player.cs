@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Microsoft.AspNetCore.Components.Web;
+using System.Text.Json.Serialization;
 
 namespace DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB
 {
@@ -6,6 +7,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses
     {
         public string Name { get; set; }
         public string Guid { get; set; }
+        public string Uid { get; set; }
         public bool IsVerified { get; set; }
         public string IP { get; set; }
 
@@ -14,6 +16,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses
         {
             Name = name;
             Guid = guid;
+            Uid = "";
             IsVerified = isVerified;
             IP = ip;
         }

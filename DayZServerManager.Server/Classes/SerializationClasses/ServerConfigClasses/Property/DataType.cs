@@ -1,4 +1,4 @@
-﻿namespace DayZServerManager.Server.Classes.Helpers.Property
+﻿namespace DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses.Property
 {
     public enum DataType
     {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog.Time;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,20 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.T
         public int MaxStockThreshold { get; set; }
         public int MinStockThreshold { get; set; }
         public float QuantityPercent { get; set; }
-        public string[] SpawnAttachments { get; set; }
-        public string[] Variants { get; set; }
+        public List<string> SpawnAttachments { get; set; }
+        public List<string> Variants { get; set; }
+
+        public TraderItem(string className, int maxPriceThreshold, int minPriceThreshold, float sellPricePercent, int maxStockThreshold, int minStockThreshold, float quantityPercent)
+        {
+            ClassName = className;
+            MaxPriceThreshold = maxPriceThreshold;
+            MinPriceThreshold = minPriceThreshold;
+            SellPricePercent = sellPricePercent;
+            MaxStockThreshold = maxStockThreshold;
+            MinStockThreshold = minStockThreshold;
+            QuantityPercent = quantityPercent;
+            SpawnAttachments = new List<string>();
+            Variants = new List<string>();
+        }
     }
 }

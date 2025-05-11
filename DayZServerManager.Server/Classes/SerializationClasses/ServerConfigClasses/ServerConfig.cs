@@ -1,5 +1,5 @@
-﻿using DayZServerManager.Server.Classes.Helpers.Property;
-using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
+﻿using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses.Property;
 using Microsoft.AspNetCore.Hosting.Server;
 using System;
 using System.Collections.Generic;

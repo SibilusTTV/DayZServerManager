@@ -60,7 +60,7 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            '/DayZServer': {
+            '/Manager': {
                 target,
                 secure: false
             },
@@ -69,6 +69,10 @@ export default defineConfig({
                 secure: false
             },
             '/ServerConfig': {
+                target,
+                secure: false
+            },
+            '/Scheduler': {
                 target,
                 secure: false
             },

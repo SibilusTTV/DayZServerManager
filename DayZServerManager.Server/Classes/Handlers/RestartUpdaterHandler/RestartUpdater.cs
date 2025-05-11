@@ -3,7 +3,7 @@ using DayZServerManager.Server.Classes.Handlers.SchedulerHandler;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 
-namespace DayZServerManager.Server.Classes.Helpers
+namespace DayZServerManager.Server.Classes.Handlers.RestartUpdaterHandler
 {
     public static class RestartUpdater
     {

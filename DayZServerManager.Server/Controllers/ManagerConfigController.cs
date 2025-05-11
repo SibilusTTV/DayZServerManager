@@ -10,9 +10,9 @@ namespace DayZServerManager.Server.Controllers
     [Route("[controller]")]
     public class ManagerConfigController : ControllerBase
     {
-        private readonly ILogger<DayZServerController> _logger;
+        private readonly ILogger<ManagerController> _logger;
 
-        public ManagerConfigController(ILogger<DayZServerController> logger)
+        public ManagerConfigController(ILogger<ManagerController> logger)
         {
             _logger = logger;
         }

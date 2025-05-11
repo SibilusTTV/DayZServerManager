@@ -24,7 +24,7 @@ export default function ManagerLog() {
 
 async function getManagerLog(setManagerLog: Function) {
     try {
-        const response = await fetch('DayZServer/GetManagerLog');
+        const response = await fetch('Manager/GetManagerLog');
         if (response.status == 200) {
             const result = await response.text();
             setManagerLog(result);

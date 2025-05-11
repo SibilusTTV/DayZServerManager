@@ -1,5 +1,4 @@
-﻿using DayZServerManager.Server.Classes.Helpers;
-using DayZServerManager.Server.Classes.Helpers.Property;
+﻿using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses.Property;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
@@ -12,6 +11,10 @@ using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
 using Microsoft.VisualBasic.FileIO;
 using System.IO;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses;
+using DayZServerManager.Server.Classes.Handlers.RestartUpdaterHandler;
+using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB;
+using System.Text.RegularExpressions;
 
 namespace DayZServerManager.Server.Classes
 {
@@ -435,6 +438,26 @@ namespace DayZServerManager.Server.Classes
                         returnString = sr.ReadToEnd();
                     }
                 }
+
+                if (props.adminLog != returnString)
+                {
+                    string pattern = @"Player \""(?'name'[^\n]+)\""\(id=(?'id'\S*)\)";
+                    Regex regex = new Regex(pattern);
+                    MatchCollection matches = regex.Matches(returnString);
+
+                    foreach (Match match in matches)
+                    {
+                        string name = match.Groups["name"].Value;
+                        string uid = match.Groups["id"].Value;
+
+                        Player? player = scheduler.PlayersDB.Players.Find(player => player.Name == name);
+                        if (player != null)
+                        {
+                            player.Uid = uid;
+                        }
+                    }
+                }
+
                 props.adminLog = returnString;
                 return returnString;
             }
@@ -530,7 +553,7 @@ namespace DayZServerManager.Server.Classes
                 NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME));
                 if (notFile == null)
                 {
-                    notFile = new NotificationSchedulerFile();
+                    notFile = new NotificationSchedulerFile(1, 1, 0, 0);
                 }
                 RestartUpdater.UpdateExpansionScheduler(managerConfig, notFile);
                 JSONSerializer.SerializeJSONFile(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME), notFile);

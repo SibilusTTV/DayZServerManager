@@ -1,16 +1,17 @@
+
 import { DefaultButton } from "@fluentui/react";
 import CheckIcon from '@mui/icons-material/Check';
 
-
 interface UnbanPlayerProps {
-    guid: string,
-    name: string
+    guid: string;
+    name: string;
+    reload: Function;
 }
 
-export default function UnbanButton({ guid, name }: UnbanPlayerProps) {
+export default function UnbanButton({ guid, name, reload }: UnbanPlayerProps) {
     return (
         <DefaultButton
-            onClick={() => sendUnbanRequest(guid, name)}
+            onClick={() => sendUnbanRequest(guid, name, reload)}
             style={{ display: "flex", flexDirection: "column" }}
         >
             <CheckIcon />
@@ -18,7 +19,7 @@ export default function UnbanButton({ guid, name }: UnbanPlayerProps) {
     )
 }
 
-async function sendUnbanRequest(_guid: string, _name: string) {
+async function sendUnbanRequest(_guid: string, _name: string, reload: Function) {
     try {
         await fetch('DayZServer/UnbanPlayer', {
             method: "POST",
@@ -36,4 +37,5 @@ async function sendUnbanRequest(_guid: string, _name: string) {
     catch (ex) {
         alert(ex);
     }
+    reload();
 }

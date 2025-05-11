@@ -15,5 +15,15 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.T
         public string count_in_player { get; set; }
         public string crafted { get; set; }
         public string deloot { get; set; }
+
+        public FlagsChangesItem(string cargo, string hoarder, string map, string player, string crafted, string deloot)
+        {
+            count_in_cargo = cargo;
+            count_in_hoarder = hoarder;
+            count_in_map = map;
+            count_in_player = player;
+            this.crafted = crafted;
+            this.deloot = deloot;
+        }
     }
 }

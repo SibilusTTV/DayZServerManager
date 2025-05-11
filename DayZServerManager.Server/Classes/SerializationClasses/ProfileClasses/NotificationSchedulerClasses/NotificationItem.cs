@@ -16,8 +16,6 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.N
         public string Icon { get; set; }
         public string Color { get; set; }
 
-        public NotificationItem() { }
-
         public NotificationItem(int hour, int minute, int second, string title, string text, string icon, string color)
         {
             Hour = hour;

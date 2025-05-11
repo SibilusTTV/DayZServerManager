@@ -1,7 +1,8 @@
 ﻿
 using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
-using DayZServerManager.Server.Classes.Helpers;
+using DayZServerManager.Server.Classes.Handlers.RestartUpdaterHandler;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
@@ -24,10 +25,12 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         private PlayersDB _playersdb;
         private bool _onlyRestarts;
         private int _interval;
+        private List<string> _whitelistedPlayers;
 
         public PlayersDB PlayersDB { get { return _playersdb; } }
         public SchedulerConfig Config { get { return _config; } }
         public RCON RconClient { get { return _rconClient; } }
+        public List<string> WhitelistedPlayers { get { return _whitelistedPlayers; } }
 
         public SchedulerManager(string ip, int port, string password, int interval, bool onlyRestarts, List<CustomMessage> customMessages)
         {
@@ -66,44 +69,13 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 _playersdb = players;
             }
 
-            List<string> whitelistedUsers = new List<string>();
-            if (_config.UseWhiteList)
-            {
-                if (!File.Exists(Path.Combine(Manager.SCHEDULER_PATH, _config.WhiteListFile)))
-                {
-                    File.Create(Path.Combine(Manager.SCHEDULER_PATH, _config.WhiteListFile));
-                }
-                else
-                {
-                    using (StreamReader sr = new StreamReader(Path.Combine(Manager.SCHEDULER_PATH, _config.WhiteListFile)))
-                    {
-                        string whitelistFile = sr.ReadToEnd();
-                        whitelistedUsers = whitelistFile.Split("\n").ToList();
-                    }
-                }
-            }
-
-            List<string> filteredNicks = new List<string>();
-            if (_config.UseNickFilter)
-            {
-                if (!File.Exists(Path.Combine(Manager.SCHEDULER_PATH, _config.NickFilterFile)))
-                {
-                    File.Create(Path.Combine(Manager.SCHEDULER_PATH, _config.NickFilterFile));
-                }
-                else
-                {
-                    using (StreamReader sr = new StreamReader(Path.Combine(Manager.SCHEDULER_PATH, _config.NickFilterFile)))
-                    {
-                        string nickFilteFile = sr.ReadToEnd();
-                        filteredNicks = nickFilteFile.Split("\n").ToList();
-                    }
-                }
-            }
+            _whitelistedPlayers = new List<string>();
+            LoadWhitelistedPlayers();
 
             _automaticMessages = RestartUpdater.CreateSchedule(false, _onlyRestarts, _interval, this);
             _customMessages = RestartUpdater.CreateCustomJobTimers(_onlyRestarts, _interval, this, customMessages);
 
-            _rconClient = new RCON(ip, port, password, whitelistedUsers, filteredNicks, _config, _playersdb);
+            _rconClient = new RCON(ip, port, password, _config, _playersdb);
 
         }
 
@@ -114,6 +86,35 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             Logger.Info("Connecting to the Server");
             _rconClient.Connect();
             return true;
+        }
+
+        private void LoadWhitelistedPlayers()
+        {
+            using (StreamReader reader = new StreamReader(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
+            {
+                while (!reader.EndOfStream)
+                {
+                    string? line = reader.ReadLine();
+                    if (line != null && !string.IsNullOrEmpty(line) && !_whitelistedPlayers.Contains(line))
+                    {
+                        _whitelistedPlayers.Add(line);
+                    }
+                }
+            }
+        }
+
+        private void SaveWhitelistedPlayers()
+        {
+            using (StreamWriter writer = new StreamWriter(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
+            {
+                foreach (string whitelistedPlayer in _whitelistedPlayers)
+                {
+                    if (whitelistedPlayer != string.Empty)
+                    {
+                        writer.WriteLine(whitelistedPlayer);
+                    }
+                }
+            }
         }
 
         public void Disconnect()
@@ -197,6 +198,40 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             {
                 _rconClient.UnbanPlayer(bannedPlayer.BanId, name);
             }
+        }
+
+        public void WhitelistPlayer(string guid, string name)
+        {
+            LoadWhitelistedPlayers();
+
+            Player? player = _playersdb.Players.Find(player => player.Guid == guid);
+            if (player != null)
+            {
+                if (!_whitelistedPlayers.Contains(player.Uid))
+                {
+                    _whitelistedPlayers.Add(player.Uid);
+                }
+            }
+
+            SaveWhitelistedPlayers();
+            Logger.Info($"{name} was whitelisted");
+        }
+
+        public void UnwhitelistPlayer(string guid, string name)
+        {
+            LoadWhitelistedPlayers();
+
+            Player? player = _playersdb.Players.Find(player => player.Guid == guid);
+            if (player != null)
+            {
+                if (_whitelistedPlayers.Contains(player.Uid))
+                {
+                    _whitelistedPlayers.Remove(player.Uid);
+                }
+            }
+
+            SaveWhitelistedPlayers();
+            Logger.Info($"{name} was unwhitelisted");
         }
 
         public void SendCommand(string command)

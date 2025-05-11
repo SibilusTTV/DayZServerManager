@@ -11,7 +11,7 @@ using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.Envir
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.RarityFile;
 using Microsoft.VisualBasic.FileIO;
 
-namespace DayZServerManager.Server.Classes.Helpers
+namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
 {
     public class MissionUpdater
     {
@@ -46,15 +46,15 @@ namespace DayZServerManager.Server.Classes.Helpers
                 }
 
                 // Creating example folder in CustomFiles
-                List<string> customFilesDirectories = Directory.GetDirectories(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME)).ToList<string>();
+                List<string> customFilesDirectories = Directory.GetDirectories(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME)).ToList();
                 if (customFilesDirectories.Count == 0)
                 {
                     Directory.CreateDirectory(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME, Manager.MISSION_EXAMPLE_MOD_FILES_FOLDER_NAME));
-                    customFilesDirectories = Directory.GetDirectories(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME)).ToList<string>();
+                    customFilesDirectories = Directory.GetDirectories(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILE_NAME)).ToList();
                 }
 
                 //Creating Example typesFile
-                List<string> filesNames = Directory.GetFiles(Path.Combine(customFilesDirectories[0])).ToList<string>();
+                List<string> filesNames = Directory.GetFiles(Path.Combine(customFilesDirectories[0])).ToList();
                 if (filesNames.Count == 0)
                 {
                     TypesFile exampleTypesFile = new TypesFile()
@@ -77,7 +77,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                             }
                         }
                     };
-                    XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(customFilesDirectories[0], Manager.MISSION_EXAMPLE_TYPES_FILE_NAME), exampleTypesFile);
+                    XMLSerializer.SerializeXMLFile(Path.Combine(customFilesDirectories[0], Manager.MISSION_EXAMPLE_TYPES_FILE_NAME), exampleTypesFile);
                 }
 
                 // Creating Exmple cfgeconomycore
@@ -101,7 +101,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         }
                     }
                     };
-                    XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME), exampleEconomyCore);
+                    XMLSerializer.SerializeXMLFile(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME), exampleEconomyCore);
                 }
                 else
                 {
@@ -123,7 +123,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                             }
                         }
                     };
-                        XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME), economyCoreFile);
+                        XMLSerializer.SerializeXMLFile(Path.Combine(missionTemplatePath, Manager.MISSION_ECONOMYCORE_FILE_NAME), economyCoreFile);
                     }
                 }
                 #endregion Create example CustomFiles
@@ -148,7 +148,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                             rarity = 5
                         }
                     };
-                    JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME), customFilesRarities);
+                    JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME), customFilesRarities);
                 }
 
                 //Creating vanillaRarities.json
@@ -170,7 +170,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                             rarity = 5
                         }
                     };
-                    JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME), vanillaRarities);
+                    JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME), vanillaRarities);
                 }
 
                 //Creating vanillaTypesChanges.json
@@ -180,37 +180,29 @@ namespace DayZServerManager.Server.Classes.Helpers
                     vanillaTypesChanges.types =
                     [
                         new()
-                    {
-                        name = "example1",
-                        lifetime = 3888000,
-                        flags = new()
                         {
-                            count_in_cargo = "0",
-                            count_in_hoarder = "0",
-                            count_in_map = "1",
-                            count_in_player = "0",
-                            crafted = "0",
-                            deloot = "0"
+                            name = "example1",
+                            lifetime = 3888000,
+                            flags = new("0", "0", "1", "0", "0", "0"),
+                            value =
+                            [
+                                "Tier3"
+                            ]
                         },
-                        value =
-                        [
-                            "Tier3"
-                        ]
-                    },
-                    new()
-                    {
-                        name = "example2",
-                        lifetime = 3888000,
-                        value = []
-                    },
-                    new()
-                    {
-                        name = "example2",
-                        lifetime = 3888000
-                    }
+                        new()
+                        {
+                            name = "example2",
+                            lifetime = 3888000,
+                            value = []
+                        },
+                        new()
+                        {
+                            name = "example2",
+                            lifetime = 3888000
+                        }
                     ];
 
-                    JSONSerializer.SerializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_TYPES_CHANGES_FILE_NAME), vanillaTypesChanges);
+                    JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_TYPES_CHANGES_FILE_NAME), vanillaTypesChanges);
                 }
 
                 //Creating expansionRarities.json and expansionTypesChanges.json, if Expansion is part of the mods
@@ -235,7 +227,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                                 rarity = 5
                             }
                         };
-                        JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_RARITIES_FILE_NAME), expansionRarityFile);
+                        JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_RARITIES_FILE_NAME), expansionRarityFile);
                     }
 
                     //Creating expansionTypesChanges.json
@@ -256,7 +248,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         }
                     };
 
-                        JSONSerializer.SerializeJSONFile<TypesChangesFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_TYPES_CHANGES_FILE_NAME), expansionTypesChanges);
+                        JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_TYPES_CHANGES_FILE_NAME), expansionTypesChanges);
                     }
 
                     // Creating expansion folder in the missionTemplate folder, if it doesn't exist
@@ -311,7 +303,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                             ItemRarity = new Dictionary<string, int>()
                         };
 
-                        JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), exampleHardlineRarity);
+                        JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), exampleHardlineRarity);
                     }
                 }
                 #endregion Creating example rarities and types changes files
@@ -341,7 +333,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         if (globals != null)
                         {
                             UpdateGlobals(globals);
-                            XMLSerializer.SerializeXMLFile<GlobalsFile>(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_GLOBALS_FILE_NAME), globals);
+                            XMLSerializer.SerializeXMLFile(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_GLOBALS_FILE_NAME), globals);
                         }
                     }
 
@@ -360,7 +352,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         {
                             UpdateEconomyCore(missionEconomyCore, missionTemplateEconomyCore);
                         }
-                        XMLSerializer.SerializeXMLFile<EconomyCoreFile>(Path.Combine(missionPath, Manager.MISSION_ECONOMYCORE_FILE_NAME), missionEconomyCore);
+                        XMLSerializer.SerializeXMLFile(Path.Combine(missionPath, Manager.MISSION_ECONOMYCORE_FILE_NAME), missionEconomyCore);
                     }
 
                     // Add the other parts of the cfgeventspawns.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
@@ -378,7 +370,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         {
                             UpdateEventSpawns(missionEventSpawns, missionTemplateEventSpawns);
                         }
-                        XMLSerializer.SerializeXMLFile<EventSpawnsFile>(Path.Combine(missionPath, Manager.MISSION_EVENTSPAWNS_FILE_NAME), missionEventSpawns);
+                        XMLSerializer.SerializeXMLFile(Path.Combine(missionPath, Manager.MISSION_EVENTSPAWNS_FILE_NAME), missionEventSpawns);
                     }
 
                     EnvironmentFile? missionEnvironmentFile = XMLSerializer.DeserializeXMLFile<EnvironmentFile>(Path.Combine(missionPath, Manager.MISSION_ENVIRONMENTS_FILE_NAME));
@@ -396,7 +388,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         {
                             UpdateEnvironmentFile(missionEnvironmentFile, missionTemplateEnvironmentFile);
                         }
-                        XMLSerializer.SerializeXMLFile<EnvironmentFile>(Path.Combine(missionPath, Manager.MISSION_ENVIRONMENTS_FILE_NAME), missionEnvironmentFile);
+                        XMLSerializer.SerializeXMLFile(Path.Combine(missionPath, Manager.MISSION_ENVIRONMENTS_FILE_NAME), missionEnvironmentFile);
                     }
 
                     // Add the part of the main method of the init.c of the missionTemplate to the one from the new mission folder
@@ -433,7 +425,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         {
                             UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
                         }
-                        JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), hardlineFile);
+                        JSONSerializer.SerializeJSONFile(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), hardlineFile);
                     }
 
                     if (vanillaTypes != null)
@@ -450,7 +442,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                             UpdateTypesWithTypesChanges(vanillaTypes, changes);
                         }
 
-                        XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME), vanillaTypes);
+                        XMLSerializer.SerializeXMLFile(Path.Combine(missionPath, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME), vanillaTypes);
                     }
 
                     if (expansionTypes != null)
@@ -467,7 +459,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                             UpdateTypesWithTypesChanges(expansionTypes, changes);
                         }
 
-                        XMLSerializer.SerializeXMLFile<TypesFile>(Path.Combine(missionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME, Manager.MISSION_EXPANSION_TYPES_FILE_NAME), expansionTypes);
+                        XMLSerializer.SerializeXMLFile(Path.Combine(missionPath, Manager.MISSION_EXPANSIONCE_FOLDER_NAME, Manager.MISSION_EXPANSION_TYPES_FILE_NAME), expansionTypes);
                     }
                 }
 
@@ -562,7 +554,7 @@ namespace DayZServerManager.Server.Classes.Helpers
             {
                 foreach (PosItem item in eventItem.positions)
                 {
-                    if (Int64.Parse(item.x) == Int64.Parse(posItem.x) && Int64.Parse(item.y) == Int64.Parse(posItem.y) && Int64.Parse(item.a) == Int64.Parse(posItem.a))
+                    if (long.Parse(item.x) == long.Parse(posItem.x) && long.Parse(item.y) == long.Parse(posItem.y) && long.Parse(item.a) == long.Parse(posItem.a))
                     {
                         return true;
                     }
@@ -601,7 +593,7 @@ namespace DayZServerManager.Server.Classes.Helpers
         {
             try
             {
-                List<string> folderDirectories = Directory.GetDirectories(folderPath).ToList<string>();
+                List<string> folderDirectories = Directory.GetDirectories(folderPath).ToList();
                 foreach (string folder in folderDirectories)
                 {
                     if (Path.GetFileName(folder).ToLower() == Manager.managerConfig.mapName.ToLower())
@@ -671,7 +663,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         item.value = "500";
                     }
                 }
-                Logger.Info("Finished updating globals"); 
+                Logger.Info("Finished updating globals");
             }
             catch (Exception ex)
             {
@@ -773,7 +765,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                 Logger.Error("Error when updating types with rarity", ex);
             }
         }
-        
+
         // Updates the lifetime of items in the given TypesFile with the new spawns of another TypesFile
         public static void UpdateTypesWithTypesChanges(TypesFile typesFile, TypesChangesFile changesFile)
         {
@@ -866,7 +858,7 @@ namespace DayZServerManager.Server.Classes.Helpers
 
         private static void UpdateEventSpawns(EventSpawnsFile missionEventSpawns, EventSpawnsFile templateEventSpawns)
         {
-            try 
+            try
             {
                 Logger.Info("Updating event spawns");
                 foreach (EventItem eventItem in templateEventSpawns.eventItems)
@@ -982,7 +974,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                 Logger.Error("Error when copying vanilla mission folder", ex);
             }
         }
-        
+
         private static void CopyExpansionTemplateFiles(string expansionTemplatePath, string missionPath, string oldMissionPath)
         {
             try
@@ -1009,8 +1001,8 @@ namespace DayZServerManager.Server.Classes.Helpers
             try
             {
                 Logger.Info("Moving mission template files and folders");
-                List<string> templateDirectories = Directory.GetDirectories(missionTemplatePath).ToList<string>();
-                List<string> templateFiles = Directory.GetFiles(missionTemplatePath).ToList<string>();
+                List<string> templateDirectories = Directory.GetDirectories(missionTemplatePath).ToList();
+                List<string> templateFiles = Directory.GetFiles(missionTemplatePath).ToList();
 
                 foreach (string directory in templateDirectories)
                 {
@@ -1040,7 +1032,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                 Logger.Error("Error when copying mission template files and folders", ex);
             }
         }
-        
+
         private static void CopyPersistenceData(string missionPath, string oldMissionPath)
         {
             try

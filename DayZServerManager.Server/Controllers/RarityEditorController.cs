@@ -3,9 +3,8 @@ using DayZServerManager.Server.Classes;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.RarityFile;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using DayZServerManager.Server.Classes.Helpers;
-using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.StringInput;
 using System.Xml.Linq;
+using DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler;
 
 namespace DayZServerManager.Server.Controllers
 {
@@ -13,9 +12,9 @@ namespace DayZServerManager.Server.Controllers
     [Route("[controller]")]
     public class RarityEditorController : ControllerBase
     {
-        private readonly ILogger<DayZServerController> _logger;
+        private readonly ILogger<ManagerController> _logger;
 
-        public RarityEditorController(ILogger<DayZServerController> logger)
+        public RarityEditorController(ILogger<ManagerController> logger)
         {
             _logger = logger;
         }

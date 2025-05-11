@@ -15,5 +15,16 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.T
         public int IsExchange { get; set; }
         public float InitStockPercent { get; set; }
         public List<TraderItem> Items { get; set; }
+
+        public TraderFile(int version, string displayName, string icon, string color, int isExchange, float initStockPercent)
+        {
+            m_Version = version;
+            DisplayName = displayName;
+            Icon = icon;
+            Color = color;
+            IsExchange = isExchange;
+            InitStockPercent = initStockPercent;
+            Items = new List<TraderItem>();
+        }
     }
 }

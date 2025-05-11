@@ -1,4 +1,5 @@
-﻿using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EconomyCoreClasses;
+﻿using DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler;
+using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EconomyCoreClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.RarityClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.RarityFile;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesChangesClasses;
@@ -6,7 +7,7 @@ using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.Types
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using Microsoft.VisualBasic.FileIO;
 
-namespace DayZServerManager.Server.Classes.Helpers
+namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
 {
     public static class RarityEditor
     {
@@ -81,7 +82,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                     {
                         MissionUpdater.UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
                     }
-                    JSONSerializer.SerializeJSONFile<HardlineFile>(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), hardlineFile);
+                    JSONSerializer.SerializeJSONFile(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), hardlineFile);
                 }
             }
             catch (Exception ex)
@@ -107,7 +108,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
                     }
 
-                    XMLSerializer.SerializeXMLFile<TypesFile>(typesPath, typesFile);
+                    XMLSerializer.SerializeXMLFile(typesPath, typesFile);
                 }
             }
         }
@@ -128,7 +129,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                         MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
                     }
 
-                    XMLSerializer.SerializeXMLFile<TypesFile>(typesPath, typesFile);
+                    XMLSerializer.SerializeXMLFile(typesPath, typesFile);
                 }
             }
         }
@@ -142,7 +143,7 @@ namespace DayZServerManager.Server.Classes.Helpers
                 if (typesFile != null)
                 {
                     MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
-                    XMLSerializer.SerializeXMLFile<TypesFile>(filePath, typesFile);
+                    XMLSerializer.SerializeXMLFile(filePath, typesFile);
                 }
             }
         }

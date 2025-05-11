@@ -13,5 +13,14 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.N
         public int UTC { get; set; }
         public int UseMissionTime { get; set; }
         public List<NotificationItem> Notifications { get; set; }
+
+        public NotificationSchedulerFile(int version, int enabled, int utc, int useMissionTime)
+        {
+            m_Version = version;
+            Enabled = enabled;
+            UTC = utc;
+            UseMissionTime = useMissionTime;
+            Notifications = new List<NotificationItem>();
+        }
     }
 }

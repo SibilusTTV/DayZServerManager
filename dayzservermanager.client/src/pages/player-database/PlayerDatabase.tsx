@@ -8,31 +8,17 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import UnpublishedIcon from '@mui/icons-material/Unpublished';
 import { ColumnActionsMode, ContextualMenu, DirectionalHint, IColumn, IContextualMenuItem, IContextualMenuProps, initializeIcons, SelectionMode, ShimmeredDetailsList, TextField } from "@fluentui/react";
 import ReloadButton from "../../common/components/reload-button/ReloadButton";
-
-interface PlayersDB {
-    players: Player[];
-}
+import WhitelistButton from "../../common/components/whitelist-button/WhitelistButton";
+import UnwhitelistButton from "../../common/components/unwhitelist-button/UnwhitelistButton";
 
 interface Player {
     name: string;
     guid: string;
-    isVerified: boolean;
-    ip: string;
-}
-
-interface BannedPlayer {
-    banId: number;
-    guid: string;
-    remainingTime: number;
-    reason: string;
-}
-
-interface ListItem {
-    name: string;
-    guid: string;
+    uid: string;
     isVerified: boolean;
     ip: string;
     isBanned: boolean;
+    isWhitelisted: boolean;
     bannedReasons: string;
 }
 
@@ -42,12 +28,12 @@ interface Dictionary<T>{
 
 export default function PlayerDatabase() {
 
-    const [listItems, setListItems] = React.useState<ListItem[]>([]);
-    const [unsortedListItems, setUnsortedListItems] = React.useState<ListItem[]>([]);
+    const [players, setPlayers] = React.useState<Player[]>([]);
+    const [unsortedPlayers, setUnsortedPlayers] = React.useState<Player[]>([]);
     const [contextualMenuProps, setContextualMenuProps] = React.useState<IContextualMenuProps>();
     const [sortKey, setSortKey] = React.useState("");
     const [isSortedDescending, setIsSortedDescending] = React.useState(false);
-    const [fieldFilters, setFieldFilters] = React.useState<Dictionary<string>>({ "guid": "", "name": "", "ip": "", "bannedReasons": "", "isBanned": "", "isVerified": "" });
+    const [fieldFilters, setFieldFilters] = React.useState<Dictionary<string>>({ "guid": "", "name": "", "ip": "", "bannedReasons": "", "isBanned": "", "isVerified": "", "isWhitelisted": "" });
     //const [groupedKey, setGroupedKey] = React.useState("");
 
     const onColumnContextMenu = (column: IColumn | undefined, ev: React.MouseEvent<HTMLElement> | undefined): void => {
@@ -60,6 +46,10 @@ export default function PlayerDatabase() {
         if (column.columnActionsMode !== ColumnActionsMode.disabled) {
             setContextualMenuProps(getContextualMenuProps(column, ev));
         }
+    }
+
+    const reload = () => {
+        getAllPlayers(setPlayers, setUnsortedPlayers, 'Scheduler/GetPlayers');
     }
 
     initializeIcons();
@@ -99,17 +89,16 @@ export default function PlayerDatabase() {
             isResizable: true
         },
         {
-            key: 'isVerified',
-            name: 'Is Verified',
-            fieldName: 'isVerified',
-            minWidth: 120,
-            isSorted: sortKey === "isVerified",
+            key: 'uid',
+            name: 'Unique ID',
+            fieldName: 'uid',
+            minWidth: 320,
+            data: 'string',
+            isSorted: sortKey === "uid",
             isSortedDescending: isSortedDescending,
-            isFiltered: fieldFilters["isVerified"] != "",
+            isFiltered: fieldFilters["uid"] != "",
             onRender: (item: Player) => {
-                return item.isVerified ?
-                    <CheckCircleIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} /> :
-                    <UnpublishedIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} />
+                return <span style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center" }}>{item.uid}</span>
             },
             onColumnContextMenu: onColumnContextMenu,
             onColumnClick: onColumnClick,
@@ -134,16 +123,15 @@ export default function PlayerDatabase() {
             isResizable: true
         },
         {
-            key: 'isBanned',
-            name: 'Is Banned',
-            fieldName: 'isBanned',
+            key: 'isVerified',
+            name: 'Is Verified',
+            fieldName: 'isVerified',
             minWidth: 120,
-            data: 'boolean',
-            isSorted: sortKey === "isBanned",
+            isSorted: sortKey === "isVerified",
             isSortedDescending: isSortedDescending,
-            isFiltered: fieldFilters["isBanned"] != "",
-            onRender: (item: ListItem) => {
-                return item.isBanned ?
+            isFiltered: fieldFilters["isVerified"] != "",
+            onRender: (item: Player) => {
+                return item.isVerified ?
                     <CheckCircleIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} /> :
                     <UnpublishedIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} />
             },
@@ -158,25 +146,68 @@ export default function PlayerDatabase() {
             fieldName: 'kick',
             minWidth: 80,
             onRender: (item: Player) => {
-                return <KickButton guid={item.guid} name={item.name} />
+                return <KickButton guid={item.guid} name={item.name} reload={reload} />
             }
+        },
+        {
+            key: 'isWhitelisted',
+            name: 'Is Whitelisted',
+            fieldName: 'isWhitelisted',
+            minWidth: 120,
+            data: 'boolean',
+            isSorted: sortKey === "isWhitelisted",
+            isSortedDescending: isSortedDescending,
+            isFiltered: fieldFilters["isWhitelisted"] != "",
+            onRender: (item: Player) => {
+                return item.isWhitelisted ?
+                    <CheckCircleIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} /> :
+                    <UnpublishedIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} />
+            },
+            onColumnContextMenu: onColumnContextMenu,
+            onColumnClick: onColumnClick,
+            columnActionsMode: ColumnActionsMode.hasDropdown,
+            isResizable: true
+        },
+        {
+            key: 'whitelist',
+            name: 'Whitelist Actions',
+            fieldName: 'whitelist',
+            minWidth: 120,
+            onRender: (item: Player) => {
+                return item.isWhitelisted ?
+                    <UnwhitelistButton guid={item.guid} name={item.name} reload={reload} /> :
+                    <WhitelistButton guid={item.guid} name={item.name} reload={reload} />
+            }
+        },
+        {
+            key: 'isBanned',
+            name: 'Is Banned',
+            fieldName: 'isBanned',
+            minWidth: 120,
+            data: 'boolean',
+            isSorted: sortKey === "isBanned",
+            isSortedDescending: isSortedDescending,
+            isFiltered: fieldFilters["isBanned"] != "",
+            onRender: (item: Player) => {
+                return item.isBanned ?
+                    <CheckCircleIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} /> :
+                    <UnpublishedIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} />
+            },
+            onColumnContextMenu: onColumnContextMenu,
+            onColumnClick: onColumnClick,
+            columnActionsMode: ColumnActionsMode.hasDropdown,
+            isResizable: true
         },
         {
             key: 'ban',
-            name: 'Ban',
+            name: 'Ban Actions',
             fieldName: 'ban',
             minWidth: 80,
             onRender: (item: Player) => {
-                return <BanButton guid={item.guid} name={item.name} />
-            }
-        },
-        {
-            key: 'unban',
-            name: 'Unban',
-            fieldName: 'unban',
-            minWidth: 80,
-            onRender: (item: Player) => {
-                return <UnbanButton guid={item.guid} name={item.name} />
+                return item.isBanned ?
+                    <UnbanButton guid={item.guid} name={item.name} reload={reload} /> :
+                    <BanButton guid={item.guid} name={item.name} reload={reload} />
+
             }
         },
         {
@@ -187,7 +218,7 @@ export default function PlayerDatabase() {
             isSorted: sortKey === "bannedReasons",
             isSortedDescending: isSortedDescending,
             isFiltered: fieldFilters["bannedReasons"] != "",
-            onRender: (item: ListItem) => {
+            onRender: (item: Player) => {
                 return <div style={{ display: "flex", flexDirection: "column", padding: "0px 0px 0px 0px" }}>{item.isBanned && item.bannedReasons}</div>
             },
             onColumnContextMenu: onColumnContextMenu,
@@ -198,7 +229,7 @@ export default function PlayerDatabase() {
     ]
 
     React.useEffect(() => {
-        getAllPlayers(setListItems, setUnsortedListItems);
+        reload();
     }, []);
 
     const onContextualMenuDismissed = (): void => {
@@ -267,15 +298,15 @@ export default function PlayerDatabase() {
     }
 
     const _onSortColumn = (column: IColumn, isSortedDescending: boolean) => {
-        const sortedListItems = _copyAndSort<ListItem>(listItems, column.key, isSortedDescending);
-        setListItems(sortedListItems);
+        const sortedPlayers = _copyAndSort<Player>(players, column.key, isSortedDescending);
+        setPlayers(sortedPlayers);
 
         setSortKey(column.key);
         setIsSortedDescending(isSortedDescending);
     };
 
     const _onDisableSorting = () => {
-        setListItems(unsortedListItems);
+        setPlayers(unsortedPlayers);
 
         setSortKey("");
         setIsSortedDescending(false);
@@ -290,19 +321,19 @@ export default function PlayerDatabase() {
 
         setFieldFilters(newFieldFilters);
 
-        setListItems(
-            unsortedListItems.filter(
-                listItem => {
-                    return getValidForFilters(listItem, newFieldFilters);
+        setPlayers(
+            unsortedPlayers.filter(
+                player => {
+                    return getValidForFilters(player, newFieldFilters);
                 }
             )
         );
     }
 
-    const getValidForFilters = (listItem: ListItem, newFieldFilters: Dictionary<string>) => {
+    const getValidForFilters = (player: Player, newFieldFilters: Dictionary<string>) => {
         for (let filterKey in newFieldFilters) {
-            const key: keyof typeof listItem = Object.keys(listItem).find(key => key.valueOf() == filterKey) as keyof typeof listItem;
-            if (!key || newFieldFilters[filterKey] != "" && !listItem[key].toString().toLowerCase().includes(newFieldFilters[filterKey].toLowerCase())) {
+            const key: keyof typeof player = Object.keys(player).find(key => key.valueOf() == filterKey) as keyof typeof player;
+            if (!key || newFieldFilters[filterKey] != "" && !player[key].toString().toLowerCase().includes(newFieldFilters[filterKey].toLowerCase())) {
                 return false;
             }
         }
@@ -314,29 +345,30 @@ export default function PlayerDatabase() {
             <div>
                 <ReloadButton
                     populateFunction={getAllPlayers}
-                    setFunction={setListItems}
-                    setFunctionUnsorted={setUnsortedListItems}
+                    setFunction={setPlayers}
+                    setFunctionUnsorted={setUnsortedPlayers}
+                    endpoint='Scheduler/GetPlayers'
                 />
             </div>
             <ShimmeredDetailsList
-                items={listItems || []}
+                items={players || []}
                 columns={columns}
                 selectionMode={SelectionMode.none}
                 enableUpdateAnimations
-                enableShimmer={listItems == null}
+                enableShimmer={players == null}
             />
             {contextualMenuProps && <ContextualMenu {...contextualMenuProps} />}
         </div>
     )
 }
 
-async function getAllPlayers(setListItems: Function, setUnsortedListItems: Function) {
-    let players: Player[] = [];
+async function getAllPlayers(setPlayers: Function, setUnsortedPlayers: Function, endpoint: string) {
     try {
-        const response = await fetch('SchedulerConfig/GetPlayers');
+        const response = await fetch(endpoint);
         if (response.status == 200) {
-            const result = (await response.json()) as PlayersDB;
-            players = result.players;
+            const result = (await response.json()) as Player[];
+            setPlayers(result);
+            setUnsortedPlayers(result);
         }
     }
     catch (ex) {
@@ -346,42 +378,6 @@ async function getAllPlayers(setListItems: Function, setUnsortedListItems: Funct
         else if (ex instanceof Error) {
             alert(ex.message);
         }
-    }
-
-    let bannedPlayers: BannedPlayer[];
-    try {
-        const response = await fetch('SchedulerConfig/GetBannedPlayers');
-        if (response.status == 200) {
-            const result = (await response.json()) as BannedPlayer[];
-            bannedPlayers = result;
-        }
-    }
-    catch (ex) {
-        if (typeof ex === "string") {
-            alert(ex);
-        }
-        else if (ex instanceof Error) {
-            alert(ex.message);
-        }
-    }
-
-    if (players) {
-        let listItems: ListItem[] = players.map(player => {
-            let bannedReasons = "";
-            (bannedPlayers) && bannedPlayers.forEach(bannedPlayer => { if (bannedPlayer.guid === player.guid) { bannedReasons += bannedPlayer.reason + "\n" } })
-            const listItem: ListItem = {
-                name: player.name,
-                guid: player.guid,
-                isVerified: player.isVerified,
-                ip: player.ip,
-                isBanned: bannedReasons != "",
-                bannedReasons: bannedReasons
-            }
-            return listItem;
-        });
-
-        setListItems(listItems);
-        setUnsortedListItems(listItems);
     }
 }
 

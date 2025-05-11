@@ -1,19 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using DayZServerManager.Server.Classes;
-using DayZServerManager.Server.Classes.Helpers;
 using System.Numerics;
-using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.StringInput;
 using DayZServerManager.Server.Classes.Handlers.SchedulerHandler;
+using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.StringInput;
 
 namespace DayZServerManager.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class DayZServerController : ControllerBase
+    public class ManagerController : ControllerBase
     {
-        private readonly ILogger<DayZServerController> _logger;
+        private readonly ILogger<ManagerController> _logger;
 
-        public DayZServerController(ILogger<DayZServerController> logger)
+        public ManagerController(ILogger<ManagerController> logger)
         {
             _logger = logger;
         }
@@ -88,30 +88,6 @@ namespace DayZServerManager.Server.Controllers
             {
                 return false;
             }
-        }
-
-        [HttpPost("KickPlayer")]
-        public void KickPlayer([FromBody] KickPlayerProps input)
-        {
-            Manager.scheduler?.KickPlayer(input.guid, input.reason, input.name);
-        }
-
-        [HttpPost("BanPlayer")]
-        public void BanPlayer([FromBody] BanPlayerProps input)
-        {
-            Manager.scheduler?.BanPlayer(input.guid, input.reason, input.duration, input.name);
-        }
-
-        [HttpPost("UnbanPlayer")]
-        public void UnbanPlayer([FromBody] UnbanPlayerProps input)
-        {
-            Manager.scheduler?.UnbanPlayer(input.guid, input.name);
-        }
-
-        [HttpPost("SendCommand")]
-        public void SendCommand([FromBody] StringInput input)
-        {
-            Manager.scheduler?.SendCommand(input.value);
         }
 
         [HttpGet("GetManagerLog")]

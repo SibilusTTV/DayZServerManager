@@ -1,4 +1,4 @@
-﻿namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.StringInput
+﻿namespace DayZServerManager.Server.Classes.SerializationClasses.StringInput
 {
     public class StringInput
     {

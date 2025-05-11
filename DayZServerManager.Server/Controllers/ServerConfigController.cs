@@ -1,5 +1,5 @@
-﻿using DayZServerManager.Server.Classes;
-using DayZServerManager.Server.Classes.Helpers;
+﻿
+using DayZServerManager.Server.Classes;
 using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -10,9 +10,9 @@ namespace DayZServerManager.Server.Controllers
     [Route("[controller]")]
     public class ServerConfigController : ControllerBase
     {
-        private readonly ILogger<DayZServerController> _logger;
+        private readonly ILogger<ManagerController> _logger;
 
-        public ServerConfigController(ILogger<DayZServerController> logger)
+        public ServerConfigController(ILogger<ManagerController> logger)
         {
             _logger = logger;
         }

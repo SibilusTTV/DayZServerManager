@@ -6,11 +6,12 @@ import NotInterestedIcon from '@mui/icons-material/NotInterested';
 interface BanOfflineButtonProps {
     guid: string;
     name: string;
+    reload: Function;
 }
 
-export default function BanOfflineButton({guid, name}: BanOfflineButtonProps) {
+export default function BanOfflineButton({guid, name, reload}: BanOfflineButtonProps) {
 
-    const BanPlayer = (guid: string, name: string) => {
+    const BanPlayer = (guid: string, name: string, reload: Function) => {
         let reason = prompt("Please give a reason for the ban");
         if (reason == null) {
             reason = "";
@@ -20,7 +21,7 @@ export default function BanOfflineButton({guid, name}: BanOfflineButtonProps) {
         if (durationString != null && durationString != "") {
             duration = GetMinutes(durationString);
         }
-        sendBanRequest(guid, name, duration, reason);
+        sendBanRequest(guid, name, duration, reason, reload);
     }
 
 
@@ -83,7 +84,7 @@ export default function BanOfflineButton({guid, name}: BanOfflineButtonProps) {
 
     return (
         <DefaultButton
-            onClick={() => BanPlayer(guid, name)}
+            onClick={() => BanPlayer(guid, name, reload)}
             style={{ display: "flex", flexDirection: "column" }}
         >
             <NotInterestedIcon />
@@ -92,7 +93,7 @@ export default function BanOfflineButton({guid, name}: BanOfflineButtonProps) {
 
 }
 
-async function sendBanRequest(_guid: string, _name: string, _duration: number, _reason: string) {
+async function sendBanRequest(_guid: string, _name: string, _duration: number, _reason: string, reload: Function) {
     try {
         await fetch('DayZServer/BanPlayer', {
             method: "POST",
@@ -111,4 +112,5 @@ async function sendBanRequest(_guid: string, _name: string, _duration: number, _
     catch (ex) {
         alert(ex);
     }
+    reload();
 }

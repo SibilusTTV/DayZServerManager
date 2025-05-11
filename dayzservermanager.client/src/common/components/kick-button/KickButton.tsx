@@ -5,21 +5,22 @@ import DoNotStepIcon from '@mui/icons-material/DoNotStep';
 interface KickButtonProps {
     guid: string;
     name: string;
+    reload: Function;
 }
 
-export default function KickButton({ guid, name }: KickButtonProps) {
+export default function KickButton({ guid, name, reload }: KickButtonProps) {
 
-    const KickPlayer = (guid: string, name: string) => {
+    const KickPlayer = (guid: string, name: string, reload: Function) => {
         let reason = prompt("Please give a reason for the kick");
         if (reason == null) {
             reason = "";
         }
-        sendKickRequest(guid, name, reason);
+        sendKickRequest(guid, name, reason, reload);
     }
 
     return (
         <DefaultButton
-            onClick={() => KickPlayer(guid, name)}
+            onClick={() => KickPlayer(guid, name, reload)}
             style={{ display: "flex", flexDirection: "column" }}
         >
             <DoNotStepIcon />
@@ -27,7 +28,7 @@ export default function KickButton({ guid, name }: KickButtonProps) {
     )
 }
 
-async function sendKickRequest(_guid: string, _name: string, _reason: string) {
+async function sendKickRequest(_guid: string, _name: string, _reason: string, reload: Function) {
     try {
         await fetch('DayZServer/KickPlayer', {
             method: "POST",
@@ -45,4 +46,5 @@ async function sendKickRequest(_guid: string, _name: string, _reason: string) {
     catch (ex) {
         alert(ex);
     }
+    reload();
 }

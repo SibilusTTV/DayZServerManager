@@ -5,7 +5,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 interface ReloadButtonProps {
     populateFunction: Function;
     setFunction: Function;
-    endpoint?: string;
+    endpoint: string;
     setFunctionUnsorted?: Function
 }
 
@@ -22,7 +22,7 @@ export default function ReloadButton({ populateFunction, setFunction, endpoint, 
     else {
         return (
             <DefaultButton
-                onClick={() => populateFunction(setFunction, setFunctionUnsorted)}
+                onClick={() => populateFunction(setFunction, setFunctionUnsorted, endpoint)}
             >
                 <ReplayIcon />
             </DefaultButton>
