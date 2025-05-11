@@ -15,6 +15,7 @@ using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses;
 using DayZServerManager.Server.Classes.Handlers.RestartUpdaterHandler;
 using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB;
 using System.Text.RegularExpressions;
+using System.Security.Authentication.ExtendedProtection;
 
 namespace DayZServerManager.Server.Classes
 {
@@ -242,6 +243,7 @@ namespace DayZServerManager.Server.Classes
 
             kill = false;
             props.managerStatus = STATUS_STARTING_SERVER;
+            scheduler.SaveWhitelistedPlayers();
             dayZServer.StartServer();
 
             props.managerStatus = STATUS_STARTING_SCHEDULER;
@@ -276,6 +278,8 @@ namespace DayZServerManager.Server.Classes
                     dayZServer.SaveServerConfig(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
 
                     dayZServer.UpdateAndBackupServer(false, true);
+
+                    scheduler.SaveWhitelistedPlayers();
 
                     dayZServer.StartServer();
                 }

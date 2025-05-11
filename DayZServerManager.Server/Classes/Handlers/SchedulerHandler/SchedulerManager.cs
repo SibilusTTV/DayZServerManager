@@ -90,30 +90,44 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 
         private void LoadWhitelistedPlayers()
         {
-            using (StreamReader reader = new StreamReader(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
+            try
             {
-                while (!reader.EndOfStream)
+                using (StreamReader reader = new StreamReader(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
                 {
-                    string? line = reader.ReadLine();
-                    if (line != null && !string.IsNullOrEmpty(line) && !_whitelistedPlayers.Contains(line))
+                    while (!reader.EndOfStream)
                     {
-                        _whitelistedPlayers.Add(line);
+                        string? line = reader.ReadLine();
+                        if (line != null && !string.IsNullOrEmpty(line) && !_whitelistedPlayers.Contains(line))
+                        {
+                            _whitelistedPlayers.Add(line);
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                Logger.Error("Error when loading the whitelisted players", ex);
+            }
         }
 
-        private void SaveWhitelistedPlayers()
+        public void SaveWhitelistedPlayers()
         {
-            using (StreamWriter writer = new StreamWriter(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
+            try
             {
-                foreach (string whitelistedPlayer in _whitelistedPlayers)
+                using (StreamWriter writer = new StreamWriter(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
                 {
-                    if (whitelistedPlayer != string.Empty)
+                    foreach (string whitelistedPlayer in _whitelistedPlayers)
                     {
-                        writer.WriteLine(whitelistedPlayer);
+                        if (whitelistedPlayer != string.Empty)
+                        {
+                            writer.WriteLine(whitelistedPlayer);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error when saving the whitelisted players", ex);
             }
         }
 
