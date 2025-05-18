@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-
-namespace DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses
+﻿namespace DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses
 {
     public class FlagsChangesItem
     {
@@ -16,12 +9,12 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.T
         public string crafted { get; set; }
         public string deloot { get; set; }
 
-        public FlagsChangesItem(string cargo, string hoarder, string map, string player, string crafted, string deloot)
+        public FlagsChangesItem(string count_in_cargo, string count_in_hoarder, string count_in_map, string count_in_player, string crafted, string deloot)
         {
-            count_in_cargo = cargo;
-            count_in_hoarder = hoarder;
-            count_in_map = map;
-            count_in_player = player;
+            this.count_in_cargo = count_in_cargo;
+            this.count_in_hoarder = count_in_hoarder;
+            this.count_in_map = count_in_map;
+            this.count_in_player = count_in_player;
             this.crafted = crafted;
             this.deloot = deloot;
         }

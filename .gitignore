@@ -374,3 +374,4 @@ FodyWeavers.xsd
 /DayZServerManager.Server/deploy
 /DayZServerManager.Server/Debug/config.json
 /DayZServerManager.Server/Debug/config.json
+/DayZServerManager.Server/Debug/server/serverDZ.cfg

@@ -279,6 +279,35 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                 steamCMDProcess.StartInfo.RedirectStandardOutput = true;
                 Logger.Info(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE) + " " + serverUpdateArguments);
                 steamCMDProcess.StartInfo.FileName = Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAM_CMD_EXECUTABLE);
+
+                if (OperatingSystem.IsWindows())
+                {
+                    if (!Directory.Exists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_LOGS_FOLDER)))
+                    {
+                        Directory.CreateDirectory(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_LOGS_FOLDER));
+                    }
+                }
+                else
+                {
+                    if (!Directory.Exists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_LINUX32_Folder)))
+                    {
+                        Directory.CreateDirectory(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_LINUX32_Folder));
+                    }
+
+                    if (!Directory.Exists(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_LINUX32_Folder, Manager.STEAMCMD_LOGS_FOLDER)))
+                    {
+                        Directory.CreateDirectory(Path.Combine(Manager.STEAM_CMD_PATH, Manager.STEAMCMD_LINUX32_Folder, Manager.STEAMCMD_LOGS_FOLDER));
+                    }
+                }
+
+                if (!File.Exists(Manager.STEAMCMD_CONSOLE_LOG_PATH))
+                {
+                    using (var fs = File.Create(Manager.STEAMCMD_CONSOLE_LOG_PATH))
+                    {
+
+                    }
+                }
+
                 steamCMDProcess.Start();
 
                 Manager.props.steamCMDStatus = Manager.STATUS_RUNNING;
@@ -287,12 +316,14 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                 {
                     using (var sr = new StreamReader(fs, Encoding.Default))
                     {
-                        while (!steamCMDProcess.HasExited)
+                        bool hasExited = false;
+                        while (!steamCMDProcess.HasExited && !hasExited)
                         {
                             string? standardOutput = sr.ReadToEnd();
 
                             if (!string.IsNullOrEmpty(standardOutput))
                             {
+                                Logger.Info(standardOutput);
                                 if (standardOutput.Contains("password:"))
                                 {
                                     Logger.Info(Manager.STATUS_CACHED_CREDENTIALS);
@@ -308,15 +339,21 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                                 {
                                     Manager.props.steamCMDStatus = Manager.STATUS_CLIENT_CONFIG;
                                 }
-                                Logger.Info(standardOutput);
+                                else if (standardOutput.Contains("Unloading Steam API"))
+                                {
+                                    steamCMDProcess.WaitForExit();
+                                    hasExited = true;
+                                }
                             }
                         }
+
+                        Logger.Info(sr.ReadToEnd());
+
                     }
                 }
 
                 if (steamCMDProcess != null)
                 {
-                    steamCMDProcess.WaitForExit();
                     steamCMDProcess.Kill();
                     steamCMDProcess = null;
                 }

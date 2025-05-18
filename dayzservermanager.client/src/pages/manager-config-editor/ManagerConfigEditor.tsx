@@ -95,9 +95,10 @@ export default function ManagerConfigEditor() {
         }),
         []
     );
+
     const handleLoad = () => {
         PopulateManagerConfig(setManagerConfig, 'ManagerConfig/GetManagerConfig');
-    }
+    };
 
     const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue: string | undefined) => {
         if (!(managerConfig === undefined)) {
@@ -159,19 +160,12 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const handleClientModChange = (newValue: string | undefined, mod: Mod, key: string) => {
+    const handleClientModBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, mod: Mod, key: string) => {
         if (!(managerConfig === undefined)) {
             setManagerConfig(
                 {
                     ...managerConfig,
-                    clientMods: [
-                        ...managerConfig.clientMods.filter((_, index) => index < mod.id),
-                        {
-                            ...mod,
-                            [key]: newValue
-                        },
-                        ...managerConfig.clientMods.filter((_, index) => index > mod.id)
-                    ]
+                    clientMods: managerConfig.clientMods.map((oldMod) => oldMod.id === mod.id ? {...mod, [key]: event.target.value} : oldMod)
                 }
             );
         }
@@ -205,19 +199,12 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const handleServerModChange = (newValue: string | undefined, mod: Mod, key: string) => {
+    const handleServerModBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, mod: Mod, key: string) => {
         if (!(managerConfig === undefined)) {
             setManagerConfig(
                 {
                     ...managerConfig,
-                    serverMods: [
-                        ...managerConfig.serverMods.filter((_, index) => index < mod.id),
-                        {
-                            ...mod,
-                            [key]: newValue
-                        },
-                        ...managerConfig.serverMods.filter((_, index) => index > mod.id),
-                    ]
+                    serverMods: managerConfig.serverMods.map((oldMod) => oldMod.id === mod.id ? { ...mod, [key]: key === "workshopID" ? parseInt(event.target.value) : event.target.value } : oldMod)
                 }
             );
         }
@@ -460,7 +447,7 @@ export default function ManagerConfigEditor() {
             minWidth: 160,
             onRender: (mod: Mod) => {
                 return (
-                    <TextField id={"name-" + mod.id} value={mod.name} onChange={(_, newValue) => handleClientModChange(newValue, mod, "name")} />
+                    <TextField id={"name-" + mod.id} defaultValue={mod.name} onBlur={(event) => handleClientModBlur(event, mod, "name")} />
                 )
             }
         },
@@ -471,7 +458,7 @@ export default function ManagerConfigEditor() {
             minWidth: 160,
             onRender: (mod: Mod) => {
                 return (
-                    <TextField id={"workshopID-" + mod.id} value={mod.workshopID.toString()} onChange={(_, newValue) => handleClientModChange(newValue, mod, "workshopID")} />
+                    <TextField id={"workshopID-" + mod.id} defaultValue={mod.workshopID.toString()} onBlur={(event) => handleClientModBlur(event, mod, "workshopID")} />
                 )
             }
         },
@@ -501,7 +488,7 @@ export default function ManagerConfigEditor() {
             minWidth: 160,
             onRender: (mod: Mod) => {
                 return (
-                    <TextField id={"name-" + mod.id} value={mod.name} onChange={(_, newValue) => handleServerModChange(newValue, mod, "name")} />
+                    <TextField id={"name-" + mod.id} defaultValue={mod.name} onBlur={(event) => handleServerModBlur(event, mod, "name")} />
                 )
             }
         },
@@ -512,7 +499,7 @@ export default function ManagerConfigEditor() {
             minWidth: 160,
             onRender: (mod: Mod) => {
                 return (
-                    <TextField id={"workshopID-" + mod.id} value={mod.workshopID.toString()} onChange={(_, newValue) => handleServerModChange(newValue, mod, "workshopID")} />
+                    <TextField id={"workshopID-" + mod.id} defaultValue={mod.workshopID.toString()} onBlur={(event) => handleServerModBlur(event, mod, "workshopID")} />
                 )
             }
         },
@@ -570,6 +557,7 @@ export default function ManagerConfigEditor() {
                                 onDragEnd={() => handleClientModsDragEnd()}
                                 onDragEnter={() => handleDragEnter(props.item)}
                                 onDragLeave={() => handleDragLeave()}
+                                key={(props.item as Mod).id}
                             >
                                 <DetailsRow {...props} />
                             </div>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibGit2Sharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,13 +15,13 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.N
         public int UseMissionTime { get; set; }
         public List<NotificationItem> Notifications { get; set; }
 
-        public NotificationSchedulerFile(int version, int enabled, int utc, int useMissionTime)
+        public NotificationSchedulerFile(int m_Version, int Enabled, int UTC, int UseMissionTime, List<NotificationItem> Notifications)
         {
-            m_Version = version;
-            Enabled = enabled;
-            UTC = utc;
-            UseMissionTime = useMissionTime;
-            Notifications = new List<NotificationItem>();
+            this.m_Version = m_Version;
+            this.Enabled = Enabled;
+            this.UTC = UTC;
+            this.UseMissionTime = UseMissionTime;
+            this.Notifications = Notifications;
         }
     }
 }

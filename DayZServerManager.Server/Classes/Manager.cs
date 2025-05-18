@@ -458,7 +458,7 @@ namespace DayZServerManager.Server.Classes
                 NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME));
                 if (notFile == null)
                 {
-                    notFile = new NotificationSchedulerFile(1, 1, 0, 0);
+                    notFile = new NotificationSchedulerFile(1, 1, 0, 0, new List<NotificationItem>());
                 }
                 RestartUpdater.UpdateExpansionScheduler(managerConfig, notFile);
                 JSONSerializer.SerializeJSONFile(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME), notFile);
