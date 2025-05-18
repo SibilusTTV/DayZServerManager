@@ -1,8 +1,6 @@
 
 import { CheckboxVisibility, DefaultButton, DetailsList, DetailsRow, getTheme, IColumn, IDetailsRowProps, IDragDropContext, IDragDropEvents, initializeIcons, IObjectWithKey, mergeStyles, Selection, SelectionMode, TextField } from '@fluentui/react';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { JSX, useEffect, useMemo, useState } from 'react';
 import { Dict } from "styled-components/dist/types";
 import ReloadButton from '../../common/components/reload-button/ReloadButton';
@@ -59,10 +57,13 @@ export default function ManagerConfigEditor() {
     const [managerConfig, setManagerConfig] = useState<ManagerConfig>();
     const [draggedClientMods, setDraggedClientMods] = useState<Mod>();
     const [draggedServerMods, setDraggedServerMods] = useState<Mod>();
+    const [draggedCustomMessages, setDraggedCustomMessages] = useState<CustomMessage>();
     const [draggedClientModsIndex, setDraggedClientModsIndex] = useState<number>(-1);
     const [draggedServerModsIndex, setDraggedServerModsIndex] = useState<number>(-1);
+    const [draggedCustomMessagesIndex, setDraggedCustomMessagesIndex] = useState<number>(-1);
     const [, setSelectedClientMods] = useState<IObjectWithKey[]>();
     const [, setSelectedServerMods] = useState<IObjectWithKey[]>();
+    const [, setSelectedCustomMessages] = useState<IObjectWithKey[]>();
 
     initializeIcons();
 
@@ -92,6 +93,17 @@ export default function ManagerConfigEditor() {
             },
             selectionMode: SelectionMode.multiple,
             getKey: (item) => (item as Mod).id
+        }),
+        []
+    );
+
+    const customMessageSelection: Selection = useMemo(() => new Selection(
+        {
+            onSelectionChanged: () => {
+                setSelectedCustomMessages(customMessageSelection.getSelection());
+            },
+            selectionMode: SelectionMode.multiple,
+            getKey: (item) => (item as CustomMessage).id
         }),
         []
     );
@@ -240,71 +252,83 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const handleCustomMessagesChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, i: number, newValue: string | undefined) => {
-        if (!(managerConfig === undefined)) {
-            let changedMessage: CustomMessage = managerConfig.customMessages[i];
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    customMessages: [
-                        ...managerConfig.customMessages.filter((_, index) => index < i),
-                        {
-                            ...changedMessage,
-                            [event.currentTarget.id]: newValue
-                        },
-                        ...managerConfig.customMessages.filter((_, index) => index > i)
-                    ]
-                }
-            )
-        }
-    }
-
-    const handleWaitTimeChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, i: number, newValue: string | undefined) => {
+    const handleCustomMessagesChange = (customMessage: CustomMessage, newValue: string | undefined, key: string) => {
         if (managerConfig) {
-            let changedMessage: CustomMessage = managerConfig.customMessages[i];
             setManagerConfig(
                 {
                     ...managerConfig,
-                    customMessages: [
-                        ...managerConfig.customMessages.filter((_, index) => index < i),
-                        {
-                            ...changedMessage,
-                            waitTime: {
-                                ...changedMessage.waitTime,
-                                [event.currentTarget.id]: newValue
-                            }
-                        },
-                        ...managerConfig.customMessages.filter((_, index) => index > i)
-                    ]
+                    customMessages: managerConfig.customMessages.map((message) => message.id === customMessage.id ? {
+                        ...customMessage,
+                        [key]: newValue
+                    } :
+                        message)
                 }
             )
         }
     }
 
-    const handleIntervalChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, i: number, newValue: string | undefined) => {
-        if (!(managerConfig === undefined)) {
-            let changedMessage: CustomMessage = managerConfig.customMessages[i];
+    const handleWaitTimeChange = (customMessage: CustomMessage, newValue: string | undefined, key: string) => {
+        if (managerConfig && newValue) {
+            let newNumber = parseInt(newValue);
+            if (!Number.isNaN(newNumber)) {
+                if (newNumber > 24) {
+                    newNumber = 24;
+                }
+                else if (newNumber < 0) {
+                    newNumber = 0;
+                }
+            }
+            else {
+                newNumber = 0;
+            }
+
             setManagerConfig(
                 {
                     ...managerConfig,
-                    customMessages: [
-                        ...managerConfig.customMessages.filter((_, index) => index < i),
-                        {
-                            ...changedMessage,
-                            interval: {
-                                ...changedMessage.interval,
-                                [event.currentTarget.id]: newValue
-                            }
-                        },
-                        ...managerConfig.customMessages.filter((_, index) => index > i)
-                    ]
+                    customMessages: managerConfig.customMessages.map((message) => message.id === customMessage.id ? {
+                        ...message,
+                        waitTime: {
+                            ...message.waitTime,
+                            [key]: newNumber
+                        }
+                    } :
+                        message)
+                }
+            )
+        }
+    }
+
+    const handleIntervalChange = (customMessage: CustomMessage, newValue: string | undefined, key: string) => {
+        if (managerConfig && newValue) {
+            let newNumber = 0;
+            if (!Number.isNaN(newValue)) {
+                newNumber = parseInt(newValue);
+                if (newNumber > 24) {
+                    newNumber = 24;
+                }
+                else if (newNumber < 0) {
+                    newNumber = 0;
+                }
+            }
+
+            setManagerConfig(
+                {
+                    ...managerConfig,
+                    customMessages: managerConfig.customMessages.map((message) => message.id === customMessage.id ? {
+                        ...message,
+                        interval: {
+                            ...message.interval,
+                            [key]: newNumber
+                        }
+                    } :
+                        message)
                 }
             )
         }
     }
 
     const deleteCustomMessage = (id: number) => {
-        if (!(managerConfig === undefined)) {
+        if (managerConfig) {
             setManagerConfig(
                 {
                     ...managerConfig,
@@ -313,40 +337,6 @@ export default function ManagerConfigEditor() {
                     ]
                 }
             )
-        }
-    }
-
-    const moveMessageUp = (i: number) => {
-        if (!(managerConfig === undefined)) {
-            let movedMessage = managerConfig.customMessages[i];
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    customMessages: [
-                        ...managerConfig.customMessages.filter((_, index) => index < i - 1),
-                        movedMessage,
-                        ...managerConfig.customMessages.filter((_, index) => index > i - 2 && index !== i)
-                    ]
-
-                }
-            );
-        }
-    }
-
-    const moveMessageDown = (i: number) => {
-        if (!(managerConfig === undefined)) {
-            let movedMessage = managerConfig.customMessages[i];
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    customMessages: [
-                        ...managerConfig.customMessages.filter((_, index) => index < i + 2 && index !== i),
-                        movedMessage,
-                        ...managerConfig.customMessages.filter((_, index) => index > i + 1)
-                    ]
-
-                }
-            );
         }
     }
 
@@ -386,6 +376,24 @@ export default function ManagerConfigEditor() {
         }
     };
 
+    const insertBeforeCustomMessages = (item: CustomMessage): void => {
+        if (managerConfig) {
+            const draggedItems = customMessageSelection.isIndexSelected(draggedCustomMessagesIndex)
+                ? (customMessageSelection.getSelection() as CustomMessage[])
+                : [draggedCustomMessages!];
+
+            const items = managerConfig.customMessages.filter(itm => draggedItems.indexOf(itm) === -1);
+
+            const insertIndex = managerConfig.customMessages.indexOf(item as CustomMessage);
+            items.splice(insertIndex, 0, ...draggedItems);
+
+            setManagerConfig({
+                ...managerConfig,
+                customMessages: items
+            });
+        }
+    };
+
     const handleClientModsDragStart = (item: any, itemIndex: number) => {
         setDraggedClientMods(item);
         setDraggedClientModsIndex(itemIndex!);
@@ -394,6 +402,11 @@ export default function ManagerConfigEditor() {
     const handleServerModsDragStart = (item: any, itemIndex: number) => {
         setDraggedServerMods(item);
         setDraggedServerModsIndex(itemIndex!);
+    };
+
+    const handleCustomMessagesDragStart = (item: any, itemIndex: number) => {
+        setDraggedCustomMessages(item);
+        setDraggedCustomMessagesIndex(itemIndex!);
     };
 
     const handleClientModsDrop = (item: any) => {
@@ -408,6 +421,12 @@ export default function ManagerConfigEditor() {
         }
     };
 
+    const handleCustomMessagesDrop = (item: any) => {
+        if (draggedCustomMessages) {
+            insertBeforeCustomMessages(item);
+        }
+    };
+
     const handleClientModsDragEnd = () => {
         setDraggedClientMods(undefined);
         setDraggedClientModsIndex(-1);
@@ -416,6 +435,11 @@ export default function ManagerConfigEditor() {
     const handleServerModsDragEnd = () => {
         setDraggedServerMods(undefined);
         setDraggedServerModsIndex(-1);
+    };
+
+    const handleCustomMessagesDragEnd = () => {
+        setDraggedCustomMessages(undefined);
+        setDraggedCustomMessagesIndex(-1);
     };
 
     const handleDragEnter = (item: any) => {
@@ -521,10 +545,176 @@ export default function ManagerConfigEditor() {
         }
     ]
 
+    const customMessagesColumns: IColumn[] = [
+        {
+            key: "waitTime",
+            name: "Wait Time",
+            fieldName: "waitTime",
+            minWidth: 200,
+            maxWidth: 200,
+            onRender: (customMessage: CustomMessage) => {
+                return (
+                    <div style={{ display: "flex", flexDirection: "row" }}>
+                        <TextField
+                            id="waitTime-hours"
+                            label="Hours"
+                            value={customMessage.waitTime["hours"]}
+                            onChange={(_, newValue) => handleWaitTimeChange(customMessage, newValue, "hours")}
+                        />
+                        <TextField
+                            id="waitTime-minutes"
+                            label="Minutes"
+                            value={customMessage.waitTime["minutes"]}
+                            onChange={(_, newValue) => handleWaitTimeChange(customMessage, newValue, "minutes")}
+                        />
+                        <TextField id="waitTime-seconds"
+                            label="Seconds"
+                            value={customMessage.waitTime["seconds"]}
+                            onChange={(_, newValue) => handleWaitTimeChange(customMessage, newValue, "seconds")}
+                        />
+                    </div>
+                )
+            }
+        },
+        {
+            key: "interval",
+            name: "Interval",
+            fieldName: "interval",
+            minWidth: 200,
+            maxWidth: 200,
+            onRender: (customMessage: CustomMessage) => {
+                return (
+                    <div style={{ display: "flex", flexDirection: "row" }}>
+                        <TextField
+                            id="interval-hours"
+                            label="Hours"
+                            value={customMessage.interval["hours"]}
+                            onChange={(_, newValue) => handleIntervalChange(customMessage, newValue, "hours")}
+                        />
+                        <TextField
+                            id="interval-minutes"
+                            label="Minutes"
+                            value={customMessage.interval["minutes"]}
+                            onChange={(_, newValue) => handleIntervalChange(customMessage, newValue, "minutes")}
+                        />
+                        <TextField id="interval-seconds"
+                            label="Seconds"
+                            value={customMessage.interval["seconds"]}
+                            onChange={(_, newValue) => handleIntervalChange(customMessage, newValue, "seconds")}
+                        />
+                    </div>
+                )
+            }
+        },
+        {
+            key: "title",
+            name: "Title",
+            fieldName: "title",
+            minWidth: 200,
+            maxWidth: 200,
+            onRender: (customMessage: CustomMessage, _, column: IColumn | undefined) => {
+                return (
+                    < TextField
+                        id="Title"
+                        label="Title"
+                        value={customMessage.title}
+                        onChange={(_, newValue) => handleCustomMessagesChange(customMessage, newValue, column?.fieldName || "")}
+                    />
+                )
+            }
+        },
+        {
+            key: "message",
+            name: "Message",
+            fieldName: "message",
+            minWidth: 160,
+            maxWidth: 640,
+            onRender: (customMessage: CustomMessage, _, column: IColumn | undefined) => {
+                return (
+                    <TextField
+                        multiline={true}
+                        id="Message"
+                        label="Message"
+                        value={customMessage.message}
+                        onChange={(_, newValue) => handleCustomMessagesChange(customMessage, newValue, column?.fieldName || "")}
+                    />
+                )
+            }
+        },
+        {
+            key: "icon",
+            name: "Icon",
+            fieldName: "icon",
+            minWidth: 200,
+            maxWidth: 200,
+            onRender: (customMessage: CustomMessage, _, column: IColumn | undefined) => {
+                return (
+                    <TextField
+                        id="Icon"
+                        label="Icon"
+                        value={customMessage.icon}
+                        onChange={(_, newValue) => handleCustomMessagesChange(customMessage, newValue, column?.fieldName || "")}
+                    />
+                )
+            }
+        },
+        {
+            key: "color",
+            name: "Color",
+            fieldName: "color",
+            minWidth: 200,
+            maxWidth: 200,
+            onRender: (customMessage: CustomMessage, _, column: IColumn | undefined) => {
+                return (
+                    <TextField
+                        id="Color"
+                        label="Color"
+                        value={customMessage.color}
+                        onChange={(_, newValue) => handleCustomMessagesChange(customMessage, newValue, column?.fieldName || "")}
+                    />
+                )
+            }
+        },
+        {
+            key: "isTimeOfDay",
+            name: "Is Time Of Day",
+            fieldName: "isTimeOfDay",
+            minWidth: 200,
+            maxWidth: 200,
+            onRender: (customMessage: CustomMessage, _, column: IColumn | undefined) => {
+                return (
+                    <TextField
+                        id="IsTimeOfDay"
+                        label="Is Time Of Day"
+                        value={customMessage.isTimeOfDay.toString()}
+                        onChange={(_, newValue) => handleCustomMessagesChange(customMessage, newValue, column?.fieldName || "")}
+                    />
+                )
+            }
+        },
+        {
+            key: "delete",
+            name: "Delete",
+            fieldName: "delete",
+            minWidth: 100,
+            maxWidth: 100,
+            onRender: (customMessage: CustomMessage) => {
+                return (
+                    <DefaultButton
+                        id="deleteButton"
+                        onClick={() => deleteCustomMessage(customMessage.id)}
+                        className="Button">
+                        <DeleteIcon />
+                    </DefaultButton>
+                )
+            }
+        }
+    ];
+
     let texts: JSX.Element[] = new Array;
     if (managerConfig != null) {
         Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods" && key != "customMessages") && texts.push(<TextField key={key} id={key} label={key} value={value} onChange={handleChange} />));
-    }
+    };
 
     const contents = managerConfig === undefined
         ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
@@ -536,7 +726,11 @@ export default function ManagerConfigEditor() {
             </div>
             <h3>Client Mods</h3>
             <div>
-                <DefaultButton onClick={() => { createClientMod() }} className="Button">
+                <DefaultButton
+                    onClick={() => { createClientMod() }}
+                    className="Button"
+                    style={{ margin: "0px 10px 0px 0px" }}
+                >
                     Add new Row
                 </DefaultButton>
                 <DetailsList
@@ -570,6 +764,7 @@ export default function ManagerConfigEditor() {
                 <DefaultButton
                     onClick={() => { createServerMod() }}
                     className="Button"
+                    style={{ margin: "0px 10px 0px 0px" }}
                 >
                     Add new Row
                 </DefaultButton>
@@ -591,6 +786,7 @@ export default function ManagerConfigEditor() {
                                 onDragEnd={() => handleServerModsDragEnd()}
                                 onDragEnter={() => handleDragEnter(props.item)}
                                 onDragLeave={() => handleDragLeave()}
+                                key={(props.item as Mod).id}
                             >
                                 <DetailsRow {...props} />
                             </div>
@@ -598,46 +794,42 @@ export default function ManagerConfigEditor() {
                     }}
                 />
             </div>
-            <h3>Custom Messages</h3>
             <div>
-                {
-                    managerConfig.customMessages.map((message, index) => {
-                        return (
-                            <div className="messageContainer" key={message.id} id={"Message-" + index}>
-                                <DefaultButton onClick={() => { moveMessageUp(index) }} className="Button"><KeyboardArrowUpIcon /></DefaultButton>
-                                <DefaultButton onClick={() => { moveMessageDown(index) }} className="Button"><KeyboardArrowDownIcon /></DefaultButton>
-                                <div className="subContainer">
-                                    <h4>Wait Time</h4>
-                                    <TextField id="waitTime-hours" label="Hours" defaultValue={message.waitTime["hours"]} onChange={(event, newValue) => handleWaitTimeChange(event, index, newValue)} />
-                                    <TextField id="waitTime-minutes" label="Minutes" defaultValue={message.waitTime["minutes"]} onChange={(event, newValue) => handleWaitTimeChange(event, index, newValue)} />
-                                    <TextField id="waitTime-seconds" label="Seconds" defaultValue={message.waitTime["seconds"]} onChange={(event, newValue) => handleWaitTimeChange(event, index, newValue)} />
+                <h3>Custom Messages</h3>
+                <div>
+                    <DefaultButton
+                        onClick={() => { createCustomMessage() }}
+                        className="Button"
+                        style={{ margin: "0px 10px 0px 0px" }}
+                    >
+                        Add new Row
+                    </DefaultButton>
+                    <DetailsList
+                        setKey="customMessagesDetailsList"
+                        items={managerConfig.customMessages}
+                        columns={customMessagesColumns}
+                        selection={customMessageSelection}
+                        checkboxVisibility={CheckboxVisibility.always}
+                        dragDropEvents={dragDropEvents}
+                        onRenderRow={(props?: IDetailsRowProps) => {
+                            if (!props) return null;
+                            return (
+                                <div
+                                    draggable
+                                    onDragStart={() => handleCustomMessagesDragStart(props.item, props.itemIndex)}
+                                    onDrop={() => handleCustomMessagesDrop(props.item)}
+                                    onDragOver={(event) => event.preventDefault()}
+                                    onDragEnd={() => handleCustomMessagesDragEnd()}
+                                    onDragEnter={() => handleDragEnter(props.item)}
+                                    onDragLeave={() => handleDragLeave()}
+                                    key={(props.item as CustomMessage).id}
+                                >
+                                    <DetailsRow {...props} />
                                 </div>
-                                <div className="subContainer">
-                                    <h4>Interval</h4>
-                                    <TextField id="interval-hours" label="Hours" defaultValue={message.interval["hours"]} onChange={(event, newValue) => handleIntervalChange(event, index, newValue)} />
-                                    <TextField id="interval-minutes" label="Minutes" defaultValue={message.interval["minutes"]} onChange={(event, newValue) => handleIntervalChange(event, index, newValue)} />
-                                    <TextField id="interval-seconds" label="Seconds" defaultValue={message.interval["seconds"]} onChange={(event, newValue) => handleIntervalChange(event, index, newValue)} />
-                                </div>
-                                <div className="subContainer">
-                                    <TextField id="Title" label="Title" defaultValue={message.title} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
-                                    <TextField multiline={true} id="Message" label="Message" defaultValue={message.message} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
-                                    <TextField id="Icon" label="Icon" defaultValue={message.icon} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
-                                    <TextField id="Color" label="Color" defaultValue={message.color} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
-                                    <TextField id="IsTimeOfDay" label="Is Time Of Day" defaultValue={message.isTimeOfDay.toString()} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
-                                </div>
-                                <DefaultButton id="deleteButton" onClick={() => deleteCustomMessage(message.id)} className="Button">
-                                    <DeleteIcon/>
-                                </DefaultButton>
-                            </div>
-                        )
-                    })
-                }
-                <DefaultButton
-                    onClick={() => { createCustomMessage() }}
-                    className="Button"
-                >
-                    Add new Row
-                </DefaultButton>
+                            );
+                        }}
+                    />
+                </div>
             </div>
         </div>
 

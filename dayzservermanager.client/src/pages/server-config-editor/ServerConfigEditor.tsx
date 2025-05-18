@@ -4,7 +4,7 @@ import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import SaveButton from "../../common/components/save-button/SaveButton";
 import ReloadButton from "../../common/components/reload-button/ReloadButton";
-import { DefaultButton, DetailsList, Dropdown, IColumn, IDropdownOption, initializeIcons, IObjectWithKey, Selection, SelectionMode, TextField } from "@fluentui/react";
+import { CheckboxVisibility, ColumnActionsMode, ContextualMenu, DefaultButton, DetailsList, DetailsRow, DirectionalHint, Dropdown, getTheme, IColumn, IContextualMenuItem, IContextualMenuProps, IDetailsRowProps, IDragDropContext, IDragDropEvents, IDropdownOption, initializeIcons, IObjectWithKey, mergeStyles, Selection, SelectionMode, TextField } from "@fluentui/react";
 
 interface ServerConfig {
     properties: PropertyValue[]
@@ -31,8 +31,11 @@ enum DataType {
 interface StringRow {
     id: number,
     lineNumber: string
-    lineString: string,
-    parentId: number
+    lineString: string
+}
+
+interface Dictionary<T> {
+    [key: string]: T;
 }
 
 const dataTypeDropdownOptions: IDropdownOption[] = [
@@ -59,11 +62,11 @@ const dataTypeDropdownOptions: IDropdownOption[] = [
     {
         key: 5,
         text: "Boolean"
-    },
-    {
-        key: 6,
-        text: "Array"
     }
+    //{
+    //    key: 6,
+    //    text: "Array"
+    //}
 ]
 
 const booleanDropdown: IDropdownOption[] = [
@@ -78,9 +81,18 @@ const booleanDropdown: IDropdownOption[] = [
 ]
 
 export default function ServerConfigEditor() {
-
     const [serverConfig, setServerConfig] = useState<ServerConfig>();
-    const [,setSelectedArrayRow] = useState<IObjectWithKey[]>();
+    const [sortedPropertyValues, setSortedPropertyValues] = useState<PropertyValue[]>();
+    const [motdArray, setMotdArray] = useState<StringRow[]>();
+    const [, setSelectedArrayRow] = useState<IObjectWithKey[]>();
+    const [contextualMenuProps, setContextualMenuProps] = useState<IContextualMenuProps>();
+    const [sortKey, setSortKey] = useState("");
+    const [isSortedDescending, setIsSortedDescending] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState<Dictionary<string>>({ "id": "", "propertyName": "", "dataType": "", "value": "", "comment": "" });
+
+    const [motdPropertyId, setMotdPropertyId] = useState<number>();
+    const [draggedMotdLines, setDraggedMotdLines] = useState<StringRow>();
+    const [draggedMotdLinesIndex, setDraggedMotdLinesIndex] = useState<number>(-1);
 
     const arraySelection: Selection = useMemo(() => new Selection(
         {
@@ -100,12 +112,24 @@ export default function ServerConfigEditor() {
     }, []);
 
     const handleLoad = () => {
-        populateServerConfig(setServerConfig, 'ServerConfig/GetServerConfig');
+        populateServerConfig(setServerConfig, 'ServerConfig/GetServerConfig', setSortedPropertyValues, setMotdPropertyId, setMotdArray);
     };
 
     const handleSave = () => {
         postServerConfig('ServerConfig/PostServerConfig', JSON.stringify(serverConfig))
     };
+
+    const onColumnContextMenu = (column: IColumn | undefined, ev: React.MouseEvent<HTMLElement> | undefined): void => {
+        if (column && ev && column.columnActionsMode !== ColumnActionsMode.disabled) {
+            setContextualMenuProps(getContextualMenuProps(column, ev));
+        }
+    }
+
+    const onColumnClick = (ev: React.MouseEvent<HTMLElement>, column: IColumn): void => {
+        if (column.columnActionsMode !== ColumnActionsMode.disabled) {
+            setContextualMenuProps(getContextualMenuProps(column, ev));
+        }
+    }
 
     const arrayColumns: IColumn[] = [
         {
@@ -127,9 +151,10 @@ export default function ServerConfigEditor() {
             fieldName: 'lineString',
             name: 'Content',
             minWidth: 360,
-            onRender: (item: StringRow) => {
+            onRender: (item: StringRow, _, column: IColumn | undefined) => {
                 return (
                     <TextField
+                        key={"TextField-" + item.id + "-" + (column?.key || "")}
                         defaultValue={item.lineString}
                         onBlur={(event) => handleArrayFieldBlur(event, item)}
                     />
@@ -163,15 +188,21 @@ export default function ServerConfigEditor() {
             minWidth: 160,
             maxWidth: 320,
             isResizable: true,
-            onRender: (item: PropertyValue) => {
+            isSorted: sortKey === "propertyName",
+            isSortedDescending: isSortedDescending,
+            isFiltered: fieldFilters["propertyName"] != "",
+            onRender: (item: PropertyValue, _, column: IColumn | undefined) => {
                 return (
                     <TextField
-                        key="propertyName"
+                        key={"TextField-" + item.id + "-" + (column?.key || "")}
                         defaultValue={item.propertyName}
-                        onBlur={(event) => handleFieldBlur(event, item, "propertyName")}
+                        onBlur={(event) => handleFieldBlur(event, item, column?.key || "")}
                     />
                 )
-            }
+            },
+            onColumnContextMenu: onColumnContextMenu,
+            onColumnClick: onColumnClick,
+            columnActionsMode: ColumnActionsMode.hasDropdown
         },
         {
             key: 'dataType',
@@ -179,15 +210,22 @@ export default function ServerConfigEditor() {
             name: 'Data Type',
             minWidth: 160,
             maxWidth: 160,
-            onRender: (item) => {
+            isSorted: sortKey === "dataType",
+            isSortedDescending: isSortedDescending,
+            isFiltered: fieldFilters["dataType"] != "",
+            onRender: (item: PropertyValue, _, column: IColumn | undefined) => {
                 return (
                     <Dropdown
+                        key={"DropDown-" + item.id + "-" + (column?.key || "")}
                         selectedKey={item.dataType}
                         options={dataTypeDropdownOptions}
                         onChange={(_, option) => handleDataTypeSelect(option, item)}
                     />
                 )
-            }
+            },
+            onColumnContextMenu: onColumnContextMenu,
+            onColumnClick: onColumnClick,
+            columnActionsMode: ColumnActionsMode.hasDropdown
         },
         {
             key: 'value',
@@ -195,10 +233,14 @@ export default function ServerConfigEditor() {
             name: 'Value',
             minWidth: 160,
             maxWidth: 320,
-            onRender: (item: PropertyValue) => {
+            isSorted: sortKey === "value",
+            isSortedDescending: isSortedDescending,
+            isFiltered: fieldFilters["value"] != "",
+            onRender: (item: PropertyValue, _, column: IColumn | undefined) => {
                 if (item.dataType != DataType.Boolean) {
                     return (
                         <TextField
+                            key={"TextField-" + item.id + "-" + (column?.key || "")}
                             defaultValue={item.value?.toString()}
                             onBlur={(event) => handleValueFieldBlur(event, item)}
                         />
@@ -207,27 +249,38 @@ export default function ServerConfigEditor() {
                 else {
                     return(
                         <Dropdown
+                            key={"DropDown-" + item.id + "-" + (column?.key || "")}
                             selectedKey={item.value?.toString()}
                             options={booleanDropdown}
                             onChange={(_, option) => option && handleBooleanSelect(option, item)}
                         />
                     )
                 }
-            }
+            },
+            onColumnContextMenu: onColumnContextMenu,
+            onColumnClick: onColumnClick,
+            columnActionsMode: ColumnActionsMode.hasDropdown
         },
         {
             key: 'comment',
             fieldName: 'comment',
             name: 'Comment',
             minWidth: 320,
-            onRender: (item: PropertyValue) => {
+            isSorted: sortKey === "comment",
+            isSortedDescending: isSortedDescending,
+            isFiltered: fieldFilters["comment"] != "",
+            onRender: (item: PropertyValue, _, column: IColumn | undefined) => {
                 return (
                     <TextField
+                        key={"TextField-" + item.id + "-" + (column?.key || "")}
                         defaultValue={item.comment}
-                        onBlur={(event) => handleFieldBlur(event, item, "comment") }
+                        onBlur={(event) => handleFieldBlur(event, item, column?.key || "") }
                     />
                 )
-            }
+            },
+            onColumnContextMenu: onColumnContextMenu,
+            onColumnClick: onColumnClick,
+            columnActionsMode: ColumnActionsMode.hasDropdown 
         },
         {
             key: 'delete',
@@ -375,39 +428,37 @@ export default function ServerConfigEditor() {
     };
 
     const deleteArrayItem = (deletedRow: StringRow) => {
-        if (serverConfig != null) {
+        if (serverConfig && motdArray) {
+            const newMotdArray = motdArray.filter(line => line.id != deletedRow.id);
+
+            setMotdArray(newMotdArray);
+
             setServerConfig(
                 {
                     ...serverConfig,
-                    properties:
-                        serverConfig.properties.map((property) => {
-                            if (property.id == deletedRow.parentId) {
-                                return {
-                                    ...property,
-                                    value: (property.value as string[]).filter((_, index) => index != deletedRow.id)
-                                }
-                            }
-                            else {
-                                return property;
-                            }
-                        })
+                    properties: serverConfig.properties.map((property) => 
+                        property.id == motdPropertyId ?
+                            { ...property, value: newMotdArray.map(line => line.lineString) }
+                            : property
+                    )
                 }
             );
         }
     };
 
     const handleArrayFieldBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, item: StringRow) => {
-        if (serverConfig) {
-            const updatedProperties = serverConfig.properties.map(property => {
-                if (property.id !== item.parentId) return property;
+        if (serverConfig && motdArray) {
+            const newMotdArray = motdArray.map(line => line.id === item.id ? { ...line, lineString: event.target.value } : line);
 
-                const updatedValue = [...(property.value as string[])];
-                updatedValue[item.id] = event.target.value;
+            setMotdArray(newMotdArray);
 
-                return { ...property, value: updatedValue };
+            setServerConfig({
+                ...serverConfig,
+                properties: serverConfig.properties.map(property => property.id === motdPropertyId ?
+                    { ...property, value: newMotdArray.map(line => line.lineString) }
+                    : property
+                )
             });
-
-            setServerConfig({ ...serverConfig, properties: updatedProperties });
         }
     }
 
@@ -438,34 +489,245 @@ export default function ServerConfigEditor() {
         }
     }
 
+    const GetNextArrayId = () => {
+        if (motdArray != null) {
+            let index: number;
+            for (index = 0; index < motdArray.length; index++) {
+                if (motdArray.find(x => x.id == index) == null) {
+                    return index;
+                }
+            }
+            return index++;
+        }
+        return 0;
+    }
+
     const handleAddArrayItem = (propertyId: number) => {
-        if (serverConfig != null) {
+        if (serverConfig && motdArray) {
+            const id = GetNextArrayId();
+            const newMotdArray = [...motdArray, { id: id, lineNumber: "Line " + (id + 1), lineString: "" }]
+
+            setMotdArray(newMotdArray)
+
             setServerConfig(
                 {
                     ...serverConfig,
-                    properties: serverConfig.properties.map((property) => {
-                        if (property.id == propertyId) {
-                            return {
-                                ...property,
-                                value: [
-                                    ...(property.value as string[]),
-                                    ""
-                                ]
-                            }
-                        }
-                        else {
-                            return property;
-                        }
-                    })
+                    properties: serverConfig.properties.map(property =>
+                        property.id == propertyId ?
+                            { ...property, value: newMotdArray.map(line => line.lineString) }
+                            : property
+                    )
                 }
             )
         }
     }
 
+    const onContextualMenuDismissed = (): void => {
+        setContextualMenuProps(undefined);
+    }
+
+    const getContextualMenuProps = (column: IColumn, ev: React.MouseEvent<HTMLElement>): IContextualMenuProps => {
+        const items: IContextualMenuItem[] = [
+            {
+                key: 'aToZ',
+                name: 'A to Z',
+                iconProps: { iconName: 'SortUp' },
+                canCheck: true,
+                checked: column.isSorted && !column.isSortedDescending,
+                onClick: () => {
+                    column.isSorted && !column.isSortedDescending ? _onDisableSorting() : _onSortColumn(column, false);
+                }
+            },
+            {
+                key: 'zToA',
+                name: 'Z to A',
+                iconProps: { iconName: 'SortDown' },
+                canCheck: true,
+                checked: column.isSorted && column.isSortedDescending,
+                onClick: () => {
+                    column.isSorted && column.isSortedDescending ? _onDisableSorting() : _onSortColumn(column, true);
+                }
+            }
+        ];
+
+        const textfieldFilters: IContextualMenuItem[] = [
+            {
+                key: "clearFilter",
+                name: "ClearFilter",
+                iconProps: { iconName: 'Filter' },
+                canCheck: true,
+                checked: column.isFiltered,
+                onClick: () => {
+                    onFilterChange("", column);
+                }
+            },
+            {
+                key: 'filter',
+                name: 'Filter',
+                iconProps: { iconName: 'Filter' },
+                canCheck: false,
+                onRender: () => {
+                    return <TextField label="Filter" defaultValue={fieldFilters[column.key]} onChange={(event) => onFilterChange(event.currentTarget.value, column)} />
+                }
+            }
+        ];
+
+        const dropdownFilters: IContextualMenuItem[] = [
+            {
+                key: "clearFilter",
+                name: "ClearFilter",
+                iconProps: { iconName: 'Filter' },
+                canCheck: true,
+                checked: column.isFiltered,
+                onClick: () => {
+                    onFilterChange("", column);
+                }
+            },
+            {
+                key: 'filter',
+                name: 'Filter',
+                iconProps: { iconName: 'Filter' },
+                canCheck: false,
+                onRender: () => {
+                    return <Dropdown options={dataTypeDropdownOptions} label="Filter" defaultSelectedKey={(fieldFilters["dataType"] && fieldFilters["dataType"] != null) ? Number(fieldFilters["dataType"]) : undefined} onChange={(_, option) => option && onFilterChange(option.key.toString(), column)} />
+                }
+            }
+
+        ];
+
+        if (column.key != "dataType") {
+            textfieldFilters.forEach(filter => items.push(filter));
+        }
+        else {
+            dropdownFilters.forEach(filter => items.push(filter));
+        }
+
+        return {
+            items: items,
+            target: ev.currentTarget as HTMLElement,
+            directionalHint: DirectionalHint.bottomLeftEdge,
+            gapSpace: 0,
+            isBeakVisible: true,
+            onDismiss: onContextualMenuDismissed,
+        }
+    }
+
+    const _onSortColumn = (column: IColumn, isSortedDescending: boolean) => {
+        if (sortedPropertyValues && serverConfig) {
+            const filteredAndSortedPropertyValues = _copyAndSort<PropertyValue>(sortedPropertyValues, column.key, isSortedDescending);
+            setSortedPropertyValues(filteredAndSortedPropertyValues);
+
+            setSortKey(column.key);
+            setIsSortedDescending(isSortedDescending);
+        }
+    };
+
+    const _onDisableSorting = () => {
+        if (serverConfig) {
+            setSortedPropertyValues(serverConfig.properties.filter(item => item.dataType != DataType.Array));
+
+            setSortKey("");
+            setIsSortedDescending(false);
+        }
+    }
+
+    const onFilterChange = (newFilter: string, column: IColumn) => {
+        if (serverConfig) {
+            const newFieldFilters = {
+                ...fieldFilters,
+                [column.key]: newFilter
+            };
+
+            setFieldFilters(newFieldFilters);
+
+            const filteredItemRarities = serverConfig.properties.filter(property => property.dataType != DataType.Array).filter(
+                property => {
+                    return getValidForFilters(property, newFieldFilters);
+                }
+            );
+
+            const filteredAndSortedPropertyValues = _copyAndSort<PropertyValue>(filteredItemRarities, sortKey, isSortedDescending);
+
+            setSortedPropertyValues(filteredAndSortedPropertyValues);
+        }
+    }
+
+    const getValidForFilters = (property: PropertyValue, newFieldFilters: Dictionary<string>) => {
+        for (let key in property) {
+            const propertyKey = key as keyof typeof property;
+            if (!key || (newFieldFilters[key] && newFieldFilters[key] != "") && !property[propertyKey]?.toString().toLowerCase().includes(newFieldFilters[key].toLowerCase())) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const insertBeforeMotdLine = (item: StringRow): void => {
+        if (motdArray && serverConfig && motdPropertyId) {
+            const isIndexSelected = arraySelection.isIndexSelected(draggedMotdLinesIndex);
+            const draggedItems = isIndexSelected
+                ? (arraySelection.getSelection() as StringRow[])
+                : [draggedMotdLines!];
+
+            const items = motdArray.filter(itm => draggedItems.indexOf(itm) === -1);
+
+            const insertIndex = motdArray.indexOf(item as StringRow);
+            items.splice(insertIndex, 0, ...draggedItems);
+
+            setMotdArray(items);
+
+            setServerConfig({
+                ...serverConfig,
+                properties: serverConfig.properties.map(property => property.id === motdPropertyId ?
+                    { ...property, value: items.map(item => item.lineString) }
+                    : property
+                )
+            })
+        }
+    };
+
+    const handleMotdLinesDragStart = (item: any, itemIndex: number) => {
+        setDraggedMotdLines(item);
+        setDraggedMotdLinesIndex(itemIndex!);
+    };
+
+    const handleMotdLinesDrop = (item: any) => {
+        if (draggedMotdLines) {
+            insertBeforeMotdLine(item);
+        }
+    };
+
+    const handleMotdLinesDragEnd = () => {
+        setDraggedMotdLines(undefined);
+        setDraggedMotdLinesIndex(-1);
+    };
+
+    const handleDragEnter = (item: any) => {
+        console.log("Drag entered:", item);
+        // return string is the css classes that will be added to the entering element.
+        return mergeStyles({
+            backgroundColor: getTheme().palette.neutralLight,
+        });
+    };
+
+    const handleDragLeave = () => {
+        return;
+    };
+
+    const dragDropEvents: IDragDropEvents = {
+        canDrop: (_dropContext?: IDragDropContext, _dragContext?: IDragDropContext) => {
+            return true;
+        },
+        canDrag: (_item?: any) => {
+            return true;
+        }
+    };
+
     const contents = serverConfig === undefined
         ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
         :
         <div>
+            {contextualMenuProps && <ContextualMenu {...contextualMenuProps} />}
             <DefaultButton
                 onClick={() => handleAddProperty()}
                 className="Button"
@@ -474,33 +736,47 @@ export default function ServerConfigEditor() {
                 <AddIcon/>
             </DefaultButton>
             <DetailsList
+                setKey="propertyValuesListBox"
                 styles={{ root: { display: "flex" } }}
-                items={serverConfig.properties}
+                items={sortedPropertyValues || []}
                 columns={columns}
                 selectionMode={SelectionMode.none}
             />
-            {
-                serverConfig.properties.map((property) => {
-                    if (property.dataType == DataType.Array) {
-                        return (
-                            <>
-                                <h3>{(property.propertyName == "motd[]") ? "Motto of the day" : property.propertyName}</h3>
-                                <DefaultButton
-                                    onClick={() => handleAddArrayItem(property.id)}
-                                    className="Button"
-                                    style={{ margin: "0px 10px 10px 0px" }}
+            {motdPropertyId &&
+                <div key="motd">
+                    <h3>Motto of the day</h3>
+                    <DefaultButton
+                        onClick={() => handleAddArrayItem(motdPropertyId)}
+                        className="Button"
+                        style={{ margin: "0px 10px 10px 0px" }}
+                    >
+                        <AddIcon/>
+                    </DefaultButton>
+                    <DetailsList
+                        items={motdArray || []}
+                        columns={arrayColumns}
+                        selection={arraySelection}
+                        checkboxVisibility={CheckboxVisibility.always}
+                        dragDropEvents={dragDropEvents}
+                        onRenderRow={(props?: IDetailsRowProps) => {
+                            if (!props) return null;
+                            return (
+                                <div
+                                    draggable
+                                    onDragStart={() => handleMotdLinesDragStart(props.item, props.itemIndex)}
+                                    onDrop={() => handleMotdLinesDrop(props.item)}
+                                    onDragOver={(event) => event.preventDefault()}
+                                    onDragEnd={() => handleMotdLinesDragEnd()}
+                                    onDragEnter={() => handleDragEnter(props.item)}
+                                    onDragLeave={() => handleDragLeave()}
+                                    key={(props.item as StringRow).id}
                                 >
-                                    <AddIcon/>
-                                </DefaultButton>
-                                <DetailsList
-                                    items={(property.value as string[]).map((line, index) => ({ id: index, lineNumber: "Line " + (index + 1), lineString: line, parentId: property.id }))}
-                                    columns={arrayColumns}
-                                    selection={arraySelection}
-                                />
-                            </>
-                        )
-                    }
-                })
+                                    <DetailsRow {...props} />
+                                </div>
+                            );
+                        }}
+                    />
+                </div>
             }
         </div>
 
@@ -522,11 +798,17 @@ export default function ServerConfigEditor() {
     )
 }
 
-async function populateServerConfig(setServerConfig: Function, endpoint: string) {
+async function populateServerConfig(setServerConfig: Function, endpoint: string, setSortedPropertyValues: Function, setMotdProperty: Function, setMotdArray: Function) {
     const response = await fetch(endpoint);
     const result = (await response.json()) as ServerConfig;
     if (result != null) {
         setServerConfig(result);
+        setSortedPropertyValues(result.properties.filter(item => item.dataType != DataType.Array));
+        const motdProperty = result.properties.find(property => property.dataType === DataType.Array && property.propertyName === "motd[]");
+        if (motdProperty) {
+            setMotdProperty(motdProperty.id);
+            setMotdArray((motdProperty.value as string[]).map((line, index) => ({ id: index, lineNumber: "Line " + (index + 1), lineString: line })));
+        }
     }
 }
 
@@ -541,4 +823,9 @@ async function postServerConfig(endpoint: string, data: string) {
     if (result != null) {
         alert(result);
     }
+}
+
+function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
+    const key = columnKey as keyof T;
+    return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
 }

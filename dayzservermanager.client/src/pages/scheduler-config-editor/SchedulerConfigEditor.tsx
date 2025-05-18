@@ -300,6 +300,7 @@ export default function SchedulerConfigEditor() {
                                     onDragEnd={() => handleDragEnd()}
                                     onDragEnter={() => handleDragEnter()}
                                     onDragLeave={() => handleDragLeave()}
+                                    key={(props.item as ListItem).listId}
                                 >
                                     <DetailsRow {...props} />
                                 </div>
