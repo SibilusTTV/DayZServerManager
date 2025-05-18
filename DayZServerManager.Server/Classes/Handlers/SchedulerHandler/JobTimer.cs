@@ -1,7 +1,4 @@
-﻿
-using DayZScheduler.Classes.SerializationClasses.SchedulerClasses;
-
-namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
+﻿namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 {
     public class JobTimer
     {
@@ -54,13 +51,14 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 bool isRestart = timeToRestart.TotalSeconds == 0;
 
                 DateTime now = DateTime.Now;
+                DateTime nextRestart = now.AddHours(interval).Add(timeToRestart);
 
-                if (interval > 0 && now.Day != now.AddHours(interval).Day && ((isRestart && now.AddHours(interval).Hour > 0) || (!isRestart && now.AddHours(interval).Hour >= 0)))
+                if (interval > 1 && now.Day != nextRestart.Day && ((nextRestart.Hour == 0 && nextRestart.Minute > 55) || (nextRestart.Hour == 1 && nextRestart.Minute < 5)))
                 {
                     DateTime nextDay = new DateTime(now.Year, now.Month, now.Day + 1, 0, 0, 0);
-                    TimeSpan nextRestart = nextDay - now;
+                    TimeSpan newNextRestart = nextDay - now;
                     _timer.Change(
-                        nextRestart - timeToRestart,
+                        newNextRestart - timeToRestart,
                         new TimeSpan(interval, 0, 0)
                     );
                 }

@@ -3,6 +3,7 @@ using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.Manag
 using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
+using System.Text;
 
 namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
 {
@@ -12,7 +13,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
 
         public static Process? steamCMDProcess;
 
-        public static void UpdateServer()
+        public static bool UpdateServer()
         {
             Manager.props.managerStatus = Manager.STATUS_UPDATING_SERVER;
             Logger.Info(Manager.STATUS_UPDATING_SERVER);
@@ -26,7 +27,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when creating steamCmd path", ex);
+                Logger.Error(ex, "Error when creating steamCmd path");
             }
 
             try
@@ -38,7 +39,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when downloading and extracting steamCmd", ex);
+                Logger.Error(ex, "Error when downloading and extracting steamCmd");
             }
 
             try
@@ -48,17 +49,19 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                 StartSteamCMD(serverUpdateArguments);
                 if (Manager.props.steamCMDStatus == Manager.STATUS_NOT_RUNNING)
                 {
-                    CheckForUpdatedServer();
+                    return CheckForUpdatedServer();
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating server", ex);
+                Logger.Error(ex, "Error when updating server");
                 Manager.props.managerStatus = Manager.STATUS_ERROR;
+                return false;
             }
 
             Manager.props.managerStatus = Manager.STATUS_SERVER_UPDATED;
             Logger.Info(Manager.STATUS_SERVER_UPDATED);
+            return false;
         }
 
         public static bool UpdateMods(List<Mod> mods, out List<long> updatedModsIDs)
@@ -114,7 +117,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating mods", ex);
+                Logger.Error(ex, "Error when updating mods");
             }
 
             Manager.props.managerStatus = Manager.STATUS_MODS_UPDATED;
@@ -132,6 +135,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                     if (!steamCMDProcess.HasExited)
                     {
                         steamCMDProcess.StandardInput.WriteLine(code);
+                        Logger.Info("Steam guard written");
                         return "Steam guard written";
                     }
                 }
@@ -145,7 +149,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when writing SteamGuard", ex);
+                Logger.Error(ex, "Error when writing SteamGuard");
                 return "Error";
             }
         }
@@ -187,7 +191,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when checking updated status of the server", ex);
+                Logger.Error(ex, "Error when checking updated status of the server");
                 return false;
             }
         }
@@ -259,7 +263,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when downloading and extracting steamCmd", ex);
+                Logger.Error(ex, "Error when downloading and extracting steamCmd");
             }
         }
 
@@ -279,79 +283,55 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
 
                 Manager.props.steamCMDStatus = Manager.STATUS_RUNNING;
 
-                int outputTime = 0;
-                Task task = ConsumeOutput(steamCMDProcess.StandardOutput, s =>
+                using (var fs = new FileStream(Manager.STEAMCMD_CONSOLE_LOG_PATH, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    if (s != null)
+                    using (var sr = new StreamReader(fs, Encoding.Default))
                     {
-                        Logger.Info(s);
-                        if (s.ToLower().Contains(Manager.STATUS_CLIENT_CONFIG.ToLower()))
+                        while (!steamCMDProcess.HasExited)
                         {
-                            Manager.props.steamCMDStatus = Manager.STATUS_CLIENT_CONFIG;
-                            outputTime = -1;
-                        }
-                        else if (s.ToLower().Contains(Manager.STATUS_STEAM_GUARD.ToLower()))
-                        {
-                            Manager.props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
-                        }
-                        else if (s.ToLower().Contains(Manager.STATUS_CACHED_CREDENTIALS.ToLower()))
-                        {
-                            Manager.props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
-                        }
-                        else if (outputTime != -1)
-                        {
-                            outputTime = 0;
-                        }
-                    }
-                });
+                            string? standardOutput = sr.ReadToEnd();
 
-                while (!task.IsCompleted)
-                {
-                    Thread.Sleep(1000);
-                    if (outputTime > 30)
-                    {
-                        if (Manager.props.steamCMDStatus == Manager.STATUS_CACHED_CREDENTIALS)
-                        {
-                            Logger.Info(Manager.STATUS_STEAM_GUARD);
-                            Manager.props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
-                            outputTime = 0;
+                            if (!string.IsNullOrEmpty(standardOutput))
+                            {
+                                if (standardOutput.Contains("password:"))
+                                {
+                                    Logger.Info(Manager.STATUS_CACHED_CREDENTIALS);
+                                    steamCMDProcess.StandardInput.WriteLine(Manager.managerConfig.steamPassword);
+                                    Manager.props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
+                                }
+                                else if (standardOutput.Contains("Steam Guard code:"))
+                                {
+                                    Logger.Info(Manager.STATUS_STEAM_GUARD);
+                                    Manager.props.steamCMDStatus = Manager.STATUS_STEAM_GUARD;
+                                }
+                                else if (standardOutput.Contains("client config"))
+                                {
+                                    Manager.props.steamCMDStatus = Manager.STATUS_CLIENT_CONFIG;
+                                }
+                                Logger.Info(standardOutput);
+                            }
                         }
-                        else
-                        {
-                            Logger.Info(Manager.STATUS_CACHED_CREDENTIALS);
-                            steamCMDProcess.StandardInput.WriteLine(Manager.managerConfig?.steamPassword);
-                            Manager.props.steamCMDStatus = Manager.STATUS_CACHED_CREDENTIALS;
-                            outputTime = 0;
-                        }
-                    }
-                    else if (outputTime != -1)
-                    {
-                        outputTime++;
                     }
                 }
 
                 if (steamCMDProcess != null)
                 {
                     steamCMDProcess.WaitForExit();
+                    steamCMDProcess.Kill();
+                    steamCMDProcess = null;
+                }
+
+                using (StreamWriter writer = new StreamWriter(Manager.STEAMCMD_CONSOLE_LOG_PATH, false))
+                {
+                    writer.Write(string.Empty);
                 }
 
                 Manager.props.steamCMDStatus = Manager.STATUS_NOT_RUNNING;
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when starting steam", ex);
+                Logger.Error(ex, "Error when starting steam");
                 Manager.props.dayzServerStatus = Manager.STATUS_ERROR;
-            }
-        }
-
-        private static async Task ConsumeOutput(TextReader reader, Action<string> callback)
-        {
-            char[] buffer = new char[256];
-            int cch;
-
-            while ((cch = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
-            {
-                callback(new string(buffer, 0, cch));
             }
         }
 
@@ -368,7 +348,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when killing steamCmd", ex);
+                Logger.Error(ex, "Error when killing steamCmd");
                 steamCMDProcess = null;
             }
         }
@@ -411,7 +391,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when checking directories", ex);
+                Logger.Error(ex, "Error when checking directories");
                 return false;
             }
         }
@@ -445,7 +425,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when checking file", ex);
+                Logger.Error(ex, "Error when checking file");
                 return false;
             }
         }

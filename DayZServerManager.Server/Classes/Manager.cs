@@ -16,6 +16,7 @@ using DayZServerManager.Server.Classes.Handlers.RestartUpdaterHandler;
 using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB;
 using System.Text.RegularExpressions;
 using System.Security.Authentication.ExtendedProtection;
+using System.Runtime.InteropServices;
 
 namespace DayZServerManager.Server.Classes
 {
@@ -89,6 +90,9 @@ namespace DayZServerManager.Server.Classes
         public const string LOCALHOST = "127.0.0.1";
         public const string ADMIN_LOG_NAME = "DayZServer.ADM";
         public const string ADMIN_LOG_X64_NAME = "DayZServer_x64.ADM";
+        public const string STEAMCMD_LOGS_FOLDER = "logs";
+        public const string STEAMCMD_CONSOLE_LOG = "console_log.txt";
+        public static string STEAMCMD_CONSOLE_LOG_PATH = Path.Combine(STEAM_CMD_PATH, STEAMCMD_LOGS_FOLDER, STEAMCMD_CONSOLE_LOG);
 
         // Mission rarity to numbers
         public const int EXOTIC_NOMINAL = 1;
@@ -164,47 +168,14 @@ namespace DayZServerManager.Server.Classes
 
             props = new ManagerProps(STATUS_LISTENING, STATUS_NOT_RUNNING, STATUS_NOT_RUNNING, 0, string.Empty, string.Empty);
 
-            if (!Directory.Exists(SERVER_PATH))
-            {
-                Directory.CreateDirectory(SERVER_PATH);
-            }
-
-            if (!Directory.Exists(STEAM_CMD_PATH))
-            {
-                Directory.CreateDirectory(STEAM_CMD_PATH);
-            }
-
             if (!Directory.Exists(MODS_PATH))
             {
                 Directory.CreateDirectory(MODS_PATH);
             }
 
-            if (!Directory.Exists(SCHEDULER_PATH))
-            {
-                Directory.CreateDirectory(SCHEDULER_PATH);
-            }
-
             if (!Directory.Exists(SERVER_DEPLOY))
             {
                 Directory.CreateDirectory(SERVER_DEPLOY);
-            }
-
-            if (!Directory.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName)))
-            {
-                Directory.CreateDirectory(Path.Combine(SERVER_PATH, managerConfig.profileName));
-            }
-
-            if (!Directory.Exists(BATTLEYE_FOLDER_PATH))
-            {
-                Directory.CreateDirectory(BATTLEYE_FOLDER_PATH);
-            }
-
-            if (!File.Exists(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME)))
-            {
-                using (FileStream fs = File.Create(Path.Combine(BATTLEYE_FOLDER_PATH, BATTLEYE_BANS_NAME))){
-                    
-                }
-
             }
 
             dayZServer = new ServerManager(Path.Combine(SERVER_PATH, managerConfig.serverConfigName));
@@ -285,7 +256,7 @@ namespace DayZServerManager.Server.Classes
                 }
                 else
                 {
-                    props.adminLog = GetAdminLog();
+                    props.adminLog = dayZServer.GetAdminLog();
                     scheduler.GetPlayers();
                     Logger.Info($"The Server is still running with {scheduler.RconClient.PlayersCount} players playing on it");
                 }
@@ -350,7 +321,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when killing scheduler",ex);
+                Logger.Error(ex, "Error when killing scheduler");
             }
 
             try
@@ -360,6 +331,8 @@ namespace DayZServerManager.Server.Classes
                     dayZServer.KillServerProcess();
 
                     Thread.Sleep(10000);
+
+                    props.dayzServerStatus = STATUS_NOT_RUNNING;
 
                     PROFILE_PATH = Path.Combine(SERVER_PATH, managerConfig.profileName);
                     BATTLEYE_FOLDER_PATH = OperatingSystem.IsWindows() ? Path.Combine(PROFILE_PATH, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
@@ -371,7 +344,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when killing server and ajdusting and saving the server config",ex);
+                Logger.Error(ex, "Error when killing server and ajdusting and saving the server config");
             }
 
             try
@@ -387,7 +360,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when killing steamCmd",ex);
+                Logger.Error(ex, "Error when killing steamCmd");
             }
         }
 
@@ -397,10 +370,6 @@ namespace DayZServerManager.Server.Classes
             if (dayZServer != null)
             {
                 KillServerProcesses();
-            }
-            if (serverLoop != null)
-            {
-                serverLoop = null;
             }
         }
 
@@ -419,56 +388,8 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when setting SteamGuard",ex);
+                Logger.Error(ex, "Error when setting SteamGuard");
                 return "Error";
-            }
-        }
-
-        public static string GetAdminLog()
-        {
-            try
-            {
-                string returnString = string.Empty;
-                string adminLogPath = Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_NAME);
-                if (!File.Exists(adminLogPath) && File.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_X64_NAME)))
-                {
-                    adminLogPath = Path.Combine(SERVER_PATH, managerConfig.profileName, ADMIN_LOG_X64_NAME);
-                }
-
-                using (var fs = new FileStream(adminLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    using (var sr = new StreamReader(fs, Encoding.Default))
-                    {
-                        returnString = sr.ReadToEnd();
-                    }
-                }
-
-                if (props.adminLog != returnString)
-                {
-                    string pattern = @"Player \""(?'name'[^\n]+)\""\(id=(?'id'\S*)\)";
-                    Regex regex = new Regex(pattern);
-                    MatchCollection matches = regex.Matches(returnString);
-
-                    foreach (Match match in matches)
-                    {
-                        string name = match.Groups["name"].Value;
-                        string uid = match.Groups["id"].Value;
-
-                        Player? player = scheduler.PlayersDB.Players.Find(player => player.Name == name);
-                        if (player != null)
-                        {
-                            player.Uid = uid;
-                        }
-                    }
-                }
-
-                props.adminLog = returnString;
-                return returnString;
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Error when getting admin log", ex);
-                return string.Empty;
             }
         }
 
@@ -498,7 +419,7 @@ namespace DayZServerManager.Server.Classes
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when schecking scheduler", ex);
+                Logger.Error(ex, "Error when schecking scheduler");
                 return false;
             }
         }
@@ -509,34 +430,13 @@ namespace DayZServerManager.Server.Classes
             {
                 bool onlyRestarts = managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains(EXPANSION_MOD_SEARCH)).Count > 0;
 
-                try
-                {
-                    string battleyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(SERVER_PATH, managerConfig.profileName, BATTLEYE_FOLDER_NAME) : Path.Combine(SERVER_PATH, BATTLEYE_FOLDER_NAME);
-
-                    List<string> beFiles = FileSystem.GetFiles(battleyeFolderPath).ToList();
-                    foreach (string beFile in beFiles)
-                    {
-                        if (Path.GetExtension(beFile) == ".cfg" && Path.GetFileNameWithoutExtension(beFile).Contains(Path.GetFileNameWithoutExtension(BATTLEYE_CONFIG_NAME)))
-                        {
-                            UpdateBeConfig(beFile);
-                        }
-                    }
-
-                    Logger.Info(STATUS_SCHEDULER_UPDATED);
-                    props.managerStatus = STATUS_SCHEDULER_UPDATED;
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Error when updating be file",ex);
-                }
-
                 scheduler = new SchedulerManager(LOCALHOST, managerConfig.RConPort, managerConfig.RConPassword, managerConfig.restartInterval, onlyRestarts, managerConfig.customMessages);
                 connectTask = new Task(() => { scheduler.Connect(); });
                 connectTask.Start();
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when starting scheduler",ex);
+                Logger.Error(ex, "Error when starting scheduler");
             }
         }
 
@@ -561,26 +461,6 @@ namespace DayZServerManager.Server.Classes
                 }
                 RestartUpdater.UpdateExpansionScheduler(managerConfig, notFile);
                 JSONSerializer.SerializeJSONFile(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME), notFile);
-            }
-        }
-
-        private static void UpdateBeConfig(string path)
-        {
-            try
-            {
-                string beConfig = $"RConPassword {Manager.managerConfig.RConPassword}";
-                beConfig += $"{Environment.NewLine}RConPort {Manager.managerConfig.RConPort}";
-                beConfig += $"{Environment.NewLine}RestrictRCon 0";
-
-                using (StreamWriter writer = new StreamWriter(path))
-                {
-                    writer.Write(beConfig);
-                    writer.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Error when updating be config", ex);
             }
         }
 

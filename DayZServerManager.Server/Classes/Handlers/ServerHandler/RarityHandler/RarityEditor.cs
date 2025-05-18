@@ -87,7 +87,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating RarityFile", ex);
+                Logger.Error(ex, "Error when updating RarityFile");
             }
         }
 

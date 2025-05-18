@@ -33,8 +33,18 @@ export default function PlayerDatabase() {
     const [contextualMenuProps, setContextualMenuProps] = React.useState<IContextualMenuProps>();
     const [sortKey, setSortKey] = React.useState("");
     const [isSortedDescending, setIsSortedDescending] = React.useState(false);
-    const [fieldFilters, setFieldFilters] = React.useState<Dictionary<string>>({ "guid": "", "name": "", "ip": "", "bannedReasons": "", "isBanned": "", "isVerified": "", "isWhitelisted": "" });
+    const [fieldFilters, setFieldFilters] = React.useState<Dictionary<string>>({ "guid": "", "name": "", "ip": "", "bannedReasons": "", "uid": "" });
     //const [groupedKey, setGroupedKey] = React.useState("");
+
+    React.useEffect(() => {
+        handleLoad();
+    }, []);
+
+    initializeIcons();
+
+    const handleLoad = () => {
+        getAllPlayers(setPlayers, setUnsortedPlayers, 'Scheduler/GetPlayers');
+    }
 
     const onColumnContextMenu = (column: IColumn | undefined, ev: React.MouseEvent<HTMLElement> | undefined): void => {
         if (column && ev && column.columnActionsMode !== ColumnActionsMode.disabled) {
@@ -47,12 +57,6 @@ export default function PlayerDatabase() {
             setContextualMenuProps(getContextualMenuProps(column, ev));
         }
     }
-
-    const reload = () => {
-        getAllPlayers(setPlayers, setUnsortedPlayers, 'Scheduler/GetPlayers');
-    }
-
-    initializeIcons();
 
     const columns: IColumn[] = [
         {
@@ -129,7 +133,6 @@ export default function PlayerDatabase() {
             minWidth: 120,
             isSorted: sortKey === "isVerified",
             isSortedDescending: isSortedDescending,
-            isFiltered: fieldFilters["isVerified"] != "",
             onRender: (item: Player) => {
                 return item.isVerified ?
                     <CheckCircleIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} /> :
@@ -146,7 +149,7 @@ export default function PlayerDatabase() {
             fieldName: 'kick',
             minWidth: 80,
             onRender: (item: Player) => {
-                return <KickButton guid={item.guid} name={item.name} reload={reload} />
+                return <KickButton guid={item.guid} name={item.name} reload={handleLoad} />
             }
         },
         {
@@ -157,7 +160,6 @@ export default function PlayerDatabase() {
             data: 'boolean',
             isSorted: sortKey === "isWhitelisted",
             isSortedDescending: isSortedDescending,
-            isFiltered: fieldFilters["isWhitelisted"] != "",
             onRender: (item: Player) => {
                 return item.isWhitelisted ?
                     <CheckCircleIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} /> :
@@ -175,8 +177,8 @@ export default function PlayerDatabase() {
             minWidth: 120,
             onRender: (item: Player) => {
                 return item.isWhitelisted ?
-                    <UnwhitelistButton guid={item.guid} name={item.name} reload={reload} /> :
-                    <WhitelistButton guid={item.guid} name={item.name} reload={reload} />
+                    <UnwhitelistButton guid={item.guid} name={item.name} reload={handleLoad} /> :
+                    <WhitelistButton guid={item.guid} name={item.name} reload={handleLoad} />
             }
         },
         {
@@ -187,7 +189,6 @@ export default function PlayerDatabase() {
             data: 'boolean',
             isSorted: sortKey === "isBanned",
             isSortedDescending: isSortedDescending,
-            isFiltered: fieldFilters["isBanned"] != "",
             onRender: (item: Player) => {
                 return item.isBanned ?
                     <CheckCircleIcon style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", textAlign: "center" }} /> :
@@ -205,8 +206,8 @@ export default function PlayerDatabase() {
             minWidth: 80,
             onRender: (item: Player) => {
                 return item.isBanned ?
-                    <UnbanButton guid={item.guid} name={item.name} reload={reload} /> :
-                    <BanButton guid={item.guid} name={item.name} reload={reload} />
+                    <UnbanButton guid={item.guid} name={item.name} reload={handleLoad} /> :
+                    <BanButton guid={item.guid} name={item.name} reload={handleLoad} />
 
             }
         },
@@ -227,10 +228,6 @@ export default function PlayerDatabase() {
             isResizable: true
         }
     ]
-
-    React.useEffect(() => {
-        reload();
-    }, []);
 
     const onContextualMenuDismissed = (): void => {
         setContextualMenuProps(undefined);
@@ -266,7 +263,7 @@ export default function PlayerDatabase() {
                 name: "ClearFilter",
                 iconProps: { iconName: 'Filter' },
                 canCheck: true,
-                checked: column.isSorted,
+                checked: column.isFiltered,
                 onClick: () => {
                     onFilterChange("", column);
                 }
@@ -276,14 +273,13 @@ export default function PlayerDatabase() {
                 name: 'Filter',
                 iconProps: { iconName: 'Filter' },
                 canCheck: false,
-                checked: column.isSorted,
                 onRender: () => {
                     return <TextField label="Filter" defaultValue={fieldFilters[column.key]} onChange={(event) => onFilterChange(event.currentTarget.value, column)} />
                 }
             }
         ]
 
-        if (column.key != "isBanned" && column.key != "isVerified") {
+        if (column.key != "isBanned" && column.key != "isVerified" && column.key != "isWhitelisted") {
             filters.forEach(filter => items.push(filter));
         }
 
@@ -321,19 +317,23 @@ export default function PlayerDatabase() {
 
         setFieldFilters(newFieldFilters);
 
+        const filteredPlayers = unsortedPlayers.filter(
+            player => {
+                return getValidForFilters(player, newFieldFilters);
+            }
+        );
+
+        const filteredAndSortedPlayers = _copyAndSort<Player>(filteredPlayers, sortKey, isSortedDescending);
+
         setPlayers(
-            unsortedPlayers.filter(
-                player => {
-                    return getValidForFilters(player, newFieldFilters);
-                }
-            )
+            filteredAndSortedPlayers
         );
     }
 
     const getValidForFilters = (player: Player, newFieldFilters: Dictionary<string>) => {
-        for (let filterKey in newFieldFilters) {
-            const key: keyof typeof player = Object.keys(player).find(key => key.valueOf() == filterKey) as keyof typeof player;
-            if (!key || newFieldFilters[filterKey] != "" && !player[key].toString().toLowerCase().includes(newFieldFilters[filterKey].toLowerCase())) {
+        for (let key in player) {
+            const playerKey = key as keyof typeof player;
+            if (!key || (newFieldFilters[key] && newFieldFilters[key] != "") && !player[playerKey].toString().toLowerCase().includes(newFieldFilters[key].toLowerCase())) {
                 return false;
             }
         }
@@ -344,10 +344,7 @@ export default function PlayerDatabase() {
         <div style={{ display: "flex", flexDirection: "column", padding: "10px 10px 10px 10px", flexGrow: 1 }}>
             <div>
                 <ReloadButton
-                    populateFunction={getAllPlayers}
-                    setFunction={setPlayers}
-                    setFunctionUnsorted={setUnsortedPlayers}
-                    endpoint='Scheduler/GetPlayers'
+                    handleLoad={handleLoad}
                 />
             </div>
             <ShimmeredDetailsList

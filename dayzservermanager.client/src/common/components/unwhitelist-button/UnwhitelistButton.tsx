@@ -9,7 +9,10 @@ interface UnwhitelistPlayerProps {
 
 export default function UnwhitelistButton({ guid, name, reload }: UnwhitelistPlayerProps) {
     return (
-        <DefaultButton onClick={() => WhitelistPlayer(guid, name, reload) }>
+        <DefaultButton
+            onClick={() => WhitelistPlayer(guid, name, reload)}
+            className="Button"
+        >
             Unwhitelist
         </DefaultButton>
     )

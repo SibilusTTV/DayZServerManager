@@ -16,7 +16,7 @@
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when serializing init file", ex);
+                Logger.Error(ex, "Error when serializing init file");
             }
         }
         public static string DeserializeInitFile(string path)
@@ -30,7 +30,7 @@
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when deserializing init file", ex);
+                Logger.Error(ex, "Error when deserializing init file");
                 return string.Empty;
             }
         }

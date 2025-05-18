@@ -479,7 +479,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating the mission", ex);
+                Logger.Error(ex, "Error when updating the mission");
             }
         }
 
@@ -500,7 +500,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when searching for CeItem", ex);
+                Logger.Error(ex, "Error when searching for CeItem");
                 return null;
             }
         }
@@ -521,7 +521,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when searching for FileItem", ex);
+                Logger.Error(ex, "Error when searching for FileItem");
                 return false;
             }
         }
@@ -542,7 +542,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when searching for EventItem", ex);
+                Logger.Error(ex, "Error when searching for EventItem");
                 return null;
             }
         }
@@ -563,7 +563,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when searching for PosItem", ex);
+                Logger.Error(ex, "Error when searching for PosItem");
                 return false;
             }
         }
@@ -584,7 +584,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when searching for TypesItem", ex);
+                Logger.Error(ex, "Error when searching for TypesItem");
                 return null;
             }
         }
@@ -612,7 +612,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when searching for the expansion template", ex);
+                Logger.Error(ex, "Error when searching for the expansion template");
             }
             return string.Empty;
         }
@@ -642,7 +642,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating init", ex);
+                Logger.Error(ex, "Error when updating init");
                 return init;
             }
         }
@@ -667,7 +667,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error updating globals", ex);
+                Logger.Error(ex, "Error updating globals");
             }
         }
 
@@ -699,7 +699,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating hardline rarity", ex);
+                Logger.Error(ex, "Error when updating hardline rarity");
             }
         }
 
@@ -762,7 +762,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating types with rarity", ex);
+                Logger.Error(ex, "Error when updating types with rarity");
             }
         }
 
@@ -852,7 +852,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating lifetimes", ex);
+                Logger.Error(ex, "Error when updating lifetimes");
             }
         }
 
@@ -883,7 +883,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating EventSpawns", ex);
+                Logger.Error(ex, "Error when updating EventSpawns");
             }
         }
 
@@ -913,7 +913,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating EnvironmentFile", ex);
+                Logger.Error(ex, "Error when updating EnvironmentFile");
             }
         }
 
@@ -944,7 +944,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when updating EconomyCore", ex);
+                Logger.Error(ex, "Error when updating EconomyCore");
             }
         }
         #endregion UpdateFunctions
@@ -971,7 +971,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when copying vanilla mission folder", ex);
+                Logger.Error(ex, "Error when copying vanilla mission folder");
             }
         }
 
@@ -992,7 +992,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when copying expansion template files", ex);
+                Logger.Error(ex, "Error when copying expansion template files");
             }
         }
 
@@ -1029,7 +1029,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when copying mission template files and folders", ex);
+                Logger.Error(ex, "Error when copying mission template files and folders");
             }
         }
 
@@ -1043,7 +1043,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when copying persistance data", ex);
+                Logger.Error(ex, "Error when copying persistance data");
             }
         }
 
@@ -1062,7 +1062,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when moving the old mission", ex);
+                Logger.Error(ex, "Error when moving the old mission");
             }
         }
         #endregion CopyFunctions
@@ -1093,7 +1093,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when downloading the expansion template", ex);
+                Logger.Error(ex, "Error when downloading the expansion template");
             }
             return string.Empty;
         }

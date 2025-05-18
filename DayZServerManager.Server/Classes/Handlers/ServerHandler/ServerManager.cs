@@ -6,6 +6,7 @@ using DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler;
 using DayZServerManager.Server.Classes.Handlers.SteamCMDHandler;
 using DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.ManagerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ProfileClasses.NotificationSchedulerClasses;
+using DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses.PlayersDB;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.ServerConfigClasses.Property;
@@ -15,6 +16,7 @@ using Microsoft.VisualBasic.FileIO;
 using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
@@ -25,18 +27,67 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
 
         // Other Variables
         private bool _updatedMods;
-        private bool _restartingForUpdates;
         private bool _updatedServer;
+        private bool _restartingForUpdates;
         private List<long> _updatedModsIDs;
         private ServerConfig _serverConfig;
 
         private Process? _serverProcess;
 
         public ServerConfig ServerConfig { get { return _serverConfig; } set { _serverConfig = value; } }
-        public bool RestartingForUpdates { get; }
+        public bool RestartingForUpdates { get { return _restartingForUpdates; } }
+        public bool UpdatedMods { get { return _updatedMods; } set { _updatedMods = value; } }
+        public bool UpdatedServer { get { return _updatedServer; } set { _updatedServer = value; } }
 
         public ServerManager(string serverConfigPath)
         {
+            if (!Directory.Exists(Manager.SERVER_PATH))
+            {
+                Directory.CreateDirectory(Manager.SERVER_PATH);
+            }
+
+            if (!File.Exists(Path.Combine(Manager.SERVER_PATH, Manager.BAN_FILE_NAME)))
+            {
+                File.Create(Path.Combine(Manager.SERVER_PATH, Manager.BAN_FILE_NAME));
+            }
+
+            if (!Directory.Exists(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName)))
+            {
+                Directory.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName));
+            }
+
+            if (!Directory.Exists(Manager.BATTLEYE_FOLDER_PATH))
+            {
+                Directory.CreateDirectory(Manager.BATTLEYE_FOLDER_PATH);
+            }
+
+            if (!File.Exists(Path.Combine(Manager.BATTLEYE_FOLDER_PATH, Manager.BATTLEYE_BANS_NAME)))
+            {
+                using (FileStream fs = File.Create(Path.Combine(Manager.BATTLEYE_FOLDER_PATH, Manager.BATTLEYE_BANS_NAME)))
+                {
+
+                }
+
+            }
+
+            List<string> beConfigFiles = FileSystem.GetFiles(Manager.BATTLEYE_FOLDER_PATH).ToList().FindAll(beFile => Path.GetExtension(beFile) == ".cfg" && Path.GetFileNameWithoutExtension(beFile).Contains(Path.GetFileNameWithoutExtension(Manager.BATTLEYE_CONFIG_NAME)));
+            if (beConfigFiles.Count > 0)
+            {
+                foreach (string beConfigFile in beConfigFiles)
+                {
+                    UpdateBeConfig(beConfigFile);
+                }
+            }
+            else
+            {
+                string beConfigPath = Path.Combine(Manager.BATTLEYE_FOLDER_PATH, Manager.BATTLEYE_CONFIG_NAME);
+                using (FileStream fs = File.Create(beConfigPath))
+                {
+
+                }
+                UpdateBeConfig(beConfigPath);
+            }
+
             _serverConfig = LoadServerConfig(serverConfigPath);
             _serverProcess = null;
             _updatedModsIDs = new List<long>();
@@ -64,7 +115,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             catch (Exception ex)
             {
                 Manager.props.dayzServerStatus = Manager.STATUS_NOT_RUNNING;
-                Logger.Error("Error when accessing getting server status", ex);
+                Logger.Error(ex, "Error when accessing getting server status");
                 _serverProcess = null;
                 return false;
             }
@@ -106,11 +157,6 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
 
             try
             {
-                if (!File.Exists(Path.Combine(Manager.SERVER_PATH, "ban.txt")))
-                {
-                    File.Create(Path.Combine(Manager.SERVER_PATH, "ban.txt"));
-                }
-
                 _serverProcess = new Process();
                 ProcessStartInfo procInf = new ProcessStartInfo();
                 string startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad);
@@ -125,7 +171,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when starting server process", ex);
+                Logger.Error(ex, "Error when starting server process");
             }
         }
 
@@ -166,16 +212,23 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
         {
             try
             {
-                if (_serverProcess != null)
+                if (Manager.scheduler.IsConnected())
                 {
-                    _serverProcess.Kill();
-                    _serverProcess = null;
-                    Manager.props.dayzServerStatus = Manager.STATUS_NOT_RUNNING;
+                    Manager.scheduler.Shutdown();
+                    Manager.props.dayzServerStatus = Manager.STATUS_STOPPING_SERVER;
+                }
+                else
+                {
+                    if (_serverProcess != null)
+                    {
+                        _serverProcess.Kill();
+                        _serverProcess = null;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when killing the server process", ex);
+                Logger.Error(ex, "Error when killing the server process");
                 _serverProcess = null;
             }
         }
@@ -187,7 +240,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             mods.AddRange(Manager.managerConfig.serverMods);
             if (hasToUpdate)
             {
-                SteamCMDManager.UpdateServer();
+                _updatedServer = SteamCMDManager.UpdateServer();
                 if (mods.Count > 0)
                 {
                     _updatedMods = SteamCMDManager.UpdateMods(mods, out _updatedModsIDs);
@@ -231,7 +284,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("Error copying a directory", ex);
+                        Logger.Error(ex, "Error copying a directory");
                     }
                 }
 
@@ -243,7 +296,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("Error copying a file", ex);
+                        Logger.Error(ex, "Error copying a file");
                     }
                 }
 
@@ -287,7 +340,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("Error moving mods", ex);
+                        Logger.Error(ex, "Error moving mods");
                     }
                 }
 
@@ -331,7 +384,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Error when changing to update mode", ex);
+                    Logger.Error(ex, "Error when changing to update mode");
                     return false;
                 }
             }
@@ -356,6 +409,87 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             Manager.props.managerStatus = Manager.STATUS_SERVER_BACKED_UP;
         }
 
+        public string GetAdminLog()
+        {
+            try
+            {
+                string returnString = string.Empty;
+                string adminLogPath = "";
+                if (OperatingSystem.IsWindows())
+                {
+                    adminLogPath = Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.ADMIN_LOG_X64_NAME);
+                }
+                else
+                {
+                    adminLogPath = Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.ADMIN_LOG_NAME);
+                }
+
+                if (!File.Exists(adminLogPath))
+                {
+                    using (FileStream fs = File.Create(adminLogPath))
+                    {
+
+                    }
+                }
+
+                using (var fs = new FileStream(adminLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    using (var sr = new StreamReader(fs, Encoding.Default))
+                    {
+                        returnString = sr.ReadToEnd();
+                    }
+                }
+
+                if (Manager.props.adminLog != returnString)
+                {
+                    string pattern = @"Player \""(?'name'[^\n]+)\""\(id=(?'id'\S*)\)";
+                    Regex regex = new Regex(pattern);
+                    MatchCollection matches = regex.Matches(returnString);
+
+                    foreach (Match match in matches)
+                    {
+                        string name = match.Groups["name"].Value;
+                        string uid = match.Groups["id"].Value;
+
+                        Player? player = Manager.scheduler.PlayersDB.Players.Find(player => player.Name == name);
+                        if (player != null && uid != "Unknown" && (string.IsNullOrEmpty(player.Uid) || player.Uid == "Unknown"))
+                        {
+                            player.Uid = uid;
+                        }
+                    }
+                }
+
+                Manager.props.adminLog = returnString;
+                return returnString;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error when getting admin log");
+                return string.Empty;
+            }
+        }
+
+        public void UpdateBeConfig(string path)
+        {
+            try
+            {
+                string beConfig = $"RConPassword {Manager.managerConfig.RConPassword}";
+                beConfig += $"{Environment.NewLine}RConPort {Manager.managerConfig.RConPort}";
+                beConfig += $"{Environment.NewLine}RestrictRCon 0";
+
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    writer.Write(beConfig);
+                    writer.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error when updating be config");
+            }
+        }
+
+
         #region ServerConfig
         public ServerConfig LoadServerConfig(string serverConfigPath)
         {
@@ -372,7 +506,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Error when loading server config", ex);
+                    Logger.Error(ex, "Error when loading server config");
                 }
             }
 
@@ -427,7 +561,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error saving the server config", ex);
+                Logger.Error(ex, "Error saving the server config");
             }
         }
         #endregion ServerConfig
@@ -452,7 +586,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error getting keys folder", ex);
+                Logger.Error(ex, "Error getting keys folder");
                 return string.Empty;
             }
         }

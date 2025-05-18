@@ -21,7 +21,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when serializing json file", ex);
+                Logger.Error(ex, "Error when serializing json file");
             }
         }
 
@@ -45,7 +45,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when deserializing json file", ex);
+                Logger.Error(ex, "Error when deserializing json file");
                 return default(JSONFile);
             }
         }

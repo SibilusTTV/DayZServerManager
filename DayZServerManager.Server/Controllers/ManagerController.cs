@@ -22,7 +22,7 @@ namespace DayZServerManager.Server.Controllers
         public ManagerProps GetServerStatus()
         {
             int playerCount = 0;
-            string adminLog = Manager.GetAdminLog();
+            string adminLog = Manager.dayZServer.GetAdminLog();
             if (Manager.scheduler != null)
             {
                 Manager.scheduler.GetPlayers();

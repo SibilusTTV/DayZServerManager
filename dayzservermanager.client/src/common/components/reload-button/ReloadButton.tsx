@@ -3,29 +3,17 @@ import { DefaultButton } from '@fluentui/react';
 import ReplayIcon from '@mui/icons-material/Replay';
 
 interface ReloadButtonProps {
-    populateFunction: Function;
-    setFunction: Function;
-    endpoint: string;
-    setFunctionUnsorted?: Function
+    handleLoad: Function;
 }
 
-export default function ReloadButton({ populateFunction, setFunction, endpoint, setFunctionUnsorted }: ReloadButtonProps) {
-    if (setFunctionUnsorted == undefined && endpoint != undefined) {
-        return (
-            <DefaultButton
-                onClick={() => populateFunction(setFunction, endpoint)}
-            >
-                <ReplayIcon />
-            </DefaultButton>
-        )
-    }
-    else {
-        return (
-            <DefaultButton
-                onClick={() => populateFunction(setFunction, setFunctionUnsorted, endpoint)}
-            >
-                <ReplayIcon />
-            </DefaultButton>
-        )
-    }
+export default function ReloadButton({ handleLoad }: ReloadButtonProps) {
+    return (
+        <DefaultButton
+            onClick={() => handleLoad()}
+            className="Button"
+            style={{ margin: "0px 10px 10px 0px" }}
+        >
+            <ReplayIcon />
+        </DefaultButton>
+    )
 }

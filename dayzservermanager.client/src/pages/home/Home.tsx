@@ -1,11 +1,9 @@
-import { Button, DialogActions, DialogContent, DialogContentText, TextField } from "@mui/material";
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import { GridColDef, GridRenderCellParams, DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
-import { useLayoutEffect, useState } from "react";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./Home.css";
 import KickButton from "../../common/components/kick-button/KickButton";
 import BanButton from "../../common/components/ban-button/BanButton";
+import { DefaultButton, DetailsList, IColumn, IObjectWithKey, Selection, SelectionMode, TextField } from "@fluentui/react";
 
 interface ServerInfo{
     managerStatus: string;
@@ -29,14 +27,17 @@ interface Player {
 }
 
 export default function Home() {
-    const [openDialog, setOpenDialog] = useState(false);
-    const [steamGuardCode, setSteamGuardCode] = useState("");
     const [serverStatus, setServerStatus] = useState<ServerInfo>();
-    const [dialogTimeout, setDialogTimeout] = useState(0);
+    const [dialogTimeout, setDialogTimeout] = useState<number>(0);
     const [message, setMessage] = useState("");
-    const [selectedPlayer, setSelectedPlayer] = useState(-1);
+    const [selectedPlayers, setSelectedPlayers] = useState<IObjectWithKey[]>();
+    const dialogTimeoutRef = useRef(dialogTimeout);
 
-    useLayoutEffect(() => {
+    useEffect(() => {
+        dialogTimeoutRef.current = dialogTimeout;
+    }, [dialogTimeout]);
+
+    useEffect(() => {
         reload();
         const timer = setInterval(() => {
             reload();
@@ -45,138 +46,106 @@ export default function Home() {
     }, [])
 
     const reload = () => {
-        if (!openDialog) {
-            if (dialogTimeout > 0) {
-                setDialogTimeout(dialogTimeout - 1);
+        setDialogTimeout(prevTimeout => {
+            if (prevTimeout > 0) {
+                return prevTimeout - 1;
+            } else {
+                return prevTimeout;
             }
-            getServerStatus(setOpenDialog, setServerStatus, dialogTimeout, openDialog, setDialogTimeout);
-        }
+        })
+        getServerStatus(setServerStatus, dialogTimeoutRef, setDialogTimeout);
     }
-
-    const handleClose = () => {
-        setOpenDialog(false);
-        setDialogTimeout(30);
-    };
-
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setOpenDialog(false);
-        setDialogTimeout(30);
-        sendSteamGuard(steamGuardCode);
-    };
 
     const handleSendMessage = () => {
+        let playerId: number = -1;
+        if (selectedPlayers && selectedPlayers.length > 0) {
+            playerId = (selectedPlayers[0] as Player).id
+        }
         let command = "say";
-        command += " " + selectedPlayer + " " + message;
+        command += " " + playerId + " " + message;
         sendCommand(command);
         setMessage("");
-    }
+    };
 
-    const onSelectModelChange = (rowSelectionModel: GridRowSelectionModel) => {
-        let rowId = rowSelectionModel.at(0)
-        if (rowId != null && serverStatus) {
-            let player = serverStatus.players.at(rowId.valueOf() as number)
-            if (player) {
-                setSelectedPlayer(
-                    player.id
-                );
-            }
-            else {
-                setSelectedPlayer(-1);
-            }
-        }
-        else {
-            setSelectedPlayer(-1);
-        }
-    }
+    const playerSelection: Selection = useMemo(() => new Selection(
+        {
+            onSelectionChanged: () => {
+                setSelectedPlayers(playerSelection.getSelection());
+            },
+            selectionMode: SelectionMode.single,
+            getKey: (item) => (item as Player).id
+        }),
+        []
+    );
 
-    const columns: GridColDef[] = [
+    const columns: IColumn[] = [
         {
-            field: 'name',
-            headerName: 'Name',
-            width: 360,
-            type: 'string',
-            editable: false
+            key: 'name',
+            fieldName: 'name',
+            name: 'Name',
+            minWidth: 360
         },
         {
-            field: 'guid',
-            headerName: 'Guid',
-            width: 360,
-            type: 'string',
-            editable: false
+            key: 'guid',
+            fieldName: 'guid',
+            name: 'Guid',
+            minWidth: 360
         },
         {
-            field: 'id',
-            headerName: 'Id',
-            width: 80,
-            type: 'number',
-            editable: false
+            key: 'id',
+            fieldName: 'id',
+            name: 'Id',
+            minWidth: 80
         },
         {
-            field: 'ping',
-            headerName: 'Ping',
-            width: 80,
-            type: 'number',
-            editable: false
+            key: 'ping',
+            fieldName: 'ping',
+            name: 'Ping',
+            minWidth: 80
         },
         {
-            field: 'isVerified',
-            headerName: 'Is verified',
-            width: 80,
-            type: 'boolean',
-            editable: false
+            key: 'isVerified',
+            fieldName: 'isVerified',
+            name: 'Is verified',
+            minWidth: 80
         },
         {
-            field: 'isInLobby',
-            headerName: 'Is in lobby',
-            width: 80,
-            type: 'boolean',
-            editable: false
+            key: 'isInLobby',
+            fieldName: 'isInLobby',
+            name: 'Is in lobby',
+            minWidth: 80
         },
         {
-            field: 'ip',
-            headerName: 'IP',
-            width: 360,
-            type: 'string',
-            editable: false
+            key: 'ip',
+            fieldName: 'ip',
+            name: 'IP',
+            minWidth: 360
         },
         {
-            field: 'kick',
-            headerName: 'Kick',
-            width: 100,
-            editable: false,
-            display: 'flex',
-            disableReorder: true,
-            filterable: false,
-            hideSortIcons: true,
-            resizable: false,
-            renderCell: (params: GridRenderCellParams<any, Date>) => {
-                let row: Player = params.row;
+            key: 'kick',
+            fieldName: 'kick',
+            name: 'Kick',
+            minWidth: 100,
+            onRender: (item: Player) => {
                 return (
                     <KickButton
-                        guid={row.guid}
-                        name={row.name}
+                        guid={item.guid}
+                        name={item.name}
                         reload={reload}
                     />
                 );
             }
         },
         {
-            field: 'ban',
-            headerName: 'Ban',
-            width: 100,
-            editable: false,
-            display: 'flex',
-            disableReorder: true,
-            filterable: false,
-            hideSortIcons: true,
-            resizable: false,
-            renderCell: (params: GridRenderCellParams<any, Date>) => {
-                let row: Player = params.row;
+            key: 'ban',
+            fieldName: 'ban',
+            name: 'Ban',
+            minWidth: 100,
+            onRender: (item: Player) => {
                 return (
                     <BanButton
-                        guid={row.guid}
-                        name={row.name}
+                        guid={item.guid}
+                        name={item.name}
                         reload={reload}
                     />
                 );
@@ -187,21 +156,27 @@ export default function Home() {
     return (
         <div className="HomeContainer">
             <div className="ButtonContainer">
-                <Button
+                <DefaultButton
                     onClick={() => { startDayZServer() }}
+                    className="Button"
+                    style={{margin: "0px 10px 0px 0px"}}
                 >
                     Start Server
-                </Button>
-                <Button
+                </DefaultButton>
+                <DefaultButton
                     onClick={stopDayZServer}
+                    className="Button"
+                    style={{ margin: "0px 10px 0px 0px" }}
                 >
                     Stop Server
-                </Button>
-                <Button
-                    onClick={() => { restartDayZServer() } }
+                </DefaultButton>
+                <DefaultButton
+                    onClick={() => { restartDayZServer() }}
+                    className="Button"
+                    style={{ margin: "0px 10px 0px 0px" }}
                 >
                     Restart Server
-                </Button>
+                </DefaultButton>
             </div>
             {serverStatus &&
             <>
@@ -213,21 +188,10 @@ export default function Home() {
                 {serverStatus.players.length > 0 &&
                     <>
                         <h2>Playerlist</h2>
-                        <DataGrid
-                            rows={serverStatus.players}
-                            columns={columns}
-                            initialState={{
-                                pagination: {
-                                    paginationModel: {
-                                        pageSize: 20,
-                                    },
-                                }
-                        }}
-                        checkboxSelection
-                            disableMultipleRowSelection
-                            onRowSelectionModelChange={onSelectModelChange}
-                            pageSizeOptions={[5, 10, 20, 50, 100]}
-                            sx={{ border: 0 }}
+                        <DetailsList
+                        items={serverStatus.players}
+                        columns={columns}
+                        selection={playerSelection}
                         />
                     </>
                 }
@@ -236,94 +200,54 @@ export default function Home() {
                     <TextField
                         className="Home-Message-TextField"
                         value={message}
-                        onChange={(event) => setMessage(event.target.value)}
+                        onChange={(_, newValue) => newValue && setMessage(newValue)}
                         onKeyDown={(event) => event.key === "Enter" && handleSendMessage()}
                         label="Send Message to selected player or to everyone"
                     />
-                    <Button
+                    <DefaultButton
                         onClick={handleSendMessage}
+                        className="Button"
+                        style={{ margin: "0px 10px 0px 10px" }}
                     >
                         Send Message
-                    </Button>
+                    </DefaultButton>
                 </p>
                 <h2>Scheduler Log</h2>
                 <TextField
                     key="chatLog"
-                    id="outlined-multiline"
                     multiline
                     rows={10}
-                    value={serverStatus.chatLog}
-                    fullWidth={true}
-                    inputProps={{
-                        input: {
-                            readOnly: true,
-                        },
-                    }}
-
+                    value={serverStatus.chatLog || ""}
+                    readOnly
                 />
                 <h2>Admin Log</h2>
                 <TextField
                     key="adminLog"
-                    id="outlined-multiline"
                     multiline
                     rows={10}
-                    value={serverStatus.adminLog}
-                    fullWidth={true}
-                    inputProps={{
-                        input: {
-                            readOnly: true,
-                        },
-                    }}
-
+                    readOnly
+                    value={serverStatus.adminLog || ""}
                 />
             </>}
-            <Dialog
-                open={openDialog}
-                onClose={handleClose}
-                PaperProps={{
-                    component: 'form',
-                    onSubmit: handleSubmit
-                }}
-            >
-                <DialogTitle>Steam Guard</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        To proceed in downloading the Server and the mods, you need to enter your steam guard code.
-                    </DialogContentText>
-                    <TextField
-                        autoFocus
-                        required
-                        margin="dense"
-                        id="name"
-                        name="code"
-                        label="Steam guard code"
-                        type="password"
-                        fullWidth
-                        variant="standard"
-                        onChange={(event) => { setSteamGuardCode(event.target.value) }}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button type="submit">Submit</Button>
-                </DialogActions>
-            </Dialog>
         </div>
     )
 }
 
-async function getServerStatus(setOpen: Function, setServerStatus: Function, dialogTimeout: number, open: boolean, setDialogTimeout: Function) {
+async function getServerStatus(setServerStatus: Function, dialogTimeoutRef: React.RefObject<number>, setDialogTimeout: Function) {
     try {
         const response = await fetch('Manager/GetServerStatus');
         if (response.ok) {
             const result = (await response.json()) as ServerInfo;
             setServerStatus(result);
-            if (dialogTimeout <= 0 && !open && result.steamCMDStatus === "Steam Guard") {
-                setOpen(true);
+            if (dialogTimeoutRef.current == 0 && result.steamCMDStatus === "Steam Guard") {
+                setDialogTimeout(-1);
+                const steamguard = prompt("Please provide the Steam Guard code");
+                steamguard && sendSteamGuard(steamguard);
+                setDialogTimeout(6);
             }
         }
         else {
-            setDialogTimeout(30);
+            setDialogTimeout(6);
         }
     }
     catch (ex) {

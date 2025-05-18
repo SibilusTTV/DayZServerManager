@@ -21,6 +21,7 @@ export default function KickButton({ guid, name, reload }: KickButtonProps) {
     return (
         <DefaultButton
             onClick={() => KickPlayer(guid, name, reload)}
+            className="Button"
             style={{ display: "flex", flexDirection: "column" }}
         >
             <DoNotStepIcon />
@@ -30,7 +31,7 @@ export default function KickButton({ guid, name, reload }: KickButtonProps) {
 
 async function sendKickRequest(_guid: string, _name: string, _reason: string, reload: Function) {
     try {
-        await fetch('DayZServer/KickPlayer', {
+        await fetch('Scheduler/KickPlayer', {
             method: "POST",
             mode: "cors",
             headers: {

@@ -4,7 +4,7 @@ using System.Text;
 using LogLevel = NLog.LogLevel;
 
 NLog.LogManager.Setup().LoadConfiguration(LogBuilder => {
-    LogBuilder.ForLogger().FilterMinLevel(LogLevel.Info).WriteToConsole();
+    LogBuilder.ForLogger().FilterMinLevel(LogLevel.Debug).WriteToConsole();
     LogBuilder.ForLogger().FilterMinLevel(LogLevel.Debug).WriteToFile(fileName: "manager.log");
 });
 

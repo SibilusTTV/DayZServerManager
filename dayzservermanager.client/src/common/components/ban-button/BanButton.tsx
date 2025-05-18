@@ -86,6 +86,7 @@ export default function BanOfflineButton({guid, name, reload}: BanOfflineButtonP
         <DefaultButton
             onClick={() => BanPlayer(guid, name, reload)}
             style={{ display: "flex", flexDirection: "column" }}
+            className="Button"
         >
             <NotInterestedIcon />
         </DefaultButton>
@@ -95,7 +96,7 @@ export default function BanOfflineButton({guid, name, reload}: BanOfflineButtonP
 
 async function sendBanRequest(_guid: string, _name: string, _duration: number, _reason: string, reload: Function) {
     try {
-        await fetch('DayZServer/BanPlayer', {
+        await fetch('Scheduler/BanPlayer', {
             method: "POST",
             mode: "cors",
             headers: {

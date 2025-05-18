@@ -72,15 +72,9 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.ManagerClasses.M
             maxKeepTime = 7;
             clientMods = new List<Mod>();
             serverMods = new List<Mod>();
-            Mod mod1 = new Mod();
-            mod1.id = 0;
-            mod1.workshopID = 1559212036;
-            mod1.name = "@CF";
+            Mod mod1 = new Mod(0, "@CF", 1559212036);
             clientMods.Add(mod1);
-            Mod mod2 = new Mod();
-            mod2.id = 1;
-            mod2.workshopID = 1564026768;
-            mod2.name = "@Community-Online-Tools";
+            Mod mod2 = new Mod(1, "@Community-Online-Tools", 1564026768);
             clientMods.Add(mod2);
             customMessages = new List<CustomMessage>();
             customMessages.Add(new CustomMessage(0, false, new Dictionary<string, int> { { "hours", 0 }, { "minutes", 5 }, { "seconds", 0 } }, new Dictionary<string, int> { { "hours", 0 }, { "minutes", 15 }, { "seconds", 0 } }, "Need Help?", "Make sure to join our Discord", "ExclamationMark", ""));

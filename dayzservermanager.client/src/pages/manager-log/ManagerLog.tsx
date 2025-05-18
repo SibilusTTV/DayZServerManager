@@ -1,4 +1,4 @@
-import { TextField } from "@mui/material";
+import { TextField } from "@fluentui/react"
 import { useEffect, useState } from "react";
 
 
@@ -13,11 +13,9 @@ export default function ManagerLog() {
     })
 
     return (
-        <TextField style={{ display: "flex", padding: "10px 10px 10px 10px" }}
+        <TextField 
             multiline
             value={managerLog}
-            maxRows="20"
-            minRows= "5"
         />
     )
 }

@@ -73,7 +73,8 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             if (IsConnected())
             {
-                SendCommand($"kick {id} \"{reason}\"");
+                //SendCommand($"kick {id} \"{reason}\"");
+                _client.SendCommand(BattlEyeCommand.Kick, $"{id} \"{reason}\"");
                 Logger.Info($"The player {name} was kicked for reason \"{reason}\"");
             }
         }
@@ -82,8 +83,9 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             if (IsConnected())
             {
-                SendCommand($"ban {id} {duration} \"{reason}\"");
-                Logger.Info($"The player {name} was banned for reason \"{reason}\"");
+                //SendCommand($"ban {id} {duration} \"{reason}\"");
+                _client.SendCommand(BattlEyeCommand.Ban, $"{id} {duration} \"{reason}\"");
+                Logger.Info($"The player {name} was banned for reason \"{reason}\" for {duration} minutes");
             }
         }
 
@@ -91,8 +93,10 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             if (IsConnected())
             {
-                SendCommand($"addBan {guid} {duration} \"{reason}\"");
-                Logger.Info($"The player {name} was banned for reason \"{reason}\"");
+                //SendCommand($"addBan {guid} {duration} \"{reason}\"");
+                _client.SendCommand(BattlEyeCommand.AddBan, $"{guid} {duration} \"{reason}\"");
+                Logger.Info($"The player {name} was banned for reason \"{reason}\" for {duration} minutes");
+                ReloadBans();
             }
         }
 
@@ -100,7 +104,8 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             if (IsConnected())
             {
-                SendCommand($"removeBan {banId}");
+                //SendCommand($"removeBan {banId}");
+                _client.SendCommand(BattlEyeCommand.RemoveBan, banId.ToString());
                 Logger.Info($"The player {name} was unbanned");
                 ReloadBans();
             }
@@ -110,8 +115,10 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             if (IsConnected())
             {
-                SendCommand("loadBans");
-                SendCommand("writeBans");
+                _client.SendCommand(BattlEyeCommand.LoadBans);
+                _client.SendCommand(BattlEyeCommand.WriteBans);
+                //SendCommand("loadBans");
+                //SendCommand("writeBans");
             }
         }
 
@@ -120,6 +127,14 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             if (IsConnected())
             {
                 SendCommand("bans");
+            }
+        }
+
+        public void Shutdown()
+        {
+            if (IsConnected())
+            {
+                _client.SendCommand(BattlEyeCommand.Shutdown);
             }
         }
 
@@ -228,7 +243,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 Player? player = _playersDB.Players.Find(x => x.Guid == guid);
                 if (player == null)
                 {
-                    _playersDB.Players.Add(new Player(name, guid, isVerified, ip));
+                    _playersDB.Players.Add(new Player(name, guid, "", isVerified, ip));
                 }
             }
             _players = onlinePlayers;
@@ -240,9 +255,9 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             {
                 JSONSerializer.SerializeJSONFile<PlayersDB>(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME), _playersDB);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.Error("Error when saving the playersDB", e);
+                Logger.Error(ex, "Error when saving the playersDB");
             }
         }
 

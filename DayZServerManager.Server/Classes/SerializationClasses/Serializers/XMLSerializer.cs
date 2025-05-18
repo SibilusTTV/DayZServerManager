@@ -23,7 +23,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when serializing xml file", ex);
+                Logger.Error(ex, "Error when serializing xml file");
             }
         }
 
@@ -48,7 +48,7 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.Serializers
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when deserializing xml file", ex);
+                Logger.Error(ex, "Error when deserializing xml file");
                 return default(XMLFile);
             }
         }

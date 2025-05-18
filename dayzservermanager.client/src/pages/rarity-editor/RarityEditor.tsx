@@ -1,24 +1,17 @@
-import { Box, Button } from "@mui/material";
+
 import { Link, Outlet } from "react-router-dom";
 import "./RarityEditor.css"
 
 export default function RarityEditor() {
     return (
-        <>
-            <Box
-                component="form"
-                sx={{
-                    '& .MuiTextField-root': { m: 1, width: '25ch' },
-                }}
-                noValidate
-                autoComplete="off"
-                className="RarityEditor-Box"
+        <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", flexDirection: "row", margin: "10px 10px 10px 10px", flexGrow: 0  }}
             >
-                <Button color="inherit"><Link to="/rarity-editor/vanilla-rarities-editor">Vanilla Rarities Editor</Link></Button>
-                <Button color="inherit"><Link to="/rarity-editor/custom-files-rarities-editor">Custom Files Rarities Editor</Link></Button>
-                <Button color="inherit"><Link to="/rarity-editor/expansion-rarities-editor">Expansion Rarities Editor</Link></Button>
-            </Box>
+                <Link to="/rarity-editor/vanilla-rarities-editor" className="Layout-Link">Vanilla Rarities Editor</Link>
+                <Link to="/rarity-editor/custom-files-rarities-editor" className="Layout-Link">Custom Files Rarities Editor</Link>
+                <Link to="/rarity-editor/expansion-rarities-editor" className="Layout-Link">Expansion Rarities Editor</Link>
+            </div>
             <Outlet />
-        </>
+        </div>
     )
 }

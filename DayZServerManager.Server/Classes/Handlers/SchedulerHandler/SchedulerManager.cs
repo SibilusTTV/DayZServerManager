@@ -34,6 +34,11 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
 
         public SchedulerManager(string ip, int port, string password, int interval, bool onlyRestarts, List<CustomMessage> customMessages)
         {
+            if (!Directory.Exists(Manager.SCHEDULER_PATH))
+            {
+                Directory.CreateDirectory(Manager.SCHEDULER_PATH);
+            }
+
             _onlyRestarts = onlyRestarts;
 
             if (interval < 1 && interval > 24)
@@ -45,28 +50,44 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 _interval = interval;
             }
 
-            SchedulerConfig? tempConfig = JSONSerializer.DeserializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME));
-            if (tempConfig == null)
+            if (!File.Exists(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME)))
             {
                 _config = new SchedulerConfig();
                 JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME), _config);
             }
             else
             {
-                _config = tempConfig;
+                SchedulerConfig? tempConfig = JSONSerializer.DeserializeJSONFile<SchedulerConfig>(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME));
+                if (tempConfig != null)
+                {
+                    _config = tempConfig;
+                }
+                else
+                {
+                    _config = new SchedulerConfig();
+                    JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SCHEDULER_PATH, Manager.SCHEDULER_CONFIG_NAME), _config);
+                }
             }
 
             _autoLoadBansTimer = new Timer((state) => { LoadBans(); }, null, 10000, 10000);
 
-            PlayersDB? players = JSONSerializer.DeserializeJSONFile<PlayersDB>(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME));
-            if (players == null)
+            if (!File.Exists(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME)))
             {
                 _playersdb = new PlayersDB();
                 JSONSerializer.SerializeJSONFile<PlayersDB>(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME), _playersdb);
             }
             else
             {
-                _playersdb = players;
+                PlayersDB? players = JSONSerializer.DeserializeJSONFile<PlayersDB>(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME));
+                if (players != null)
+                {
+                    _playersdb = players;
+                }
+                else
+                {
+                    _playersdb = new PlayersDB();
+                    JSONSerializer.SerializeJSONFile<PlayersDB>(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME), _playersdb);
+                }
             }
 
             _whitelistedPlayers = new List<string>();
@@ -92,21 +113,35 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         {
             try
             {
-                using (StreamReader reader = new StreamReader(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
+                if (File.Exists(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
                 {
-                    while (!reader.EndOfStream)
+                    using (StreamReader reader = new StreamReader(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
                     {
-                        string? line = reader.ReadLine();
-                        if (line != null && !string.IsNullOrEmpty(line) && !_whitelistedPlayers.Contains(line))
+                        while (!reader.EndOfStream)
                         {
-                            _whitelistedPlayers.Add(line);
+                            string? line = reader.ReadLine();
+                            if (line != null && !string.IsNullOrEmpty(line) && !_whitelistedPlayers.Contains(line))
+                            {
+                                _whitelistedPlayers.Add(line);
+                            }
                         }
+                    }
+                }
+                else
+                {
+                    if (!Directory.Exists(Manager.SERVER_PATH))
+                    {
+                        Directory.CreateDirectory(Manager.SERVER_PATH);
+                    }
+                    using (FileStream writer = File.Create(Path.Combine(Manager.SERVER_PATH, Manager.WHITELIST_FILE_NAME)))
+                    {
+
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when loading the whitelisted players", ex);
+                Logger.Error(ex, "Error when loading the whitelisted players");
             }
         }
 
@@ -127,7 +162,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             }
             catch (Exception ex)
             {
-                Logger.Error("Error when saving the whitelisted players", ex);
+                Logger.Error(ex, "Error when saving the whitelisted players");
             }
         }
 
@@ -253,6 +288,11 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             _rconClient.SendCommand(command);
         }
 
+        public void Shutdown()
+        {
+            _rconClient.Shutdown();
+        }
+
         public void SaveSchedulerConfig(SchedulerConfig config)
         {
             _config = config;
@@ -270,7 +310,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Error when getting bans", ex);
+                    Logger.Error(ex, "Error when getting bans");
                 }
             }
         }

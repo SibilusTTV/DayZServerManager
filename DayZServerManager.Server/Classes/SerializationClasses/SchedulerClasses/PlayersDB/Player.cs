@@ -12,11 +12,11 @@ namespace DayZServerManager.Server.Classes.SerializationClasses.SchedulerClasses
         public string IP { get; set; }
 
         [JsonConstructor]
-        public Player(string name, string guid, bool isVerified, string ip)
+        public Player(string name, string guid, string uid, bool isVerified, string ip)
         {
             Name = name;
             Guid = guid;
-            Uid = "";
+            Uid = uid;
             IsVerified = isVerified;
             IP = ip;
         }

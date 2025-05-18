@@ -1,4 +1,4 @@
-import { Box, Button, IconButton, Toolbar } from "@mui/material";
+
 import {Home} from "@mui/icons-material";
 import { Link, Outlet } from "react-router-dom";
 import "./Layout.css"
@@ -6,29 +6,19 @@ import "./Layout.css"
 
 export default function Layout() {
     return (
-        <>
-            <Box sx={{ flexGrow: 0 }} className="Layout-Box">
-                <Toolbar>
-                    <Link to="/">
-                        <IconButton
-                            size="large"
-                            edge="start"
-                            color="inherit"
-                            aria-label="home"
-                            sx={{ mr: 2 }}
-                        >
-                            <Home />
-                            </IconButton>
-                    </Link>
-                    <Button color="inherit"><Link to="/manager-log">Manager Log</Link></Button>
-                    <Button color="inherit"><Link to="/player-database">Player Database</Link></Button>
-                    <Button color="inherit"><Link to="/manager-config">Manager Config Editor</Link></Button>
-                    <Button color="inherit"><Link to="/server-config">Server Config Editor</Link></Button>
-                    <Button color="inherit"><Link to="/scheduler-config">Scheduler Config Editor</Link></Button>
-                    <Button color="inherit"><Link to="/rarity-editor">Rarity Editor</Link></Button>
-                </Toolbar>
-            </Box>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", flexDirection: "row", margin: "10px 10px 10px 10px", flexGrow: 0 }}>
+                <Link to="/" className="Layout-Link">
+                    <Home style={{flexGrow: 1}} />
+                </Link>
+                <Link to="/manager-log" className="Layout-Link">Manager Log</Link>
+                <Link to="/player-database" className="Layout-Link">Player Database</Link>
+                <Link to="/manager-config" className="Layout-Link">Manager Config Editor</Link>
+                <Link to="/server-config" className="Layout-Link">Server Config Editor</Link>
+                <Link to="/scheduler-config" className="Layout-Link">Scheduler Config Editor</Link>
+                <Link to="/rarity-editor" className="Layout-Link">Rarity Editor</Link>
+            </div>
             <Outlet />
-        </>
+        </div>
     )
 }

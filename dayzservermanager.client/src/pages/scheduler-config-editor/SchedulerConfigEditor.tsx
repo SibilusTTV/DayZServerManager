@@ -1,10 +1,10 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import SaveButton from "../../common/components/save-button/SaveButton";
 import ReloadButton from "../../common/components/reload-button/ReloadButton";
-import { DefaultButton, DetailsList, Dropdown, IColumn, IDropdownOption, initializeIcons, SelectionMode, TextField } from "@fluentui/react";
+import { CheckboxVisibility, DefaultButton, DetailsList, DetailsRow, Dropdown, getTheme, IColumn, IDetailsRowProps, IDragDropEvents, IDropdownOption, initializeIcons, IObjectWithKey, MarqueeSelection, mergeStyles, Selection, SelectionMode, TextField } from "@fluentui/react";
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 
 interface SchedulerConfig{
     useNickFilter: boolean;
@@ -20,10 +20,34 @@ interface ListItem {
 
 export default function SchedulerConfigEditor() {
     const [schedulerConfig, setSchedulerConfig] = useState<SchedulerConfig>();
+    const [listItems, setListItems] = useState<ListItem[]>();
+    const [draggedItem, setDraggedItem] = useState<ListItem>();
+    const [draggedIndex, setDraggedIndex] = useState<number>(-1);
+    const [, setSelectedItems] = useState<IObjectWithKey[]>();
+
+    const badNamesSelection: Selection = useMemo(() => new Selection(
+        {
+            onSelectionChanged: () => {
+                const newSelection = badNamesSelection.getSelection();
+                setSelectedItems(newSelection);
+            },
+            selectionMode: SelectionMode.multiple,
+            getKey: (item) => (item as ListItem).listId
+        }),
+        []
+    );
 
     useEffect(() => {
-        PopulateSchedulerManagerConfig(setSchedulerConfig, 'SchedulerConfig/GetSchedulerConfig');
+        handleLoad();
     }, []);
+
+    const handleLoad = () => {
+        PopulateSchedulerManagerConfig(setSchedulerConfig, 'SchedulerConfig/GetSchedulerConfig', setListItems);
+    };
+
+    const handleSave = () => {
+        PostSchedulerConfig('SchedulerConfig/PostSchedulerConfig', JSON.stringify(schedulerConfig));
+    };
 
     initializeIcons();
 
@@ -33,22 +57,22 @@ export default function SchedulerConfigEditor() {
             name: "Bad Name",
             fieldName: "badName",
             minWidth: 200,
-            onRender: (badName: ListItem) => {
+            onRender: (badName: ListItem, index: number | undefined) => {
                 return (
                     <TextField
-                        value={badName.badName}
-                        onChange={(event) => {
-                            if (schedulerConfig) {
+                        defaultValue={badName.badName}
+                        onBlur={(event) => {
+                            if (schedulerConfig && listItems && index != null) {
+                                const items = listItems.map(item => item.listId == badName.listId ? { ...item, badName: event.target.value } : item)
+                                setListItems(
+                                    items
+                                );
                                 setSchedulerConfig(
                                     {
                                         ...schedulerConfig,
-                                        badNames: [
-                                            ...schedulerConfig.badNames.slice(0, badName.listId),
-                                            event.currentTarget.value.toString(),
-                                            ...schedulerConfig.badNames.slice(badName.listId + 1)
-                                        ]
+                                        badNames: items.map(itm => itm.badName)
                                     }
-                                )
+                                );
                             }
                         }}
                     />
@@ -60,8 +84,20 @@ export default function SchedulerConfigEditor() {
                         <span>Bad Name</span>
                         <DefaultButton
                             onClick={
-                                () => { schedulerConfig && setSchedulerConfig({ ...schedulerConfig, badNames: [...schedulerConfig.badNames, ""] }) }
+                                () => {
+                                    if (schedulerConfig && listItems) {
+                                        const items = [...listItems, { listId: getNextListItemId(), badName: "" }];
+                                        setListItems(
+                                            items
+                                        );
+                                        setSchedulerConfig(
+                                            { ...schedulerConfig, badNames: items.map(item => item.badName) }
+                                        );
+                                    }
+                                }
                             }
+                            className="Button"
+                            style={{margin: "5px 10px 5px 10px"} }
                             styles={{ root: { margin: "0px 10px 0px 10px" } }}
                         >
                             <AddIcon/>
@@ -79,17 +115,40 @@ export default function SchedulerConfigEditor() {
                 return (
                     <DefaultButton
                         onClick={
-                            () => { schedulerConfig && setSchedulerConfig({ ...schedulerConfig, badNames: schedulerConfig.badNames.filter((_, index) => index != badName.listId) }) }
+                            () => {
+                                if (schedulerConfig && listItems) {
+                                    const items = listItems.filter((item) => item.listId != badName.listId);
+                                    setListItems(
+                                        items
+                                    );
+                                    setSchedulerConfig(
+                                        { ...schedulerConfig, badNames: items.map(item => item.badName) }
+                                    );
+                                }
+                            }
                         }
+                        className="Button"
                     >
-                        <CloseIcon/>
+                        <DeleteIcon />
                     </DefaultButton>
                 )
             }
         }
     ];
 
-    const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const getNextListItemId = () => {
+        let index = 0
+        if (listItems) {
+            for (index; index < listItems.length; index++) {
+                if (listItems.find(item => item.listId === index) == null) {
+                    return index;
+                }
+            }
+        }
+        return index;
+    }
+
+    const handleFieldBlur = (event: React.FocusEvent<HTMLInputElement>) => {
         if (schedulerConfig) {
             setSchedulerConfig(
                 {
@@ -100,7 +159,7 @@ export default function SchedulerConfigEditor() {
         }
     }
 
-    const handleChange = (key: string, option: IDropdownOption | undefined) => {
+    const handleDropDownChange = (key: string, option: IDropdownOption | undefined) => {
         if (option && schedulerConfig) {
             setSchedulerConfig(
                 {
@@ -111,6 +170,62 @@ export default function SchedulerConfigEditor() {
         }
     }
 
+    const insertBeforeName = (item: ListItem): void => {
+        if (schedulerConfig && listItems) {
+            const draggedItems = badNamesSelection.isIndexSelected(draggedIndex)
+                ? (badNamesSelection.getSelection() as ListItem[])
+                : [draggedItem!];
+
+            const items = listItems.filter(itm => draggedItems.indexOf(itm) === -1);
+
+            const insertIndex = listItems.indexOf(item as ListItem);
+            items.splice(insertIndex, 0, ...draggedItems);
+
+            setListItems(items);
+
+            setSchedulerConfig({
+                ...schedulerConfig,
+                badNames: items.map(itm => itm.badName)
+            });
+        }
+    };
+
+    const handleDragStart = (item: any, itemIndex: number) => {
+        setDraggedItem(item);
+        setDraggedIndex(itemIndex!);
+    };
+
+    const handleDrop = (item: any) => {
+        if (draggedItem) {
+            insertBeforeName(item);
+        }
+    };
+
+    const handleDragEnd = () => {
+        setDraggedItem(undefined);
+        setDraggedIndex(-1);
+    };
+
+    const handleDragEnter = () => {
+        // return string is the css classes that will be added to the entering element.
+        return mergeStyles({
+            backgroundColor: getTheme().palette.neutralLight,
+        });
+    };
+
+    const handleDragLeave = () => {
+        return;
+    };
+
+    const badNamesDragDropEvents: IDragDropEvents = {
+        canDrop: () => {
+            return true;
+        },
+        canDrag: (_item?: any) => {
+            return true;
+        }
+    };
+
     const options: IDropdownOption[] = [
         {
             key: "true",
@@ -120,21 +235,17 @@ export default function SchedulerConfigEditor() {
             key: "false",
             text: "false"
         }
-    ] 
+    ];
 
     return (
         <div style={{padding: "10px 10px 10px 10px"} }>
             <h1 id="tableLabel">Scheduler Configurations</h1>
-            <div key="buttons">
+            <div key="buttons" style={{ display: "flex", flexDirection: "row" }}>
                 <SaveButton
-                    postFunction={PostSchedulerConfig}
-                    data={JSON.stringify(schedulerConfig)}
-                    endpoint='SchedulerConfig/PostSchedulerConfig'
+                    handleSave={handleSave}
                 />
                 <ReloadButton
-                    populateFunction={PopulateSchedulerManagerConfig}
-                    setFunction={setSchedulerConfig}
-                    endpoint='SchedulerConfig/GetSchedulerConfig'
+                    handleLoad={handleLoad}
                 />
             </div>
             <div key="configFields" style={{ padding: "10px 0px 0px 0px", flexDirection: "row", display: "flex" }}>
@@ -142,8 +253,9 @@ export default function SchedulerConfigEditor() {
                     if (key === "useWhiteList" || key === "useNickFilter") {
                         return (
                             <Dropdown
+                                key={key}
                                 selectedKey={value.toString()}
-                                onChange={(_, option) => handleChange(key, option)}
+                                onChange={(_, option) => handleDropDownChange(key, option)}
                                 label={key}
                                 options={options}
                                 styles={{ root: { width: 100, padding: "0px", margin: "0px" }}}
@@ -156,7 +268,7 @@ export default function SchedulerConfigEditor() {
                                 key={key}
                                 id={key}
                                 label={key}
-                                onBlur={handleBlur}
+                                onBlur={handleFieldBlur}
                                 defaultValue={value}
                                 styles={{ root: { width: 400, padding: "0px", margin: "0px" } }}
                             />
@@ -165,22 +277,47 @@ export default function SchedulerConfigEditor() {
                 })}
             </div>
             <div key="badNamesList" style={{ padding: "10px 0px 0px 0px", flexDirection: "column", display: "flex" }}>
-                <DetailsList
-                    styles={{ root: { padding: "10px 0px 0px 0px" } }}
-                    items={schedulerConfig?.badNames.map((badName, index) => { return { listId: index, badName: badName } }) || []}
-                    columns={columns}
-                    selectionMode={SelectionMode.none}
-                />
+                <MarqueeSelection selection={badNamesSelection}>
+                    <DetailsList
+                        setKey="badNamesDetailsList"
+                        styles={{ root: { padding: "10px 0px 0px 0px" } }}
+                        items={listItems || []}
+                        columns={columns}
+                        selection={badNamesSelection}
+                        checkboxVisibility={CheckboxVisibility.always}
+                        dragDropEvents={badNamesDragDropEvents}
+                        ariaLabelForSelectionColumn="Toggle selection"
+                        ariaLabelForSelectAllCheckbox="Toggle selection for all items"
+                        checkButtonAriaLabel="select row"
+                        onRenderRow={(props?: IDetailsRowProps) => {
+                            if (!props) return null;
+                            return (
+                                <div
+                                    draggable
+                                    onDragStart={() => handleDragStart(props.item, props.itemIndex)}
+                                    onDrop={() => handleDrop(props.item)}
+                                    onDragOver={(event) => event.preventDefault()}
+                                    onDragEnd={() => handleDragEnd()}
+                                    onDragEnter={() => handleDragEnter()}
+                                    onDragLeave={() => handleDragLeave()}
+                                >
+                                    <DetailsRow {...props} />
+                                </div>
+                            );
+                        }}
+                    />
+                </MarqueeSelection>
             </div>
         </div>
     )
 }
 
-async function PopulateSchedulerManagerConfig(setSchedulerConfig: Function, endpoint: string) {
+async function PopulateSchedulerManagerConfig(setSchedulerConfig: Function, endpoint: string, setItems: Function) {
     const response = await fetch(endpoint);
     const result = (await response.json()) as SchedulerConfig;
     if (result != null) {
         setSchedulerConfig(result);
+        setItems(result.badNames.map((badName, index) => { return { listId: index, badName: badName } }));
     }
 }
 

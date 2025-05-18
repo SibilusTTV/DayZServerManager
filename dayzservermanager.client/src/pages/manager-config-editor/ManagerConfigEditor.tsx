@@ -1,11 +1,13 @@
+
+import { CheckboxVisibility, DefaultButton, DetailsList, DetailsRow, getTheme, IColumn, IDetailsRowProps, IDragDropContext, IDragDropEvents, initializeIcons, IObjectWithKey, mergeStyles, Selection, SelectionMode, TextField } from '@fluentui/react';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import { Box, Button, TextField } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { JSX, useEffect, useMemo, useState } from 'react';
 import { Dict } from "styled-components/dist/types";
-import "./ManagerConfigEditor.css";
-import SaveButton from '../../common/components/save-button/SaveButton';
 import ReloadButton from '../../common/components/reload-button/ReloadButton';
+import SaveButton from '../../common/components/save-button/SaveButton';
+import "./ManagerConfigEditor.css";
 
 interface ManagerConfig {
     steamUsername: string;
@@ -55,17 +57,54 @@ interface CustomMessage {
 
 export default function ManagerConfigEditor() {
     const [managerConfig, setManagerConfig] = useState<ManagerConfig>();
+    const [draggedClientMods, setDraggedClientMods] = useState<Mod>();
+    const [draggedServerMods, setDraggedServerMods] = useState<Mod>();
+    const [draggedClientModsIndex, setDraggedClientModsIndex] = useState<number>(-1);
+    const [draggedServerModsIndex, setDraggedServerModsIndex] = useState<number>(-1);
+    const [, setSelectedClientMods] = useState<IObjectWithKey[]>();
+    const [, setSelectedServerMods] = useState<IObjectWithKey[]>();
+
+    initializeIcons();
 
     useEffect(() => {
-        PopulateManagerConfig(setManagerConfig, 'ManagerConfig/GetManagerConfig');
+        handleLoad();
     }, []);
 
-    const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const handleSave = () => {
+        PostManagerConfig('ManagerConfig/PostManagerConfig', JSON.stringify(managerConfig));
+    }
+
+    const clientModsSelection: Selection = useMemo(() => new Selection(
+        {
+            onSelectionChanged: () => {
+                setSelectedClientMods(clientModsSelection.getSelection());
+            },
+            selectionMode: SelectionMode.multiple,
+            getKey: (item) => (item as Mod).id
+        }),
+        []
+    );
+
+    const serverModsSelection: Selection = useMemo(() => new Selection(
+        {
+            onSelectionChanged: () => {
+                setSelectedServerMods(serverModsSelection.getSelection());
+            },
+            selectionMode: SelectionMode.multiple,
+            getKey: (item) => (item as Mod).id
+        }),
+        []
+    );
+    const handleLoad = () => {
+        PopulateManagerConfig(setManagerConfig, 'ManagerConfig/GetManagerConfig');
+    }
+
+    const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue: string | undefined) => {
         if (!(managerConfig === undefined)) {
             setManagerConfig(
                 {
                     ...managerConfig,
-                    [event.target.id]: (event.target.value.toLowerCase() == "true") ? true : (event.target.value.toLowerCase() == "false" ? false : event.target.value)
+                    [event.currentTarget.id]: (newValue && newValue.toLowerCase() == "true") ? true : (newValue && newValue.toLowerCase() == "false" ? false : newValue)
                 }
             );
         }
@@ -120,19 +159,18 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const handleClientModChange = (event: React.ChangeEvent<HTMLInputElement>, i: number ) => {
+    const handleClientModChange = (newValue: string | undefined, mod: Mod, key: string) => {
         if (!(managerConfig === undefined)) {
-            let changedMod: Mod = managerConfig.clientMods[i];
             setManagerConfig(
                 {
                     ...managerConfig,
                     clientMods: [
-                        ...managerConfig.clientMods.filter((_, index) => index < i),
+                        ...managerConfig.clientMods.filter((_, index) => index < mod.id),
                         {
-                            ...changedMod,
-                            [event.target.id]: event.target.value
+                            ...mod,
+                            [key]: newValue
                         },
-                        ...managerConfig.clientMods.filter((_, index) => index > i)
+                        ...managerConfig.clientMods.filter((_, index) => index > mod.id)
                     ]
                 }
             );
@@ -152,42 +190,9 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const moveClientModUp = (i: number) => {
-        if (!(managerConfig === undefined)) {
-            let movedMod = managerConfig.clientMods[i];
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    clientMods: [
-                        ...managerConfig.clientMods.filter((_, index) => index < i - 1),
-                        movedMod,
-                        ...managerConfig.clientMods.filter((_, index) => (index > i - 2 && index !== i))
-                    ]
-                }
-            );
-        }
-    }
-
-    const moveClientModDown = (i: number) => {
-        if (!(managerConfig === undefined)) {
-            let movedMod = managerConfig.clientMods[i];
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    clientMods: [
-                        ...managerConfig.clientMods.filter((_, index) => (index < i + 2 && index !== i)),
-                        movedMod,
-                        ...managerConfig.clientMods.filter((_, index) => index > i + 1)
-                    ]
-                }
-            );
-
-        }
-    }
-
     const createServerMod = () => {
         if (!(managerConfig === undefined)) {
-            let newId = findFirstAvailableId(managerConfig.clientMods);
+            let newId = findFirstAvailableId(managerConfig.serverMods);
             setManagerConfig(
                 {
                     ...managerConfig,
@@ -200,19 +205,18 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const handleServerModChange = (event: React.ChangeEvent<HTMLInputElement>, i: number) => {
+    const handleServerModChange = (newValue: string | undefined, mod: Mod, key: string) => {
         if (!(managerConfig === undefined)) {
-            let changedMod: Mod = managerConfig.serverMods[i];
             setManagerConfig(
                 {
                     ...managerConfig,
                     serverMods: [
-                        ...managerConfig.serverMods.filter((_, index) => index < i),
+                        ...managerConfig.serverMods.filter((_, index) => index < mod.id),
                         {
-                            ...changedMod,
-                            [event.target.id]: event.target.value
+                            ...mod,
+                            [key]: newValue
                         },
-                        ...managerConfig.serverMods.filter((_, index) => index > i),
+                        ...managerConfig.serverMods.filter((_, index) => index > mod.id),
                     ]
                 }
             );
@@ -227,40 +231,6 @@ export default function ManagerConfigEditor() {
                     serverMods: [
                         ...managerConfig.serverMods.filter((mod) => mod.id !== id)
                     ]
-                }
-            );
-        }
-    }
-
-    const moveServerModUp = (i: number) => {
-        if (!(managerConfig === undefined)) {
-            let movedMod = managerConfig.serverMods[i];
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    serverMods: [
-                        ...managerConfig.serverMods.filter((_, index) => index < i - 1),
-                        movedMod,
-                        ...managerConfig.serverMods.filter((_, index) => index > i - 2 && index !== i)
-                    ]
-
-                }
-            );
-        }
-    }
-
-    const moveServerModDown = (i: number) => {
-        if (!(managerConfig === undefined)) {
-            let movedMod = managerConfig.serverMods[i];
-            setManagerConfig(
-                {
-                    ...managerConfig,
-                    serverMods: [
-                        ...managerConfig.serverMods.filter((_, index) => index < i + 2 && index !== i),
-                        movedMod,
-                        ...managerConfig.serverMods.filter((_, index) => index > i + 1)
-                    ]
-
                 }
             );
         }
@@ -283,7 +253,7 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const handleCustomMessagesChange = (event: React.ChangeEvent<HTMLInputElement>, i: number) => {
+    const handleCustomMessagesChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, i: number, newValue: string | undefined) => {
         if (!(managerConfig === undefined)) {
             let changedMessage: CustomMessage = managerConfig.customMessages[i];
             setManagerConfig(
@@ -293,7 +263,7 @@ export default function ManagerConfigEditor() {
                         ...managerConfig.customMessages.filter((_, index) => index < i),
                         {
                             ...changedMessage,
-                            [event.target.id]: event.target.value
+                            [event.currentTarget.id]: newValue
                         },
                         ...managerConfig.customMessages.filter((_, index) => index > i)
                     ]
@@ -302,8 +272,8 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const handleWaitTimeChange = (event: React.ChangeEvent<HTMLInputElement>, i: number) => {
-        if (!(managerConfig === undefined)) {
+    const handleWaitTimeChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, i: number, newValue: string | undefined) => {
+        if (managerConfig) {
             let changedMessage: CustomMessage = managerConfig.customMessages[i];
             setManagerConfig(
                 {
@@ -314,7 +284,7 @@ export default function ManagerConfigEditor() {
                             ...changedMessage,
                             waitTime: {
                                 ...changedMessage.waitTime,
-                                [event.target.id]: event.target.value
+                                [event.currentTarget.id]: newValue
                             }
                         },
                         ...managerConfig.customMessages.filter((_, index) => index > i)
@@ -324,7 +294,7 @@ export default function ManagerConfigEditor() {
         }
     }
 
-    const handleIntervalChange = (event: React.ChangeEvent<HTMLInputElement>, i: number) => {
+    const handleIntervalChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, i: number, newValue: string | undefined) => {
         if (!(managerConfig === undefined)) {
             let changedMessage: CustomMessage = managerConfig.customMessages[i];
             setManagerConfig(
@@ -336,7 +306,7 @@ export default function ManagerConfigEditor() {
                             ...changedMessage,
                             interval: {
                                 ...changedMessage.interval,
-                                [event.target.id]: event.target.value
+                                [event.currentTarget.id]: newValue
                             }
                         },
                         ...managerConfig.customMessages.filter((_, index) => index > i)
@@ -393,125 +363,305 @@ export default function ManagerConfigEditor() {
         }
     }
 
+    const insertBeforeClientMods = (item: Mod): void => {
+        if (managerConfig) {
+            const draggedItems = clientModsSelection.isIndexSelected(draggedClientModsIndex)
+                ? (clientModsSelection.getSelection() as Mod[])
+                : [draggedClientMods!];
+
+            const items = managerConfig.clientMods.filter(itm => draggedItems.indexOf(itm) === -1);
+
+            const insertIndex = managerConfig.clientMods.indexOf(item as Mod);
+            items.splice(insertIndex, 0, ...draggedItems);
+
+            setManagerConfig({
+                ...managerConfig,
+                clientMods: items
+            });
+        }
+    };
+
+    const insertBeforeServerMods = (item: Mod): void => {
+        if (managerConfig) {
+            const draggedItems = serverModsSelection.isIndexSelected(draggedServerModsIndex)
+                ? (serverModsSelection.getSelection() as Mod[])
+                : [draggedServerMods!];
+
+            const items = managerConfig.serverMods.filter(itm => draggedItems.indexOf(itm) === -1);
+
+            const insertIndex = managerConfig.serverMods.indexOf(item as Mod);
+            items.splice(insertIndex, 0, ...draggedItems);
+
+            setManagerConfig({
+                ...managerConfig,
+                serverMods: items
+            });
+        }
+    };
+
+    const handleClientModsDragStart = (item: any, itemIndex: number) => {
+        setDraggedClientMods(item);
+        setDraggedClientModsIndex(itemIndex!);
+    };
+
+    const handleServerModsDragStart = (item: any, itemIndex: number) => {
+        setDraggedServerMods(item);
+        setDraggedServerModsIndex(itemIndex!);
+    };
+
+    const handleClientModsDrop = (item: any) => {
+        if (draggedClientMods) {
+            insertBeforeClientMods(item);
+        }
+    };
+
+    const handleServerModsDrop = (item: any) => {
+        if (draggedServerMods) {
+            insertBeforeServerMods(item);
+        }
+    };
+
+    const handleClientModsDragEnd = () => {
+        setDraggedClientMods(undefined);
+        setDraggedClientModsIndex(-1);
+    };
+
+    const handleServerModsDragEnd = () => {
+        setDraggedServerMods(undefined);
+        setDraggedServerModsIndex(-1);
+    };
+
+    const handleDragEnter = (item: any) => {
+        console.log("Drag entered:", item);
+        // return string is the css classes that will be added to the entering element.
+        return mergeStyles({
+            backgroundColor: getTheme().palette.neutralLight,
+        });
+    };
+
+    const handleDragLeave = () => {
+        return;
+    };
+
+    const dragDropEvents: IDragDropEvents = {
+        canDrop: (_dropContext?: IDragDropContext, _dragContext?: IDragDropContext) => {
+            return true;
+        },
+        canDrag: (_item?: any) => {
+            return true;
+        }
+    };
+
+    const clientModsColumns: IColumn[] = [
+        {
+            key: "name",
+            name: "Name",
+            fieldName: "name",
+            minWidth: 160,
+            onRender: (mod: Mod) => {
+                return (
+                    <TextField id={"name-" + mod.id} value={mod.name} onChange={(_, newValue) => handleClientModChange(newValue, mod, "name")} />
+                )
+            }
+        },
+        {
+            key: "workshopID",
+            name: "Workshop ID",
+            fieldName: "workshopID",
+            minWidth: 160,
+            onRender: (mod: Mod) => {
+                return (
+                    <TextField id={"workshopID-" + mod.id} value={mod.workshopID.toString()} onChange={(_, newValue) => handleClientModChange(newValue, mod, "workshopID")} />
+                )
+            }
+        },
+        {
+            key: "delete",
+            name: "Delete",
+            fieldName: "delete",
+            minWidth: 80,
+            onRender: (mod: Mod) => {
+                return (
+                    <DefaultButton
+                        onClick={() => deleteClientMod(mod.id)}
+                        className="Button"
+                    >
+                        <DeleteIcon />
+                    </DefaultButton>
+                )
+            }
+        }
+    ]
+
+    const serverModsColumns: IColumn[] = [
+        {
+            key: "name",
+            name: "Name",
+            fieldName: "name",
+            minWidth: 160,
+            onRender: (mod: Mod) => {
+                return (
+                    <TextField id={"name-" + mod.id} value={mod.name} onChange={(_, newValue) => handleServerModChange(newValue, mod, "name")} />
+                )
+            }
+        },
+        {
+            key: "workshopID",
+            name: "Workshop ID",
+            fieldName: "workshopID",
+            minWidth: 160,
+            onRender: (mod: Mod) => {
+                return (
+                    <TextField id={"workshopID-" + mod.id} value={mod.workshopID.toString()} onChange={(_, newValue) => handleServerModChange(newValue, mod, "workshopID")} />
+                )
+            }
+        },
+        {
+            key: "delete",
+            name: "Delete",
+            fieldName: "delete",
+            minWidth: 80,
+            onRender: (mod: Mod) => {
+                return (
+                    <DefaultButton
+                        onClick={() => deleteServerMod(mod.id)}
+                        className="Button"
+                    >
+                        <DeleteIcon />
+                    </DefaultButton>
+                )
+            }
+        }
+    ]
+
     let texts: JSX.Element[] = new Array;
     if (managerConfig != null) {
-        Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods" && key != "customMessages") && texts.push(<TextField key={key} id={key} variant="outlined" label={key} defaultValue={value} onBlur={handleBlur} />));
+        Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods" && key != "customMessages") && texts.push(<TextField key={key} id={key} label={key} value={value} onChange={handleChange} />));
     }
 
     const contents = managerConfig === undefined
         ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <Box
-            component="form"
-            sx={{
-                '& .MuiTextField-root': { m: 1, width: '25ch' },
-            }}
-            noValidate
-            autoComplete="off"
-        >
-            <div>
+        : <div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
                 {
                     texts.map(x => { return x; })
                 }
             </div>
             <h3>Client Mods</h3>
             <div>
-                {
-                    managerConfig.clientMods.map((mod, index) => {
-                        return (
-                            <div key={mod.id} id={"ClientMod" + index}>
-                                <Button onClick={() => { moveClientModUp(index) }}><KeyboardArrowUpIcon/></Button>
-                                <Button onClick={() => { moveClientModDown(index) }}><KeyboardArrowDownIcon/></Button>
-                                <TextField id="workshopID" variant="outlined" label="Workshop ID" defaultValue={mod.workshopID} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleClientModChange(event, index)} />
-                                <TextField fullWidth id="name" variant="outlined" label="Name" defaultValue={mod.name} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleClientModChange(event, index)} />
-                                <Button id="deleteButton" onClick={() => deleteClientMod(mod.id)}>
-                                    Delete
-                                </Button>
-                            </div>
-                        )
-                    })
-                }
-                <Button onClick={() => { createClientMod() }}>
+                <DefaultButton onClick={() => { createClientMod() }} className="Button">
                     Add new Row
-                </Button>
-            </div>
+                </DefaultButton>
+                <DetailsList
+                    setKey="clientModsDetailsList"
+                    items={managerConfig.clientMods}
+                    columns={clientModsColumns}
+                    selection={clientModsSelection}
+                    checkboxVisibility={CheckboxVisibility.always}
+                    dragDropEvents={dragDropEvents}
+                    onRenderRow={(props?: IDetailsRowProps) => {
+                        if (!props) return null;
+                        return (
+                            <div
+                                draggable
+                                onDragStart={() => handleClientModsDragStart(props.item, props.itemIndex)}
+                                onDrop={() => handleClientModsDrop(props.item)}
+                                onDragOver={(event) => event.preventDefault()}
+                                onDragEnd={() => handleClientModsDragEnd()}
+                                onDragEnter={() => handleDragEnter(props.item)}
+                                onDragLeave={() => handleDragLeave()}
+                            >
+                                <DetailsRow {...props} />
+                            </div>
+                        );
+                    }}
+                />
+        </div>
             <h3>Server Mods</h3>
             <div>
-                {
-                    managerConfig.serverMods.map((mod, index) => {
-                        return (
-                            <div key={mod.id} id={"ServerMod" + index}>
-                                <Button onClick={() => { moveServerModUp(index) }}><KeyboardArrowUpIcon/></Button>
-                                <Button onClick={() => { moveServerModDown(index) }}><KeyboardArrowDownIcon /></Button>
-                                <TextField id="workshopID" variant="outlined" label="Workshop ID" defaultValue={mod.workshopID} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleServerModChange(event, index)} />
-                                <TextField fullWidth id="name" variant="outlined" label="Name" defaultValue={mod.name} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleServerModChange(event, index)} />
-                                <Button id="deleteButton" onClick={() => deleteServerMod(mod.id)}>
-                                    Delete
-                                </Button>
-                            </div>
-                        )
-                    })
-                }
-                <Button
+                <DefaultButton
                     onClick={() => { createServerMod() }}
+                    className="Button"
                 >
                     Add new Row
-                </Button>
+                </DefaultButton>
+                <DetailsList
+                    setKey="serverModsDetailsList"
+                    items={managerConfig.serverMods}
+                    columns={serverModsColumns}
+                    selection={serverModsSelection}
+                    checkboxVisibility={CheckboxVisibility.always}
+                    dragDropEvents={dragDropEvents}
+                    onRenderRow={(props?: IDetailsRowProps) => {
+                        if (!props) return null;
+                        return (
+                            <div
+                                draggable
+                                onDragStart={() => handleServerModsDragStart(props.item, props.itemIndex)}
+                                onDrop={() => handleServerModsDrop(props.item)}
+                                onDragOver={(event) => event.preventDefault()}
+                                onDragEnd={() => handleServerModsDragEnd()}
+                                onDragEnter={() => handleDragEnter(props.item)}
+                                onDragLeave={() => handleDragLeave()}
+                            >
+                                <DetailsRow {...props} />
+                            </div>
+                        );
+                    }}
+                />
             </div>
             <h3>Custom Messages</h3>
             <div>
                 {
                     managerConfig.customMessages.map((message, index) => {
                         return (
-                            <div className="messageContainer" key={message.id} id={"Message" + index}>
-                                <Button onClick={() => { moveMessageUp(index) }}><KeyboardArrowUpIcon /></Button>
-                                <Button onClick={() => { moveMessageDown(index) }}><KeyboardArrowDownIcon /></Button>
+                            <div className="messageContainer" key={message.id} id={"Message-" + index}>
+                                <DefaultButton onClick={() => { moveMessageUp(index) }} className="Button"><KeyboardArrowUpIcon /></DefaultButton>
+                                <DefaultButton onClick={() => { moveMessageDown(index) }} className="Button"><KeyboardArrowDownIcon /></DefaultButton>
                                 <div className="subContainer">
                                     <h4>Wait Time</h4>
-                                    <TextField id="hours" variant="outlined" label="Hours" defaultValue={message.waitTime["hours"]} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleWaitTimeChange(event, index)} />
-                                    <TextField id="minutes" variant="outlined" label="Minutes" defaultValue={message.waitTime["minutes"]} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
-                                    <TextField id="seconds" variant="outlined" label="Seconds" defaultValue={message.waitTime["seconds"]} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
+                                    <TextField id="waitTime-hours" label="Hours" defaultValue={message.waitTime["hours"]} onChange={(event, newValue) => handleWaitTimeChange(event, index, newValue)} />
+                                    <TextField id="waitTime-minutes" label="Minutes" defaultValue={message.waitTime["minutes"]} onChange={(event, newValue) => handleWaitTimeChange(event, index, newValue)} />
+                                    <TextField id="waitTime-seconds" label="Seconds" defaultValue={message.waitTime["seconds"]} onChange={(event, newValue) => handleWaitTimeChange(event, index, newValue)} />
                                 </div>
                                 <div className="subContainer">
                                     <h4>Interval</h4>
-                                    <TextField id="hours" variant="outlined" label="Hours" defaultValue={message.interval["hours"]} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleIntervalChange(event, index)} />
-                                    <TextField id="minutes" variant="outlined" label="Minutes" defaultValue={message.interval["minutes"]} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleIntervalChange(event, index)} />
-                                    <TextField id="seconds" variant="outlined" label="Seconds" defaultValue={message.interval["seconds"]} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleIntervalChange(event, index)} />
+                                    <TextField id="interval-hours" label="Hours" defaultValue={message.interval["hours"]} onChange={(event, newValue) => handleIntervalChange(event, index, newValue)} />
+                                    <TextField id="interval-minutes" label="Minutes" defaultValue={message.interval["minutes"]} onChange={(event, newValue) => handleIntervalChange(event, index, newValue)} />
+                                    <TextField id="interval-seconds" label="Seconds" defaultValue={message.interval["seconds"]} onChange={(event, newValue) => handleIntervalChange(event, index, newValue)} />
                                 </div>
                                 <div className="subContainer">
-                                    <TextField id="Title" variant="outlined" label="Title" defaultValue={message.title} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
-                                    <TextField fullWidth multiline={true} id="Message" variant="outlined" label="Message" defaultValue={message.message} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
-                                    <TextField id="Icon" variant="outlined" label="Icon" defaultValue={message.icon} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
-                                    <TextField id="Color" variant="outlined" label="Color" defaultValue={message.color} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
-                                    <TextField id="IsTimeOfDay" variant="outlined" label="Is Time Of Day" defaultValue={message.isTimeOfDay} onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleCustomMessagesChange(event, index)} />
+                                    <TextField id="Title" label="Title" defaultValue={message.title} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
+                                    <TextField multiline={true} id="Message" label="Message" defaultValue={message.message} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
+                                    <TextField id="Icon" label="Icon" defaultValue={message.icon} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
+                                    <TextField id="Color" label="Color" defaultValue={message.color} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
+                                    <TextField id="IsTimeOfDay" label="Is Time Of Day" defaultValue={message.isTimeOfDay.toString()} onChange={(event, newValue) => handleCustomMessagesChange(event, index, newValue)} />
                                 </div>
-                                <Button id="deleteButton" onClick={() => deleteCustomMessage(message.id)}>
-                                    Delete
-                                </Button>
+                                <DefaultButton id="deleteButton" onClick={() => deleteCustomMessage(message.id)} className="Button">
+                                    <DeleteIcon/>
+                                </DefaultButton>
                             </div>
                         )
                     })
                 }
-                <Button
+                <DefaultButton
                     onClick={() => { createCustomMessage() }}
+                    className="Button"
                 >
                     Add new Row
-                </Button>
+                </DefaultButton>
             </div>
-        </Box>
+        </div>
 
     return (
         <div style={{padding: "10px 10px 10px 10px"} }>
             <h1 id="tableLabel">Manager Configurations</h1>
-            <div>
+            <div style={{ display: "flex", flexDirection: "row" }}>
                 <SaveButton
-                    postFunction={PostManagerConfig}
-                    data={JSON.stringify(managerConfig)}
-                    endpoint='ManagerConfig/PostManagerConfig'
+                    handleSave={handleSave}
                 />
                 <ReloadButton
-                    populateFunction={PopulateManagerConfig}
-                    setFunction={setManagerConfig}
-                    endpoint='ManagerConfig/GetManagerConfig'
+                    handleLoad={handleLoad}
                 />
             </div>
             <div>

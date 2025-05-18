@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
-import { Button, MenuItem, Paper, Select, SelectChangeEvent } from '@mui/material';
-import { GridColDef, GridRenderCellParams, GridActionsCellItem, DataGrid, GridToolbarContainer } from "@mui/x-data-grid";
+
+import { useEffect, useMemo, useState } from "react";
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import SaveButton from "../../common/components/save-button/SaveButton";
 import ReloadButton from "../../common/components/reload-button/ReloadButton";
-
-
+import { DefaultButton, DetailsList, Dropdown, IColumn, IDropdownOption, initializeIcons, IObjectWithKey, Selection, SelectionMode, TextField } from "@fluentui/react";
 
 interface ServerConfig {
     properties: PropertyValue[]
@@ -37,198 +35,215 @@ interface StringRow {
     parentId: number
 }
 
-interface CustomPropertyToolbarProps {
-    serverConfig: ServerConfig | undefined;
-    setServerConfig: Function;
-}
-
-interface CustomArrayToolbarProps {
-    propertyId: number;
-    serverConfig: ServerConfig | undefined;
-    setServerConfig: Function;
-}
-
-function CustomPropertyToolbar({ serverConfig, setServerConfig }: CustomPropertyToolbarProps) {
-    const GetNextId = () => {
-        if (serverConfig != null) {
-            let index: number;
-            for (index = 0; index < serverConfig.properties.length; index++) {
-                if (serverConfig.properties.find(x => x.id == index) == null) {
-                    return index;
-                }
-            }
-            return index++;
-        }
-        return 0;
+const dataTypeDropdownOptions: IDropdownOption[] = [
+    {
+        key: 0,
+        text: "Number"
+    },
+    {
+        key: 1,
+        text: "Text (128)"
+    },
+    {
+        key: 2,
+        text: "TextLong (256)"
+    },
+    {
+        key: 3,
+        text: "TextShort (64)"
+    },
+    {
+        key: 4,
+        text: "Decimal"
+    },
+    {
+        key: 5,
+        text: "Boolean"
+    },
+    {
+        key: 6,
+        text: "Array"
     }
+]
 
-    const handleAddProperty = () => {
-        if (serverConfig != null) {
-            setServerConfig(
-                {
-                    ...serverConfig,
-                    properties: [
-                        ...serverConfig.properties,
-                        { id: GetNextId(), propertyName: "", dataType: DataType.Text, value: "", comment: "" }
-                    ]
-                }
-            )
-        }
+const booleanDropdown: IDropdownOption[] = [
+    {
+        key: "false",
+        text: "False"
+    },
+    {
+        key: "true",
+        text: "True"
     }
-    return (
-        <GridToolbarContainer>
-            <Button color="primary" startIcon={<AddIcon />} onClick={handleAddProperty}>
-                Add Property
-            </Button>
-        </GridToolbarContainer>
-    )
-}
-
-function CustomArrayToolbar({ propertyId, serverConfig, setServerConfig }: CustomArrayToolbarProps) {
-    const handleAddArrayItem = () => {
-        if (serverConfig != null) {
-            setServerConfig(
-                {
-                    ...serverConfig,
-                    properties: serverConfig.properties.map((property) => {
-                        if (property.id == propertyId) {
-                            return {
-                                ...property,
-                                value: [
-                                    ...(property.value as string[]),
-                                    ""
-                                ]
-                            }
-                        }
-                        else {
-                            return property;
-                        }
-                    })
-                }
-            )
-        }
-    }
-    return (
-        <GridToolbarContainer>
-            <Button color="primary" startIcon={<AddIcon />} onClick={handleAddArrayItem}>
-                Add Array Item
-            </Button>
-        </GridToolbarContainer>
-    )
-}
+]
 
 export default function ServerConfigEditor() {
 
     const [serverConfig, setServerConfig] = useState<ServerConfig>();
+    const [,setSelectedArrayRow] = useState<IObjectWithKey[]>();
+
+    const arraySelection: Selection = useMemo(() => new Selection(
+        {
+            onSelectionChanged: () => {
+                setSelectedArrayRow(arraySelection.getSelection());
+            },
+            selectionMode: SelectionMode.multiple,
+            getKey: (item) => (item as StringRow).id
+        }),
+        []
+    );
+
+    initializeIcons();
 
     useEffect(() => {
-        populateServerConfig(setServerConfig, 'ServerConfig/GetServerConfig');
+        handleLoad();
     }, []);
 
-    const arrayColumns: GridColDef[] = [
+    const handleLoad = () => {
+        populateServerConfig(setServerConfig, 'ServerConfig/GetServerConfig');
+    };
+
+    const handleSave = () => {
+        postServerConfig('ServerConfig/PostServerConfig', JSON.stringify(serverConfig))
+    };
+
+    const arrayColumns: IColumn[] = [
         {
-            field: 'lineNumber',
-            headerName: 'Line Number',
-            width: 360,
-            editable: false
-        },
-        {
-            field: 'lineString',
-            headerName: 'Content',
-            width: 360,
-            editable: true
-        },
-        {
-            field: 'delete',
-            headerName: 'Delete',
-            width: 80,
-            editable: false,
-            display: 'flex',
-            disableReorder: true,
-            filterable: false,
-            hideSortIcons: true,
-            resizable: false,
-            renderCell: (params: GridRenderCellParams<any, Date>) => {
-                let row: StringRow = params.row
+            key: 'lineNumber',
+            fieldName: 'lineNumber',
+            name: 'Line Number',
+            minWidth: 160,
+            maxWidth: 320,
+            onRender: (item: StringRow) => {
                 return (
-                    <GridActionsCellItem
-                        icon={<DeleteIcon />}
-                        label="Delete"
-                        onClick={() => deleteArrayItem(row)}
-                        color="inherit"
+                    <div>
+                        {item.lineNumber}
+                    </div>
+                );
+            }
+        },
+        {
+            key: 'lineString',
+            fieldName: 'lineString',
+            name: 'Content',
+            minWidth: 360,
+            onRender: (item: StringRow) => {
+                return (
+                    <TextField
+                        defaultValue={item.lineString}
+                        onBlur={(event) => handleArrayFieldBlur(event, item)}
                     />
+                );
+            }
+        },
+        {
+            key: 'delete',
+            fieldName: 'delete',
+            name: 'Delete',
+            minWidth: 80,
+            onRender: (item: StringRow) => {
+                return (
+                    <DefaultButton
+                        label="Delete"
+                        onClick={() => deleteArrayItem(item)}
+                        className="Button"
+                    >
+                        <DeleteIcon />
+                    </DefaultButton>
                 )
             }
         }
     ]
 
-    const columns: GridColDef[] = [
+    const columns: IColumn[] = [
         {
-            field: 'propertyName',
-            headerName: 'Property Name',
-            width: 360,
-            editable: true
-        },
-        {
-            field: 'dataType',
-            headerName: 'Data Type',
-            width: 180,
-            type: 'singleSelect',
-            resizable: false,
-            editable: false,
-            display: 'flex',
-            renderCell: (params: GridRenderCellParams<any, Date>) => {
-                let row: PropertyValue = params.row;
+            key: 'propertyName',
+            fieldName: 'propertyName',
+            name: 'Property Name',
+            minWidth: 160,
+            maxWidth: 320,
+            isResizable: true,
+            onRender: (item: PropertyValue) => {
                 return (
-                    <Select
-                        style={{ display: "flex", flexGrow: 1 }}
-                        value={row.dataType}
-                        onChange={(event: SelectChangeEvent<DataType>) => handleDataTypeSelect(event, row)}
-                    >
-                        <MenuItem value={DataType.Number}>Number</MenuItem>
-                        <MenuItem value={DataType.Text}>Text (128)</MenuItem>
-                        <MenuItem value={DataType.TextLong}>Text Long (256)</MenuItem>
-                        <MenuItem value={DataType.TextShort}>Text Short (64)</MenuItem>
-                        <MenuItem value={DataType.Decimal}>Decimal</MenuItem>
-                        <MenuItem value={DataType.Boolean}>Boolean</MenuItem>
-                        <MenuItem value={DataType.Array}>Array</MenuItem>
-                    </Select>
+                    <TextField
+                        key="propertyName"
+                        defaultValue={item.propertyName}
+                        onBlur={(event) => handleFieldBlur(event, item, "propertyName")}
+                    />
                 )
             }
         },
         {
-            field: 'value',
-            headerName: 'Value',
-            width: 360,
-            type: 'string',
-            editable: true
-        },
-        {
-            field: 'comment',
-            headerName: 'Comment',
-            width: 360,
-            type: 'string',
-            editable: true
-        },
-        {
-            field: 'delete',
-            headerName: 'Delete',
-            width: 80,
-            editable: false,
-            display: 'flex',
-            disableReorder: true,
-            filterable: false,
-            hideSortIcons: true,
-            resizable: false,
-            renderCell: (params: GridRenderCellParams<any, Date>) => {
-                let row: PropertyValue = params.row;
+            key: 'dataType',
+            fieldName: 'dataType',
+            name: 'Data Type',
+            minWidth: 160,
+            maxWidth: 160,
+            onRender: (item) => {
                 return (
-                    <GridActionsCellItem
-                        icon={<DeleteIcon />}
-                        label="Delete"
-                        onClick={() => deleteProperty(row.id)}
-                        color="inherit"
+                    <Dropdown
+                        selectedKey={item.dataType}
+                        options={dataTypeDropdownOptions}
+                        onChange={(_, option) => handleDataTypeSelect(option, item)}
                     />
+                )
+            }
+        },
+        {
+            key: 'value',
+            fieldName: 'value',
+            name: 'Value',
+            minWidth: 160,
+            maxWidth: 320,
+            onRender: (item: PropertyValue) => {
+                if (item.dataType != DataType.Boolean) {
+                    return (
+                        <TextField
+                            defaultValue={item.value?.toString()}
+                            onBlur={(event) => handleValueFieldBlur(event, item)}
+                        />
+                    )
+                }
+                else {
+                    return(
+                        <Dropdown
+                            selectedKey={item.value?.toString()}
+                            options={booleanDropdown}
+                            onChange={(_, option) => option && handleBooleanSelect(option, item)}
+                        />
+                    )
+                }
+            }
+        },
+        {
+            key: 'comment',
+            fieldName: 'comment',
+            name: 'Comment',
+            minWidth: 320,
+            onRender: (item: PropertyValue) => {
+                return (
+                    <TextField
+                        defaultValue={item.comment}
+                        onBlur={(event) => handleFieldBlur(event, item, "comment") }
+                    />
+                )
+            }
+        },
+        {
+            key: 'delete',
+            fieldName: 'delete',
+            name: 'Delete',
+            minWidth: 120,
+            maxWidth: 120,
+            onRender: (item: PropertyValue) => {
+                return (
+                    <DefaultButton
+                        label="Delete"
+                        onClick={() => deleteProperty(item.id)}
+                        className="Button"
+                    >
+                        <DeleteIcon />
+                    </DefaultButton>
                 )
             }
         }
@@ -244,55 +259,6 @@ export default function ServerConfigEditor() {
         return truthy.includes(value)
     }
 
-    const handleDataTypeSelect = (event: SelectChangeEvent<DataType>, row: PropertyValue) => {
-        if (serverConfig != null) {
-            setServerConfig(
-                {
-                    properties: serverConfig.properties.map((property) => {
-                        if (property.id == row.id) {
-                            let dataType = event.target.value as DataType;
-                            let newValue;
-                            switch (dataType) {
-                                case DataType.Number:
-                                    newValue = parseInt(property.value as string);
-                                    break;
-                                case DataType.Text:
-                                    newValue = (property.value as string).substring(0, 128);
-                                    break;
-                                case DataType.TextLong:
-                                    newValue = (property.value as string).substring(0, 256);
-                                    break;
-                                case DataType.TextShort:
-                                    newValue = (property.value as string).substring(0, 64);
-                                    break;
-                                case DataType.Decimal:
-                                    newValue = parseFloat(property.value as string);
-                                    break;
-                                case DataType.Boolean:
-                                    newValue = booleanify(property.value as string);
-                                    break;
-                                case DataType.Array:
-                                    newValue = property.value;
-                                    if (!Array.isArray(newValue)) {
-                                        newValue = [""];
-                                    }
-                                    break;
-                            }
-                            return {
-                                ...property,
-                                dataType: dataType,
-                                value: newValue
-                            }
-                        }
-                        else {
-                            return property;
-                        }
-                    })
-                }
-            )
-        }
-    }
-
     const deleteProperty = (id: number) => {
         if (serverConfig != null) {
             setServerConfig(
@@ -304,43 +270,108 @@ export default function ServerConfigEditor() {
         }
     }
 
-    const processRowUpdate = (newRow: PropertyValue, oldRow: PropertyValue) => {
-        let newValue;
-        switch (newRow.dataType) {
-            case DataType.Number:
-                newValue = parseInt(newRow.value as string);
-                break;
-            case DataType.Text:
-                newValue = (newRow.value as string).substring(0, 128);
-                break;
-            case DataType.TextLong:
-                newValue = (newRow.value as string).substring(0, 256);
-                break;
-            case DataType.TextShort:
-                newValue = (newRow.value as string).substring(0, 64);
-                break;
-            case DataType.Decimal:
-                newValue = parseFloat(newRow.value as string);
-                break;
-            case DataType.Boolean:
-                newValue = booleanify(newRow.value as string);
-                break;
-            case DataType.Array:
-                newValue = oldRow.value;
-                if (!Array.isArray(newValue)) {
-                    newValue = [""];
-                }
-                break;
-        }
-        const updatedRow: PropertyValue = { ...newRow, value: newValue};
-        if (serverConfig) {
+    const handleDataTypeSelect = (newValue: IDropdownOption<any> | undefined, row: PropertyValue) => {
+        if (serverConfig && newValue) {
             setServerConfig(
                 {
-                    properties: serverConfig.properties.map((row) => (row.propertyName === newRow.propertyName ? updatedRow : row))
+                    properties: serverConfig.properties.map((property) => {
+                        if (property.id == row.id) {
+                            let dataType = newValue.key as DataType;
+                            let newFormattedValue;
+                            switch (dataType) {
+                                case DataType.Number:
+                                    newFormattedValue = property.value && (!Number.isNaN(property.value) ? property.value : parseInt(property.value.toString()));
+                                    break;
+                                case DataType.Text:
+                                    newFormattedValue = property.value && (typeof property.value === "string" ? property.value.substring(0, 128) : property.value.toString().substring(0, 128));
+                                    break;
+                                case DataType.TextLong:
+                                    newFormattedValue = property.value && (typeof property.value === "string" ? property.value.substring(0, 256) : property.value.toString().substring(0, 256));
+                                    break;
+                                case DataType.TextShort:
+                                    newFormattedValue = property.value && (typeof property.value === "string" ? property.value.substring(0, 64) : property.value.toString().substring(0, 64));
+                                    break;
+                                case DataType.Decimal:
+                                    newFormattedValue = property.value && (!Number.isNaN(property.value) ? property.value : parseFloat(property.value.toString()));
+                                    break;
+                                case DataType.Boolean:
+                                    newFormattedValue = property.value && booleanify(property.value.toString());
+                                    break;
+                                case DataType.Array:
+                                    newFormattedValue = property.value;
+                                    if (!Array.isArray(newFormattedValue)) {
+                                        newFormattedValue = [""];
+                                    }
+                                    break;
+                            }
+                            return {
+                                ...property,
+                                dataType: dataType,
+                                value: newFormattedValue
+                            }
+                        }
+                        else {
+                            return property;
+                        }
+                    })
                 }
-            );
+            )
         }
-        return updatedRow;
+    }
+
+    const handleBooleanSelect = (option: IDropdownOption<any>, item: PropertyValue) => {
+        if (serverConfig) {
+            const newItems = serverConfig.properties.map(oldItem => oldItem.id === item.id ? { ...item, value: option.key } : oldItem);
+            setServerConfig({
+                ...serverConfig,
+                properties: newItems
+            })
+        }
+    }
+
+    const handleFieldBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, item: PropertyValue, key: string) => {
+        if (serverConfig) {
+            setServerConfig({
+                ...serverConfig,
+                properties: serverConfig.properties.map(property => property.id === item.id ? { ...item, [key]: event.target.value } : property)
+            });
+        }
+    };
+
+    const handleValueFieldBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, item: PropertyValue) => {
+        if (serverConfig && event.target.value != item.value) {
+            const newFormattedValue = formatValue(event.target.value, item.dataType);
+
+            setServerConfig((prevConfig) => (prevConfig && {
+                ...prevConfig,
+                properties: prevConfig.properties.map((row) =>
+                    row.propertyName === item.propertyName ? { ...item, value: newFormattedValue } : row
+                ),
+            }));
+
+            return newFormattedValue;
+        }
+    };
+
+    const formatValue = (value: string, dataType: DataType): any => {
+        switch (dataType) {
+            case DataType.Number:
+                return isNaN(parseInt(value)) ? 0 : parseInt(value);
+            case DataType.Decimal:
+                return isNaN(parseFloat(value)) ? 0.0 : parseFloat(value);
+            case DataType.Boolean:
+                return booleanify(value);
+            case DataType.Array:
+                return Array.isArray(value) ? value : [""];
+            case DataType.TextShort:
+                return value.substring(0, 64);
+            case DataType.Text:
+                return value.substring(0, 128);
+            case DataType.TextLong:
+                return value.substring(0, 256);
+            default:
+                return value;
+        }
     };
 
     const deleteArrayItem = (deletedRow: StringRow) => {
@@ -365,56 +396,88 @@ export default function ServerConfigEditor() {
         }
     };
 
-    const processArrayItemUpdate = (newArrayItem: StringRow) => {
+    const handleArrayFieldBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, item: StringRow) => {
+        if (serverConfig) {
+            const updatedProperties = serverConfig.properties.map(property => {
+                if (property.id !== item.parentId) return property;
+
+                const updatedValue = [...(property.value as string[])];
+                updatedValue[item.id] = event.target.value;
+
+                return { ...property, value: updatedValue };
+            });
+
+            setServerConfig({ ...serverConfig, properties: updatedProperties });
+        }
+    }
+
+    const GetNextPropertyId = () => {
+        if (serverConfig != null) {
+            let index: number;
+            for (index = 0; index < serverConfig.properties.length; index++) {
+                if (serverConfig.properties.find(x => x.id == index) == null) {
+                    return index;
+                }
+            }
+            return index++;
+        }
+        return 0;
+    }
+
+    const handleAddProperty = () => {
         if (serverConfig != null) {
             setServerConfig(
                 {
                     ...serverConfig,
-                    properties: 
-                        serverConfig.properties.map<PropertyValue>((property) => {
-                            if (property.id == newArrayItem.parentId) {
-                                return {
-                                    ...property,
-                                    value: (property.value as string[]).map((line, index) => {
-                                        if (index == newArrayItem.id) {
-                                            return newArrayItem.lineString;
-                                        }
-                                        else {
-                                            return line;
-                                        }
-                                    })
-                                };
-                            }
-                            else {
-                                return property;
-                            }
-                        })
+                    properties: [
+                        ...serverConfig.properties,
+                        { id: GetNextPropertyId(), propertyName: "", dataType: DataType.Text, value: "", comment: "" }
+                    ]
                 }
-            );
+            )
         }
-        return newArrayItem;
+    }
+
+    const handleAddArrayItem = (propertyId: number) => {
+        if (serverConfig != null) {
+            setServerConfig(
+                {
+                    ...serverConfig,
+                    properties: serverConfig.properties.map((property) => {
+                        if (property.id == propertyId) {
+                            return {
+                                ...property,
+                                value: [
+                                    ...(property.value as string[]),
+                                    ""
+                                ]
+                            }
+                        }
+                        else {
+                            return property;
+                        }
+                    })
+                }
+            )
+        }
     }
 
     const contents = serverConfig === undefined
         ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
         :
-        <Paper>
-            <DataGrid
-                rows={serverConfig.properties}
+        <div>
+            <DefaultButton
+                onClick={() => handleAddProperty()}
+                className="Button"
+                style={{ margin: "0px 10px 10px 0px" }}
+            >
+                <AddIcon/>
+            </DefaultButton>
+            <DetailsList
+                styles={{ root: { display: "flex" } }}
+                items={serverConfig.properties}
                 columns={columns}
-                initialState={{
-                    pagination: {
-                        paginationModel: {
-                            pageSize: 20,
-                        },
-                    }
-                }}
-                pageSizeOptions={[5, 10, 20, 50, 100]}
-                sx={{ border: 0 }}
-                processRowUpdate={processRowUpdate}
-                slots={{
-                    toolbar: () => CustomPropertyToolbar({serverConfig: serverConfig, setServerConfig: setServerConfig })
-                }}
+                selectionMode={SelectionMode.none}
             />
             {
                 serverConfig.properties.map((property) => {
@@ -422,43 +485,34 @@ export default function ServerConfigEditor() {
                         return (
                             <>
                                 <h3>{(property.propertyName == "motd[]") ? "Motto of the day" : property.propertyName}</h3>
-                                <DataGrid
-                                    rows={(property.value as string[]).map((line, index) => ({ id: index, lineNumber: "Line " + (index + 1) ,lineString: line, parentId: property.id }))}
+                                <DefaultButton
+                                    onClick={() => handleAddArrayItem(property.id)}
+                                    className="Button"
+                                    style={{ margin: "0px 10px 10px 0px" }}
+                                >
+                                    <AddIcon/>
+                                </DefaultButton>
+                                <DetailsList
+                                    items={(property.value as string[]).map((line, index) => ({ id: index, lineNumber: "Line " + (index + 1), lineString: line, parentId: property.id }))}
                                     columns={arrayColumns}
-                                    initialState={{
-                                        pagination: {
-                                            paginationModel: {
-                                                pageSize: 20,
-                                            },
-                                        }
-                                    }}
-                                    pageSizeOptions={[5, 10, 20, 50, 100]}
-                                    sx={{ border: 0 }}
-                                    processRowUpdate={processArrayItemUpdate}
-                                    slots={{
-                                        toolbar: () => CustomArrayToolbar({propertyId: property.id, serverConfig: serverConfig, setServerConfig: setServerConfig})
-                                    }}
+                                    selection={arraySelection}
                                 />
                             </>
                         )
                     }
                 })
             }
-        </Paper>
+        </div>
 
     return (
         <div style={{padding: "10px 10px 10px 10px"} }>
             <h1 id="tableLabel">Server Configurations</h1>
-            <div>
+            <div style={{ display: "flex", flexDirection: "row" }}>
                 <SaveButton
-                    postFunction={postServerConfig}
-                    data={JSON.stringify(serverConfig)}
-                    endpoint='ServerConfig/PostServerConfig'
+                    handleSave={handleSave}
                 />
                 <ReloadButton
-                    populateFunction={populateServerConfig}
-                    setFunction={setServerConfig}
-                    endpoint='ServerConfig/GetServerConfig'
+                    handleLoad={handleLoad}
                 />
             </div>
             <div>

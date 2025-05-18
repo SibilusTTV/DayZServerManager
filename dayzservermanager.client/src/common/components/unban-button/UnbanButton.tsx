@@ -12,6 +12,7 @@ export default function UnbanButton({ guid, name, reload }: UnbanPlayerProps) {
     return (
         <DefaultButton
             onClick={() => sendUnbanRequest(guid, name, reload)}
+            className="Button"
             style={{ display: "flex", flexDirection: "column" }}
         >
             <CheckIcon />
@@ -21,7 +22,7 @@ export default function UnbanButton({ guid, name, reload }: UnbanPlayerProps) {
 
 async function sendUnbanRequest(_guid: string, _name: string, reload: Function) {
     try {
-        await fetch('DayZServer/UnbanPlayer', {
+        await fetch('Scheduler/UnbanPlayer', {
             method: "POST",
             mode: "cors",
             headers: {
