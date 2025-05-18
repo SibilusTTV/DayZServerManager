@@ -92,7 +92,8 @@ namespace DayZServerManager.Server.Classes
         public const string ADMIN_LOG_X64_NAME = "DayZServer_x64.ADM";
         public const string STEAMCMD_LOGS_FOLDER = "logs";
         public const string STEAMCMD_CONSOLE_LOG = "console_log.txt";
-        public static string STEAMCMD_CONSOLE_LOG_PATH = Path.Combine(STEAM_CMD_PATH, STEAMCMD_LOGS_FOLDER, STEAMCMD_CONSOLE_LOG);
+        public const string STEAMCMD_LINUX32_Folder = "linux32";
+        public static string STEAMCMD_CONSOLE_LOG_PATH = OperatingSystem.IsWindows() ? Path.Combine(STEAM_CMD_PATH, STEAMCMD_LOGS_FOLDER, STEAMCMD_CONSOLE_LOG) : Path.Combine(STEAM_CMD_PATH, STEAMCMD_LINUX32_Folder, STEAMCMD_LOGS_FOLDER, STEAMCMD_CONSOLE_LOG);
 
         // Mission rarity to numbers
         public const int EXOTIC_NOMINAL = 1;
