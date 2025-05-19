@@ -64,10 +64,10 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             return false;
         }
 
-        public static bool UpdateMods(List<Mod> mods, out List<long> updatedModsIDs, out bool missionNeedsUpdating)
+        public static List<long> UpdateMods(List<Mod> mods, out bool updatedMods, out bool missionNeedsUpdating)
         {
-            updatedModsIDs = new List<long>();
-            bool updatedMods = false;
+            List<long> updatedModsIDs = new List<long>();
+            updatedMods = false;
             missionNeedsUpdating = false;
 
             Manager.props.managerStatus = Manager.STATUS_UPDATING_MODS;
@@ -109,7 +109,6 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                         }
                     }
                 }
-                return updatedMods;
             }
             catch (Exception ex)
             {
@@ -119,7 +118,7 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             Manager.props.managerStatus = Manager.STATUS_MODS_UPDATED;
             Logger.Info(Manager.STATUS_MODS_UPDATED);
 
-            return updatedMods;
+            return updatedModsIDs;
         }
 
         public static string WriteSteamGuard(string code)

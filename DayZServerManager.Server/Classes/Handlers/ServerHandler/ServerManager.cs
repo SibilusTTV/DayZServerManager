@@ -246,7 +246,17 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                 _updatedServer = SteamCMDManager.UpdateServer();
                 if (mods.Count > 0)
                 {
-                    _updatedMods = SteamCMDManager.UpdateMods(mods, out _updatedModsIDs, out _missionNeedsUpdating);
+                    bool missionNeedsUpdating = false;
+                    bool updatedMods = false;
+                    _updatedModsIDs = SteamCMDManager.UpdateMods(mods, out updatedMods, out missionNeedsUpdating);
+                    if (updatedMods)
+                    {
+                        _updatedMods = updatedMods;
+                    }
+                    if (missionNeedsUpdating)
+                    {
+                        _missionNeedsUpdating = missionNeedsUpdating;
+                    }
                 }
             }
             if (hasToMove)
