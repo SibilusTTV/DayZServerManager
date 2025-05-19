@@ -29,6 +29,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
         private bool _updatedMods;
         private bool _updatedServer;
         private bool _restartingForUpdates;
+        private bool _missionNeedsUpdating;
         private List<long> _updatedModsIDs;
         private ServerConfig _serverConfig;
 
@@ -38,6 +39,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
         public bool RestartingForUpdates { get { return _restartingForUpdates; } }
         public bool UpdatedMods { get { return _updatedMods; } set { _updatedMods = value; } }
         public bool UpdatedServer { get { return _updatedServer; } set { _updatedServer = value; } }
+        public bool MissionNeedsUpdating {  get { return _missionNeedsUpdating; } set { _missionNeedsUpdating = value; } }
 
         public ServerManager(string serverConfigPath)
         {
@@ -94,6 +96,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             _updatedMods = false;
             _updatedServer = false;
             _restartingForUpdates = false;
+            _missionNeedsUpdating = false;
         }
 
         public bool CheckServer()
@@ -243,7 +246,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
                 _updatedServer = SteamCMDManager.UpdateServer();
                 if (mods.Count > 0)
                 {
-                    _updatedMods = SteamCMDManager.UpdateMods(mods, out _updatedModsIDs);
+                    _updatedMods = SteamCMDManager.UpdateMods(mods, out _updatedModsIDs, out _missionNeedsUpdating);
                 }
             }
             if (hasToMove)
@@ -351,12 +354,11 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
 
         private void UpdateMission()
         {
-            List<Mod> expansionMods = Manager.managerConfig.clientMods.FindAll(x => x.name.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH));
-
-            if (_updatedServer || expansionMods.Count > 0 && expansionMods.FindAll(mod => _updatedModsIDs.Contains(mod.workshopID)).Count > 0)
+            if (_updatedServer || _missionNeedsUpdating)
             {
                 _updatedMods = false;
                 _updatedServer = false;
+                _missionNeedsUpdating = false;
                 Logger.Info(Manager.STATUS_UPDATING_MISSION);
                 Manager.props.managerStatus = Manager.STATUS_UPDATING_MISSION;
                 MissionUpdater.Update();

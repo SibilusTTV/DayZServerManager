@@ -64,10 +64,11 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
             return false;
         }
 
-        public static bool UpdateMods(List<Mod> mods, out List<long> updatedModsIDs)
+        public static bool UpdateMods(List<Mod> mods, out List<long> updatedModsIDs, out bool missionNeedsUpdating)
         {
             updatedModsIDs = new List<long>();
             bool updatedMods = false;
+            missionNeedsUpdating = false;
 
             Manager.props.managerStatus = Manager.STATUS_UPDATING_MODS;
             Logger.Info(Manager.STATUS_UPDATING_MODS);
@@ -100,16 +101,11 @@ namespace DayZServerManager.Server.Classes.Handlers.SteamCMDHandler
                                 Logger.Info($"{mod.name} was updated");
                                 updatedModsIDs.Add(mod.workshopID);
                                 updatedMods = true;
+                                if (mod.name.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH))
+                                {
+                                    missionNeedsUpdating = true;
+                                }
                             }
-                        }
-                    }
-
-                    foreach (long key in updatedModsIDs)
-                    {
-                        Mod? mod = mods.Find(x => x.workshopID == key);
-                        if (mod != null)
-                        {
-                            Logger.Info($"{mod.name} was updated");
                         }
                     }
                 }

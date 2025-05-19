@@ -589,6 +589,30 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
         }
 
+        // Searches for the matching TypesItem and returns it
+        private static TypesItem? SearchForTypesItemInMultiple(string name, TypesFile[] typesFiles)
+        {
+            try
+            {
+                foreach (TypesFile typesFile in typesFiles)
+                {
+                    foreach (TypesItem item in typesFile.typesItems)
+                    {
+                        if (item.name.ToLower().Trim() == name.ToLower().Trim())
+                        {
+                            return item;
+                        }
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error when searching for TypesItem");
+                return null;
+            }
+        }
+
         private static string SearchForExpansionTemplate(string folderPath)
         {
             try
@@ -703,7 +727,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
         }
 
-        // Updates the spawning of items in the given TypesFile with the new spawns of another TypesFile
+        // Updates the spawning of items in the given TypesFile with the rarities of the rarityFile
         public static void UpdateTypesWithRarity(TypesFile typesFile, RarityFile rarityFile)
         {
             try
@@ -766,15 +790,78 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
         }
 
+        // Updates the spawning of items in the given TypesFile with the rarities of the rarityFile
+        public static void UpdateTypesWithRarityInMultiple(TypesFile[] typesFiles, RarityFile rarityFile)
+        {
+            try
+            {
+                if (rarityFile.ItemRarity != null)
+                {
+                    Logger.Info("Updating types with rarity");
+                    foreach (RarityItem rarityitem in rarityFile.ItemRarity)
+                    {
+                        TypesItem? item = SearchForTypesItemInMultiple(rarityitem.name, typesFiles);
+                        if (item != null)
+                        {
+                            switch (rarityitem.rarity)
+                            {
+                                case 0:
+                                    item.nominal = 0;
+                                    item.min = 0;
+                                    break;
+                                case 1:
+                                    item.nominal = Manager.POOR_NOMINAL;
+                                    item.min = Manager.POOR_MINIMAL;
+                                    break;
+                                case 2:
+                                    item.nominal = Manager.COMMON_NOMINAL;
+                                    item.min = Manager.COMMON_MINIMAL;
+                                    break;
+                                case 3:
+                                    item.nominal = Manager.UNCOMMON_NOMINAL;
+                                    item.min = Manager.UNCOMMON_MINIMAL;
+                                    break;
+                                case 4:
+                                    item.nominal = Manager.RARE_NOMINAL;
+                                    item.min = Manager.RARE_MINIMAL;
+                                    break;
+                                case 5:
+                                    item.nominal = Manager.EPIC_NOMINAL;
+                                    item.min = Manager.EPIC_MINIMAL;
+                                    break;
+                                case 6:
+                                    item.nominal = Manager.LEGENDARY_NOMINAL;
+                                    item.min = Manager.LEGENDARY_MINIMAL;
+                                    break;
+                                case 7:
+                                    item.nominal = Manager.MYTHIC_NOMINAL;
+                                    item.min = Manager.MYTHIC_MINIMAL;
+                                    break;
+                                case 8:
+                                    item.nominal = Manager.EXOTIC_NOMINAL;
+                                    item.min = Manager.EXOTIC_MINIMAL;
+                                    break;
+                            }
+                        }
+                    }
+                    Logger.Info("Finished updating types with rarity");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error when updating types with rarity");
+            }
+        }
+
         // Updates the lifetime of items in the given TypesFile with the new spawns of another TypesFile
-        public static void UpdateTypesWithTypesChanges(TypesFile typesFile, TypesChangesFile changesFile)
+        public static void UpdateTypesWithTypesChanges(TypesFile typesFiles, TypesChangesFile changesFile)
         {
             try
             {
                 Logger.Info("Updating lifetimes");
                 foreach (TypesChangesItem change in changesFile.types)
                 {
-                    TypesItem? item = SearchForTypesItem(change.name, typesFile);
+                    TypesItem? item = SearchForTypesItem(change.name, typesFiles);
                     if (item != null)
                     {
                         if (change.nominal != null)

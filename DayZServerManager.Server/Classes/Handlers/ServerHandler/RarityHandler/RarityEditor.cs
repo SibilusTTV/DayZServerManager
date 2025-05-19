@@ -5,7 +5,6 @@ using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.Rarit
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesChangesClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
-using Microsoft.VisualBasic.FileIO;
 
 namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
 {
@@ -24,117 +23,34 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
 
         public static void UpdateRaritiesAndTypes(string name, RarityFile rarityFile)
         {
-            Logger.Info("Updating Rarity, Hardline and Types");
+            Logger.Info("Updating Rarity and Types");
 
-            UpdateRarities(Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionTemplateName), name, rarityFile);
-            UpdateHardlineAndTypes(Manager.MPMISSIONS_PATH, name, rarityFile);
+            UpdateRarityFile(Path.Combine(Manager.MPMISSIONS_PATH, Manager.managerConfig.missionTemplateName), name, rarityFile);
+            UpdateTypesFiles(Manager.MPMISSIONS_PATH, name, rarityFile);
 
-            Logger.Info("Rarity, Hardline and Types updated");
+            Manager.dayZServer.MissionNeedsUpdating = true;
+
+            Logger.Info("Rarity and Types updated");
         }
 
-        private static void UpdateRarities(string missionFolder, string name, RarityFile rarityFile)
+        private static void UpdateRarityFile(string missionFolder, string name, RarityFile rarityFile)
         {
             Logger.Info("Updating Rarities");
             JSONSerializer.SerializeJSONFile(Path.Combine(missionFolder, name), rarityFile);
             Logger.Info("Rarities Updated");
         }
 
-        private static void UpdateHardlineAndTypes(string mpmissionsFolder, string name, RarityFile rarityFile)
+        private static void UpdateTypesFiles(string mpmissionsFolder, string name, RarityFile rarityFile)
         {
-            Logger.Info("Updating Hardline and Types");
-            JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName, name), rarityFile);
-            switch (name)
+            if (name == Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME)
             {
-                case Manager.MISSION_VANILLA_RARITIES_FILE_NAME:
-                    UpdateVanillaTypes(mpmissionsFolder, rarityFile);
-                    break;
-                case Manager.MISSION_EXPANSION_RARITIES_FILE_NAME:
-                    UpdateExpansionTypes(mpmissionsFolder, rarityFile);
-                    break;
-                case Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME:
-                    UpdateCustomTypes(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), rarityFile);
-                    UpdateCustomTypes(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName), rarityFile);
-                    break;
-            }
-            UpdateHardline(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName), rarityFile);
-            Logger.Info("Hardline and Types updated");
-        }
-
-        private static void UpdateHardline(string missionPath, string missionTemplatePath, RarityFile rarityFile)
-        {
-            try
-            {
-                HardlineFile? hardlineFile = JSONSerializer.DeserializeJSONFile<HardlineFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME));
-                RarityFile? vanillaRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME));
-                RarityFile? expansionRarity = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_RARITIES_FILE_NAME));
-                RarityFile? customFilesRarityFile = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME));
-
-                if (hardlineFile != null)
-                {
-                    if (vanillaRarity != null)
-                    {
-                        MissionUpdater.UpdateHardlineRarity(hardlineFile, vanillaRarity);
-                    }
-                    if (expansionRarity != null)
-                    {
-                        MissionUpdater.UpdateHardlineRarity(hardlineFile, expansionRarity);
-                    }
-                    if (customFilesRarityFile != null)
-                    {
-                        MissionUpdater.UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
-                    }
-                    JSONSerializer.SerializeJSONFile(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), hardlineFile);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Error when updating RarityFile");
+                Logger.Info("Updating Types");
+                UpdateCustomTypes(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName), rarityFile);
+                Logger.Info("Types updated");
             }
         }
 
         #region UpdateTypes
-        private static void UpdateVanillaTypes(string mpmissionsPath, RarityFile rarityFile)
-        {
-            if (File.Exists(Path.Combine(mpmissionsPath, Manager.managerConfig.missionName, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME)))
-            {
-                string typesPath = Path.Combine(mpmissionsPath, Manager.managerConfig.missionName, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME);
-                TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesPath);
-                if (typesFile != null)
-                {
-                    MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
-
-                    TypesChangesFile? typesChangesFile = GetVanillaTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
-                    if (typesChangesFile != null && typesChangesFile.types != null)
-                    {
-                        MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
-                    }
-
-                    XMLSerializer.SerializeXMLFile(typesPath, typesFile);
-                }
-            }
-        }
-
-        private static void UpdateExpansionTypes(string mpmissionsPath, RarityFile rarityFile)
-        {
-            if (File.Exists(Path.Combine(mpmissionsPath, Manager.managerConfig.missionName, Manager.MISSION_EXPANSIONCE_FOLDER_NAME, Manager.MISSION_EXPANSION_TYPES_FILE_NAME)))
-            {
-                string typesPath = Path.Combine(mpmissionsPath, Manager.managerConfig.missionName, Manager.MISSION_EXPANSIONCE_FOLDER_NAME, Manager.MISSION_EXPANSION_TYPES_FILE_NAME);
-                TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesPath);
-                if (typesFile != null)
-                {
-                    MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
-
-                    TypesChangesFile? typesChangesFile = GetExpansionTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
-                    if (typesChangesFile != null && typesChangesFile.types != null)
-                    {
-                        MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
-                    }
-
-                    XMLSerializer.SerializeXMLFile(typesPath, typesFile);
-                }
-            }
-        }
-
         private static void UpdateCustomTypes(string folderPath, RarityFile rarityFile)
         {
             List<string> typesFilePaths = GetAllCustomTypesFiles(folderPath);

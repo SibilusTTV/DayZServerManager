@@ -6,7 +6,6 @@ import { Dict } from "styled-components/dist/types";
 import ReloadButton from '../../common/components/reload-button/ReloadButton';
 import SaveButton from '../../common/components/save-button/SaveButton';
 import "./ManagerConfigEditor.css";
-import { Box } from '@mui/material';
 
 interface ManagerConfig {
     steamUsername: string;
