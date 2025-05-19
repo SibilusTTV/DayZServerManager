@@ -6,8 +6,8 @@ import "./Layout.css"
 
 export default function Layout() {
     return (
-        <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", flexDirection: "row", margin: "10px 10px 10px 10px", flexGrow: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", minWidth: "600px" }}>
+            <div style={{ display: "flex", flexDirection: "row", margin: "10px 10px 10px 10px", flexGrow: 0, gap: "10px" }}>
                 <Link to="/" className="Layout-Link">
                     <Home style={{flexGrow: 1}} />
                 </Link>

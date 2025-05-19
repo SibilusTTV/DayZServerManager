@@ -11,7 +11,6 @@ export default function SaveButton({ handleSave }: SaveButtonProps) {
         <DefaultButton
             onClick={() => handleSave()}
             className="Button"
-            style={{ margin: "0px 10px 10px 0px" }}
         >
             <SaveIcon/>
         </DefaultButton>

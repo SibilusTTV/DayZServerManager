@@ -11,7 +11,6 @@ export default function ReloadButton({ handleLoad }: ReloadButtonProps) {
         <DefaultButton
             onClick={() => handleLoad()}
             className="Button"
-            style={{ margin: "0px 10px 10px 0px" }}
         >
             <ReplayIcon />
         </DefaultButton>

@@ -726,12 +726,11 @@ export default function ServerConfigEditor() {
     const contents = serverConfig === undefined
         ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
         :
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {contextualMenuProps && <ContextualMenu {...contextualMenuProps} />}
             <DefaultButton
                 onClick={() => handleAddProperty()}
                 className="Button"
-                style={{ margin: "0px 10px 10px 0px" }}
             >
                 <AddIcon/>
             </DefaultButton>
@@ -743,12 +742,11 @@ export default function ServerConfigEditor() {
                 selectionMode={SelectionMode.none}
             />
             {motdPropertyId &&
-                <div key="motd">
+                <div key="motd" style={{display: "flex", gap: "10px"} }>
                     <h3>Motto of the day</h3>
                     <DefaultButton
                         onClick={() => handleAddArrayItem(motdPropertyId)}
                         className="Button"
-                        style={{ margin: "0px 10px 10px 0px" }}
                     >
                         <AddIcon/>
                     </DefaultButton>
@@ -781,9 +779,9 @@ export default function ServerConfigEditor() {
         </div>
 
     return (
-        <div style={{padding: "10px 10px 10px 10px"} }>
+        <div style={{ padding: "10px 10px 10px 10px", display: "flex", flexDirection: "column", gap: "10px" } }>
             <h1 id="tableLabel">Server Configurations</h1>
-            <div style={{ display: "flex", flexDirection: "row" }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                 <SaveButton
                     handleSave={handleSave}
                 />

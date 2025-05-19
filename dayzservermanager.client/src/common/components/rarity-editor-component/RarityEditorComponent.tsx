@@ -431,7 +431,7 @@ export default function RarityEditor(props: RarityEditorProps) {
     return (
         <div style={{padding: "10px 10px 10px 10px"} }>
             <h1 id="tableLabel">{props.name}</h1>
-            <div id="SaveButton" style={{ display: "flex", flexDirection: "row" }}>
+            <div id="SaveButton" style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                 <SaveButton
                     handleSave={handleSave}
                 />
@@ -440,15 +440,14 @@ export default function RarityEditor(props: RarityEditorProps) {
                 />
             </div>
             <div id="Contents">
-                <div style={{ display: "flex", padding: "20px 0px 0px 0px" }}>
+                <div style={{ display: "flex", flexDirection: "row", padding: "20px 0px 0px 0px", gap: "10px" }}>
                     <DefaultButton
                         onClick={handleAddClick}
                         className="Button"
-                        style={{ margin: "0px 10px 10px 0px" }}
                     >
                         <AddIcon />
                     </DefaultButton>
-                    {rarityDropdownOptions.map((value) => <DefaultButton className="Button" style={{ margin: "0px 10px 10px 0px" }} onClick={() => handleBulkChangeClick(Number(value.key))}>{value.text} ({String(value.key)})</DefaultButton>)}
+                    {rarityDropdownOptions.map((value) => <DefaultButton className="Button" onClick={() => handleBulkChangeClick(Number(value.key))}>{value.text} ({String(value.key)})</DefaultButton>)}
                 </div>
                 {contents}
                 {contextualMenuProps && <ContextualMenu {...contextualMenuProps} />}

@@ -240,7 +240,7 @@ export default function SchedulerConfigEditor() {
     return (
         <div style={{padding: "10px 10px 10px 10px"} }>
             <h1 id="tableLabel">Scheduler Configurations</h1>
-            <div key="buttons" style={{ display: "flex", flexDirection: "row" }}>
+            <div key="buttons" style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                 <SaveButton
                     handleSave={handleSave}
                 />
@@ -248,7 +248,7 @@ export default function SchedulerConfigEditor() {
                     handleLoad={handleLoad}
                 />
             </div>
-            <div key="configFields" style={{ padding: "10px 0px 0px 0px", flexDirection: "row", display: "flex" }}>
+            <div key="configFields" style={{ padding: "10px 0px 0px 0px", flexDirection: "row", display: "flex", gap: "10px" }}>
                 {schedulerConfig && Object.entries(schedulerConfig).map(([key, value]) => {
                     if (key === "useWhiteList" || key === "useNickFilter") {
                         return (

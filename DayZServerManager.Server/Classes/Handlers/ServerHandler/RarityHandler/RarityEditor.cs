@@ -42,15 +42,16 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
         private static void UpdateHardlineAndTypes(string mpmissionsFolder, string name, RarityFile rarityFile)
         {
             Logger.Info("Updating Hardline and Types");
+            JSONSerializer.SerializeJSONFile<RarityFile>(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName, name), rarityFile);
             switch (name)
             {
-                case "vanillaRarities.json":
+                case Manager.MISSION_VANILLA_RARITIES_FILE_NAME:
                     UpdateVanillaTypes(mpmissionsFolder, rarityFile);
                     break;
                 case Manager.MISSION_EXPANSION_RARITIES_FILE_NAME:
                     UpdateExpansionTypes(mpmissionsFolder, rarityFile);
                     break;
-                case "customFilesRarities.json":
+                case Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME:
                     UpdateCustomTypes(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionName), rarityFile);
                     UpdateCustomTypes(Path.Combine(mpmissionsFolder, Manager.managerConfig.missionTemplateName), rarityFile);
                     break;
@@ -103,7 +104,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
                     MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
 
                     TypesChangesFile? typesChangesFile = GetVanillaTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
-                    if (typesChangesFile != null)
+                    if (typesChangesFile != null && typesChangesFile.types != null)
                     {
                         MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
                     }
@@ -124,7 +125,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
                     MissionUpdater.UpdateTypesWithRarity(typesFile, rarityFile);
 
                     TypesChangesFile? typesChangesFile = GetExpansionTypesChangesFile(Path.Combine(mpmissionsPath, Manager.managerConfig.missionTemplateName));
-                    if (typesChangesFile != null)
+                    if (typesChangesFile != null && typesChangesFile.types != null)
                     {
                         MissionUpdater.UpdateTypesWithTypesChanges(typesFile, typesChangesFile);
                     }
@@ -178,9 +179,9 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
         #region GetTypesChanges
         private static TypesChangesFile? GetExpansionTypesChangesFile(string folderPath)
         {
-            if (File.Exists(Path.Combine(folderPath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME)))
+            if (File.Exists(Path.Combine(folderPath, Manager.MISSION_EXPANSION_TYPES_CHANGES_FILE_NAME)))
             {
-                return JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(folderPath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME));
+                return JSONSerializer.DeserializeJSONFile<TypesChangesFile>(Path.Combine(folderPath, Manager.MISSION_EXPANSION_TYPES_CHANGES_FILE_NAME));
             }
             return null;
         }

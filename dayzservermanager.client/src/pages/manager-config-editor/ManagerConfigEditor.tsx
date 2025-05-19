@@ -1,11 +1,12 @@
 
-import { CheckboxVisibility, DefaultButton, DetailsList, DetailsRow, getTheme, IColumn, IDetailsRowProps, IDragDropContext, IDragDropEvents, initializeIcons, IObjectWithKey, mergeStyles, Selection, SelectionMode, TextField } from '@fluentui/react';
+import { CheckboxVisibility, DefaultButton, DetailsList, DetailsRow, Dropdown, getTheme, IColumn, IDetailsRowProps, IDragDropContext, IDragDropEvents, IDropdownOption, initializeIcons, IObjectWithKey, mergeStyles, Selection, SelectionMode, TextField } from '@fluentui/react';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import { JSX, useEffect, useMemo, useState } from 'react';
 import { Dict } from "styled-components/dist/types";
 import ReloadButton from '../../common/components/reload-button/ReloadButton';
 import SaveButton from '../../common/components/save-button/SaveButton';
 import "./ManagerConfigEditor.css";
+import { Box } from '@mui/material';
 
 interface ManagerConfig {
     steamUsername: string;
@@ -52,6 +53,17 @@ interface CustomMessage {
     icon: string,
     color: string
 }
+
+const booleanDropdown: IDropdownOption[] = [
+    {
+        key: "false",
+        text: "False"
+    },
+    {
+        key: "true",
+        text: "True"
+    }
+]
 
 export default function ManagerConfigEditor() {
     const [managerConfig, setManagerConfig] = useState<ManagerConfig>();
@@ -112,12 +124,12 @@ export default function ManagerConfigEditor() {
         PopulateManagerConfig(setManagerConfig, 'ManagerConfig/GetManagerConfig');
     };
 
-    const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue: string | undefined) => {
-        if (!(managerConfig === undefined)) {
+    const handleChange = (targetId: string, newValue: string | undefined) => {
+        if (managerConfig) {
             setManagerConfig(
                 {
                     ...managerConfig,
-                    [event.currentTarget.id]: (newValue && newValue.toLowerCase() == "true") ? true : (newValue && newValue.toLowerCase() == "false" ? false : newValue)
+                    [targetId]: (newValue && newValue.toLowerCase() == "true") ? true : (newValue && newValue.toLowerCase() == "false" ? false : newValue)
                 }
             );
         }
@@ -683,11 +695,12 @@ export default function ManagerConfigEditor() {
             maxWidth: 200,
             onRender: (customMessage: CustomMessage, _, column: IColumn | undefined) => {
                 return (
-                    <TextField
+                    <Dropdown
                         id="IsTimeOfDay"
                         label="Is Time Of Day"
-                        value={customMessage.isTimeOfDay.toString()}
-                        onChange={(_, newValue) => handleCustomMessagesChange(customMessage, newValue, column?.fieldName || "")}
+                        selectedKey={customMessage.isTimeOfDay.toString()}
+                        options={booleanDropdown}
+                        onChange={(_, option) => option && handleCustomMessagesChange(customMessage, option.key as string, column?.fieldName || "")}
                     />
                 )
             }
@@ -713,23 +726,28 @@ export default function ManagerConfigEditor() {
 
     let texts: JSX.Element[] = new Array;
     if (managerConfig != null) {
-        Object.entries(managerConfig).map(([key, value]) => (key != "serverMods" && key != "clientMods" && key != "customMessages") && texts.push(<TextField key={key} id={key} label={key} value={value} onChange={handleChange} />));
+        Object.entries(managerConfig).map(([key, value]) =>
+            (key != "serverMods" && key != "clientMods" && key != "customMessages") &&
+            (key == "noFilePatching" || key == "doLogs" || key == "adminLog" || key == "freezeCheck" || key == "netLog" || key == "restartOnUpdate" || key == "autoStartServer" || key == "makeBackups" || key == "deleteBackups" ?
+                texts.push(<Dropdown style={{ flex: 1, minWidth: "160px" }} key={key} selectedKey={(value as boolean).toString()} options={booleanDropdown} label={key} onChange={(_, option) => option && handleChange(key, option.key as string)} />) :
+                texts.push(<TextField style={{ flex: 1, minWidth: "160px" }} key={key} id={key} label={key} value={value} onChange={(_, newValue) => handleChange(key, newValue)} />)
+            )
+        );
     };
 
     const contents = managerConfig === undefined
         ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
+        : <div style={{display: "flex", flexDirection: "column", gap: "10px"} }>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", }}>
                 {
                     texts.map(x => { return x; })
                 }
             </div>
             <h3>Client Mods</h3>
-            <div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <DefaultButton
                     onClick={() => { createClientMod() }}
                     className="Button"
-                    style={{ margin: "0px 10px 0px 0px" }}
                 >
                     Add new Row
                 </DefaultButton>
@@ -760,11 +778,10 @@ export default function ManagerConfigEditor() {
                 />
         </div>
             <h3>Server Mods</h3>
-            <div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <DefaultButton
                     onClick={() => { createServerMod() }}
                     className="Button"
-                    style={{ margin: "0px 10px 0px 0px" }}
                 >
                     Add new Row
                 </DefaultButton>
@@ -796,11 +813,10 @@ export default function ManagerConfigEditor() {
             </div>
             <div>
                 <h3>Custom Messages</h3>
-                <div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     <DefaultButton
                         onClick={() => { createCustomMessage() }}
                         className="Button"
-                        style={{ margin: "0px 10px 0px 0px" }}
                     >
                         Add new Row
                     </DefaultButton>
@@ -834,9 +850,9 @@ export default function ManagerConfigEditor() {
         </div>
 
     return (
-        <div style={{padding: "10px 10px 10px 10px"} }>
+        <div style={{padding: "10px 10px 10px 10px", display: "flex", flexDirection: "column", gap: "10px"} }>
             <h1 id="tableLabel">Manager Configurations</h1>
-            <div style={{ display: "flex", flexDirection: "row" }}>
+            <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                 <SaveButton
                     handleSave={handleSave}
                 />
