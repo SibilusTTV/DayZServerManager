@@ -267,7 +267,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
 
                 UpdateMission();
 
-                Manager.UpdateExpansionNotificationFile();
+                UpdateExpansionNotificationFile();
 
                 if (Manager.managerConfig.makeBackups)
                 {
@@ -577,6 +577,30 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler
             }
         }
         #endregion ServerConfig
+
+        public static void UpdateExpansionNotificationFile()
+        {
+            if (Manager.managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH)).Count > 0)
+            {
+                if (!Directory.Exists(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME)))
+                {
+                    Directory.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME));
+                }
+
+                if (!Directory.Exists(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME, Manager.PROFILE_EXPANSION_SETTINGS_FOLDER_NAME)))
+                {
+                    Directory.CreateDirectory(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME, Manager.PROFILE_EXPANSION_SETTINGS_FOLDER_NAME));
+                }
+
+                NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME, Manager.PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, Manager.PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME));
+                if (notFile == null)
+                {
+                    notFile = new NotificationSchedulerFile(1, 1, 0, 0, new List<NotificationItem>());
+                }
+                RestartUpdater.UpdateExpansionScheduler(Manager.managerConfig, notFile);
+                JSONSerializer.SerializeJSONFile(Path.Combine(Manager.SERVER_PATH, Manager.managerConfig.profileName, Manager.PROFILE_EXPANSIONMOD_FOLDER_NAME, Manager.PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, Manager.PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME), notFile);
+            }
+        }
 
         private string GetKeysFolder(string folderPath)
         {

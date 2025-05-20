@@ -65,8 +65,8 @@ const rarityDropdownOptions: IDropdownOption[] = [
 ]
 
 export default function RarityEditor(props: RarityEditorProps) {
-    const [sortedRarities, setSortedRarities] = useState<RarityFile>();
     const [rarities, setRarities] = useState<RarityFile>();
+    const [sortedRarities, setSortedRarities] = useState<RarityFile>();
     const [checkedItems, setCheckedItems] = useState<IObjectWithKey[]>([]);
     const [contextualMenuProps, setContextualMenuProps] = useState<IContextualMenuProps>();
     const [sortKey, setSortKey] = useState("");
@@ -192,31 +192,25 @@ export default function RarityEditor(props: RarityEditorProps) {
     }
 
     const handleAddClick = () => {
-        if (sortedRarities != null) {
+        if (sortedRarities && rarities) {
+            const newRarity: RarityItem = { id: getNewId(sortedRarities.itemRarity), name: "", rarity: 0 };
+
             setSortedRarities(
                 {
                     ...sortedRarities,
                     itemRarity: [
                         ...sortedRarities.itemRarity,
-                        {
-                            id: getNewId(sortedRarities.itemRarity),
-                            name: "",
-                            rarity: 0
-                        }
+                        newRarity
                     ]
                 }
             );
 
             setRarities(
                 {
-                    ...sortedRarities,
+                    ...rarities,
                     itemRarity: [
-                        ...sortedRarities.itemRarity,
-                        {
-                            id: getNewId(sortedRarities.itemRarity),
-                            name: "",
-                            rarity: 0
-                        }
+                        ...rarities.itemRarity,
+                        newRarity
                     ]
                 }
             );
@@ -241,8 +235,8 @@ export default function RarityEditor(props: RarityEditorProps) {
     }
 
     const handleFieldChange = (newValue: string | number | undefined, rarityItem: RarityItem, key: string) => {
-        const updatedRarityItem = { ...rarityItem, [key]: newValue };
-        if (sortedRarities) {
+        if (sortedRarities && rarities) {
+            const updatedRarityItem = { ...rarityItem, [key]: newValue };
             setSortedRarities(
                 {
                     ...sortedRarities,
@@ -252,14 +246,14 @@ export default function RarityEditor(props: RarityEditorProps) {
             setRarities(
                 {
                     ...rarities,
-                    itemRarity: sortedRarities.itemRarity.map((row) => (row.id === updatedRarityItem.id ? updatedRarityItem : row))
+                    itemRarity: rarities.itemRarity.map((row) => (row.id === updatedRarityItem.id ? updatedRarityItem : row))
                 }
             );
         }
     };
 
     const deleteRarity = (id: number) => {
-        if (sortedRarities != null) {
+        if (sortedRarities && rarities) {
             setSortedRarities(
                 {
                     ...sortedRarities,
@@ -268,8 +262,8 @@ export default function RarityEditor(props: RarityEditorProps) {
             );
             setRarities(
                 {
-                    ...sortedRarities,
-                    itemRarity: sortedRarities.itemRarity.filter(x => x.id != id)
+                    ...rarities,
+                    itemRarity: rarities.itemRarity.filter(x => x.id != id)
                 }
             );
         }
@@ -397,7 +391,13 @@ export default function RarityEditor(props: RarityEditorProps) {
                 }
             );
 
-            const filteredAndSortedItemRarities = _copyAndSort<RarityItem>(filteredItemRarities, sortKey, isSortedDescending);
+            let filteredAndSortedItemRarities;
+            if (sortKey) {
+                filteredAndSortedItemRarities = _copyAndSort<RarityItem>(filteredItemRarities, sortKey, isSortedDescending);
+            }
+            else {
+                filteredAndSortedItemRarities = filteredItemRarities;
+            }
 
             setSortedRarities({
                 ...rarities,

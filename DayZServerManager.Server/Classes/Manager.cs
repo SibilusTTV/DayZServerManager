@@ -441,32 +441,7 @@ namespace DayZServerManager.Server.Classes
             }
         }
 
-        public static void UpdateExpansionNotificationFile()
-        {
-            if (managerConfig.clientMods.FindAll(mod => mod.name.ToLower().Contains(EXPANSION_MOD_SEARCH)).Count > 0)
-            {
-                if (!Directory.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME)))
-                {
-                    Directory.CreateDirectory(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME));
-                }
-
-                if (!Directory.Exists(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME)))
-                {
-                    Directory.CreateDirectory(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME));
-                }
-
-                NotificationSchedulerFile? notFile = JSONSerializer.DeserializeJSONFile<NotificationSchedulerFile>(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME));
-                if (notFile == null)
-                {
-                    notFile = new NotificationSchedulerFile(1, 1, 0, 0, new List<NotificationItem>());
-                }
-                RestartUpdater.UpdateExpansionScheduler(managerConfig, notFile);
-                JSONSerializer.SerializeJSONFile(Path.Combine(SERVER_PATH, managerConfig.profileName, PROFILE_EXPANSIONMOD_FOLDER_NAME, PROFILE_EXPANSION_SETTINGS_FOLDER_NAME, PROFILE_EXPANSION_NOTIFICATION_SCHEDULER_SETTINGS_FILE_NAME), notFile);
-            }
-        }
-
         #region ManagerConfig
-
         public static void PostManagerConfig(ManagerConfig config)
         {
             managerConfig = config;

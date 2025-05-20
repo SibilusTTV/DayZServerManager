@@ -323,7 +323,13 @@ export default function PlayerDatabase() {
             }
         );
 
-        const filteredAndSortedPlayers = _copyAndSort<Player>(filteredPlayers, sortKey, isSortedDescending);
+        let filteredAndSortedPlayers;
+        if (sortKey) {
+            filteredAndSortedPlayers = _copyAndSort<Player>(filteredPlayers, sortKey, isSortedDescending);
+        }
+        else {
+            filteredAndSortedPlayers = filteredPlayers;
+        }
 
         setPlayers(
             filteredAndSortedPlayers

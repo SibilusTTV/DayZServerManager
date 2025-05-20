@@ -646,7 +646,13 @@ export default function ServerConfigEditor() {
                 }
             );
 
-            const filteredAndSortedPropertyValues = _copyAndSort<PropertyValue>(filteredItemRarities, sortKey, isSortedDescending);
+            let filteredAndSortedPropertyValues;
+            if (sortKey) {
+                filteredAndSortedPropertyValues = _copyAndSort<PropertyValue>(filteredItemRarities, sortKey, isSortedDescending);
+            }
+            else {
+                filteredAndSortedPropertyValues = filteredItemRarities;
+            }
 
             setSortedPropertyValues(filteredAndSortedPropertyValues);
         }
