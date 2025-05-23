@@ -62,7 +62,9 @@ const rarityDropdownOptions: IDropdownOption[] = [
         key: 8,
         text: "Exotic"
     }
-]
+];
+
+const emptyFieldFilters = { "id": "", "name": "", "rarity": "" };
 
 export default function RarityEditor(props: RarityEditorProps) {
     const [rarities, setRarities] = useState<RarityFile>();
@@ -71,7 +73,7 @@ export default function RarityEditor(props: RarityEditorProps) {
     const [contextualMenuProps, setContextualMenuProps] = useState<IContextualMenuProps>();
     const [sortKey, setSortKey] = useState("");
     const [isSortedDescending, setIsSortedDescending] = useState(false);
-    const [fieldFilters, setFieldFilters] = useState<Dictionary<string>>({ "id": "", "name": "", "rarity": "" });
+    const [fieldFilters, setFieldFilters] = useState<Dictionary<string>>(emptyFieldFilters);
 
     initializeIcons();
 
@@ -168,7 +170,7 @@ export default function RarityEditor(props: RarityEditorProps) {
     ];
 
     const handleLoad = () => {
-        PopulateRarityFile(setSortedRarities, setRarities, '/RarityEditor/GetRarityFile/' + props.name);
+        PopulateRarityFile(setSortedRarities, setRarities, setFieldFilters, setIsSortedDescending, setSortKey, '/RarityEditor/GetRarityFile/' + props.name);
     }
 
     const handleSave = () => {
@@ -193,14 +195,14 @@ export default function RarityEditor(props: RarityEditorProps) {
 
     const handleAddClick = () => {
         if (sortedRarities && rarities) {
-            const newRarity: RarityItem = { id: getNewId(sortedRarities.itemRarity), name: "", rarity: 0 };
+            const newRarity: RarityItem = { id: getNewId(rarities.itemRarity), name: "", rarity: 0 };
 
             setSortedRarities(
                 {
                     ...sortedRarities,
                     itemRarity: [
-                        ...sortedRarities.itemRarity,
-                        newRarity
+                        newRarity,
+                        ...sortedRarities.itemRarity
                     ]
                 }
             );
@@ -209,8 +211,8 @@ export default function RarityEditor(props: RarityEditorProps) {
                 {
                     ...rarities,
                     itemRarity: [
-                        ...rarities.itemRarity,
-                        newRarity
+                        newRarity,
+                        ...rarities.itemRarity
                     ]
                 }
             );
@@ -456,13 +458,16 @@ export default function RarityEditor(props: RarityEditorProps) {
     )
 }
 
-async function PopulateRarityFile(setSortedRarities: Function, setRarities: Function, endpoint: string) {
+async function PopulateRarityFile(setSortedRarities: Function, setRarities: Function, setFieldFilters: Function, setIsSortedDescending: Function, setSortKey: Function, endpoint: string) {
     const response = await fetch(endpoint);
     if (response.status == 200) {
         const result = (await response.json()) as RarityFile;
         if (result != null) {
             setRarities(result);
             setSortedRarities(result);
+            setFieldFilters(emptyFieldFilters);
+            setIsSortedDescending(false);
+            setSortKey("");
         }
     }
 }

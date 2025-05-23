@@ -3,8 +3,8 @@ import { CheckboxVisibility, DefaultButton, DetailsList, DetailsRow, Dropdown, g
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import { JSX, useEffect, useMemo, useState } from 'react';
 import { Dict } from "styled-components/dist/types";
-import ReloadButton from '../../common/components/reload-button/ReloadButton';
-import SaveButton from '../../common/components/save-button/SaveButton';
+import ReloadButton from '../../../../common/components/reload-button/ReloadButton';
+import SaveButton from '../../../../common/components/save-button/SaveButton';
 import "./ManagerConfigEditor.css";
 
 interface ManagerConfig {
@@ -83,8 +83,12 @@ export default function ManagerConfigEditor() {
     }, []);
 
     const handleSave = () => {
-        PostManagerConfig('ManagerConfig/PostManagerConfig', JSON.stringify(managerConfig));
-    }
+        PostManagerConfig('/ManagerConfig/PostManagerConfig', JSON.stringify(managerConfig));
+    };
+
+    const handleLoad = () => {
+        PopulateManagerConfig(setManagerConfig, '/ManagerConfig/GetManagerConfig');
+    };
 
     const clientModsSelection: Selection = useMemo(() => new Selection(
         {
@@ -118,10 +122,6 @@ export default function ManagerConfigEditor() {
         }),
         []
     );
-
-    const handleLoad = () => {
-        PopulateManagerConfig(setManagerConfig, 'ManagerConfig/GetManagerConfig');
-    };
 
     const handleChange = (targetId: string, newValue: string | undefined) => {
         if (managerConfig) {

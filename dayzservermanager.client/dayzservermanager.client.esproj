@@ -9,7 +9,10 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="src\pages\manager-config-editor\components\" />
+    <None Remove="src\pages\manager\components\manager-config-editor\components\**" />
+    <TypeScriptConfiguration Remove="src\pages\manager\components\manager-config-editor\components\**" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="src\pages\no-page\" />
     <Folder Include="src\pages\rarity-editor\components\expansion-rarities-editor\" />
     <Folder Include="src\pages\rarity-editor\components\custom-files-rarities-editor\" />

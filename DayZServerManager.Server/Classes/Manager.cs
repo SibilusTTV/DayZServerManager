@@ -29,6 +29,7 @@ namespace DayZServerManager.Server.Classes
         #region Constants
         public const string MANAGER_CONFIG_NAME = "config.json";
         public const string SERVER_PATH = "server";
+        public const string LOGS_PATH = "logs";
         public static string PROFILE_PATH = Path.Combine(SERVER_PATH, managerConfig.profileName);
         public const string SERVER_DEPLOY = "deploy";
         public static readonly string SERVER_EXECUTABLE = OperatingSystem.IsWindows() ? "DayZServer_x64.exe" : "DayZServer";
@@ -53,6 +54,7 @@ namespace DayZServerManager.Server.Classes
         public const int DAYZ_SERVER_BRANCH = 223350;
         public const int DAYZ_GAME_BRANCH = 221100;
         public const string PLAYER_DATABASE_NAME = "players_db.json";
+        public const string MANAGER_LOG_NAME = "manager.log";
 
         public const string PERSISTANCE_FOLDER_NAME = "storage_1";
         public const string BACKUP_DATA_FOLDER_NAME = "data";
@@ -160,7 +162,7 @@ namespace DayZServerManager.Server.Classes
         private static Task? connectTask;
         private static Task? serverUpdateTask;
 
-        public static void InitiateManager()
+        public static void InitializeManager()
         {
             LoadManagerConfig();
 
@@ -438,6 +440,29 @@ namespace DayZServerManager.Server.Classes
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error when starting scheduler");
+            }
+        }
+
+        public static string GetManagerLog()
+        {
+            try
+            {
+                if (File.Exists(MANAGER_LOG_NAME))
+                {
+                    using (var fs = new FileStream(MANAGER_LOG_NAME, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        using (var sr = new StreamReader(fs, Encoding.Default))
+                        {
+                            return sr.ReadToEnd();
+                        }
+                    }
+                }
+                return "No Manager Log found";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error when getting the Manager Log");
+                return "Error when getting the Manager Log";
             }
         }
 

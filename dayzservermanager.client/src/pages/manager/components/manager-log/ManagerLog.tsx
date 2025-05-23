@@ -7,22 +7,28 @@ export default function ManagerLog() {
 
     useEffect(() => {
         const timer = setInterval(() => {
-            getManagerLog(setManagerLog);
-        }, 1000)
+            handleLoad();
+        }, 5000)
         return () => clearInterval(timer);
     })
 
+    const handleLoad = () => {
+        getManagerLog(setManagerLog);
+    }
+
     return (
-        <TextField 
-            multiline
-            value={managerLog}
-        />
+        <div style={{ display: "flex", flexDirection: "column", margin: "10px 10px 10px 10px", flexGrow: 0, gap: "10px" }}>
+            <TextField
+                multiline
+                value={managerLog}
+            />
+        </div>
     )
 }
 
 async function getManagerLog(setManagerLog: Function) {
     try {
-        const response = await fetch('Manager/GetManagerLog');
+        const response = await fetch('/Manager/GetManagerLog');
         if (response.status == 200) {
             const result = await response.text();
             setManagerLog(result);

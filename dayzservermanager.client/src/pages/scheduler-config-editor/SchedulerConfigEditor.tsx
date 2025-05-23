@@ -42,11 +42,11 @@ export default function SchedulerConfigEditor() {
     }, []);
 
     const handleLoad = () => {
-        PopulateSchedulerManagerConfig(setSchedulerConfig, 'SchedulerConfig/GetSchedulerConfig', setListItems);
+        PopulateSchedulerManagerConfig(setSchedulerConfig, '/SchedulerConfig/GetSchedulerConfig', setListItems);
     };
 
     const handleSave = () => {
-        PostSchedulerConfig('SchedulerConfig/PostSchedulerConfig', JSON.stringify(schedulerConfig));
+        PostSchedulerConfig('/SchedulerConfig/PostSchedulerConfig', JSON.stringify(schedulerConfig));
     };
 
     initializeIcons();
@@ -61,9 +61,9 @@ export default function SchedulerConfigEditor() {
                 return (
                     <TextField
                         defaultValue={badName.badName}
-                        onBlur={(event) => {
-                            if (schedulerConfig && listItems && index != null) {
-                                const items = listItems.map(item => item.listId == badName.listId ? { ...item, badName: event.target.value } : item)
+                        onChange={(_, newValue) => {
+                            if (newValue && schedulerConfig && listItems && index != null) {
+                                const items = listItems.map(item => item.listId == badName.listId ? { ...item, badName: newValue } : item)
                                 setListItems(
                                     items
                                 );

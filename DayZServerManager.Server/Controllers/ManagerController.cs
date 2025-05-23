@@ -93,7 +93,7 @@ namespace DayZServerManager.Server.Controllers
         [HttpGet("GetManagerLog")]
         public string GetManagerLog()
         {
-            return "Not implemented yet";
+            return Manager.GetManagerLog();
         }
     }
 }

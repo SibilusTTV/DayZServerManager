@@ -43,7 +43,7 @@ export default function PlayerDatabase() {
     initializeIcons();
 
     const handleLoad = () => {
-        getAllPlayers(setPlayers, setUnsortedPlayers, 'Scheduler/GetPlayers');
+        getAllPlayers(setPlayers, setUnsortedPlayers, '/Scheduler/GetPlayers');
     }
 
     const onColumnContextMenu = (column: IColumn | undefined, ev: React.MouseEvent<HTMLElement> | undefined): void => {

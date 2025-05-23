@@ -112,11 +112,11 @@ export default function ServerConfigEditor() {
     }, []);
 
     const handleLoad = () => {
-        populateServerConfig(setServerConfig, 'ServerConfig/GetServerConfig', setSortedPropertyValues, setMotdPropertyId, setMotdArray);
+        populateServerConfig(setServerConfig, '/ServerConfig/GetServerConfig', setSortedPropertyValues, setMotdPropertyId, setMotdArray);
     };
 
     const handleSave = () => {
-        postServerConfig('ServerConfig/PostServerConfig', JSON.stringify(serverConfig))
+        postServerConfig('/ServerConfig/PostServerConfig', JSON.stringify(serverConfig))
     };
 
     const onColumnContextMenu = (column: IColumn | undefined, ev: React.MouseEvent<HTMLElement> | undefined): void => {
@@ -156,7 +156,7 @@ export default function ServerConfigEditor() {
                     <TextField
                         key={"TextField-" + item.id + "-" + (column?.key || "")}
                         defaultValue={item.lineString}
-                        onBlur={(event) => handleArrayFieldBlur(event, item)}
+                        onChange={(_, newValue) => newValue && handleArrayFieldChange(newValue, item)}
                     />
                 );
             }
@@ -196,7 +196,7 @@ export default function ServerConfigEditor() {
                     <TextField
                         key={"TextField-" + item.id + "-" + (column?.key || "")}
                         defaultValue={item.propertyName}
-                        onBlur={(event) => handleFieldBlur(event, item, column?.key || "")}
+                        onChange={(_, newValue) => newValue && handleFieldChange(newValue, item, column?.key || "")}
                     />
                 )
             },
@@ -242,7 +242,7 @@ export default function ServerConfigEditor() {
                         <TextField
                             key={"TextField-" + item.id + "-" + (column?.key || "")}
                             defaultValue={item.value?.toString()}
-                            onBlur={(event) => handleValueFieldBlur(event, item)}
+                            onChange={(_, newValue) => newValue && handleValueFieldChange(newValue, item)}
                         />
                     )
                 }
@@ -274,7 +274,7 @@ export default function ServerConfigEditor() {
                     <TextField
                         key={"TextField-" + item.id + "-" + (column?.key || "")}
                         defaultValue={item.comment}
-                        onBlur={(event) => handleFieldBlur(event, item, column?.key || "") }
+                        onChange={(_, newValue) => newValue && handleFieldChange(newValue, item, column?.key || "") }
                     />
                 )
             },
@@ -382,18 +382,18 @@ export default function ServerConfigEditor() {
         }
     }
 
-    const handleFieldBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, item: PropertyValue, key: string) => {
+    const handleFieldChange = (newValue: string, item: PropertyValue, key: string) => {
         if (serverConfig) {
             setServerConfig({
                 ...serverConfig,
-                properties: serverConfig.properties.map(property => property.id === item.id ? { ...item, [key]: event.target.value } : property)
+                properties: serverConfig.properties.map(property => property.id === item.id ? { ...item, [key]: newValue } : property)
             });
         }
     };
 
-    const handleValueFieldBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, item: PropertyValue) => {
-        if (serverConfig && event.target.value != item.value) {
-            const newFormattedValue = formatValue(event.target.value, item.dataType);
+    const handleValueFieldChange = (newValue: string, item: PropertyValue) => {
+        if (serverConfig && newValue != item.value) {
+            const newFormattedValue = formatValue(newValue, item.dataType);
 
             setServerConfig((prevConfig) => (prevConfig && {
                 ...prevConfig,
@@ -446,9 +446,9 @@ export default function ServerConfigEditor() {
         }
     };
 
-    const handleArrayFieldBlur = (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>, item: StringRow) => {
+    const handleArrayFieldChange = (newValue: string, item: StringRow) => {
         if (serverConfig && motdArray) {
-            const newMotdArray = motdArray.map(line => line.id === item.id ? { ...line, lineString: event.target.value } : line);
+            const newMotdArray = motdArray.map(line => line.id === item.id ? { ...line, lineString: newValue } : line);
 
             setMotdArray(newMotdArray);
 
@@ -748,7 +748,7 @@ export default function ServerConfigEditor() {
                 selectionMode={SelectionMode.none}
             />
             {motdPropertyId &&
-                <div key="motd" style={{display: "flex", gap: "10px"} }>
+                <div key="motd" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     <h3>Motto of the day</h3>
                     <DefaultButton
                         onClick={() => handleAddArrayItem(motdPropertyId)}
