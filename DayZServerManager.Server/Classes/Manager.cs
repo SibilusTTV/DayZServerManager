@@ -55,6 +55,7 @@ namespace DayZServerManager.Server.Classes
         public const int DAYZ_GAME_BRANCH = 221100;
         public const string PLAYER_DATABASE_NAME = "players_db.json";
         public const string MANAGER_LOG_NAME = "manager.log";
+        public const string MANAGER_LOGS_FOLDER = "logs";
 
         public const string PERSISTANCE_FOLDER_NAME = "storage_1";
         public const string BACKUP_DATA_FOLDER_NAME = "data";
@@ -447,9 +448,9 @@ namespace DayZServerManager.Server.Classes
         {
             try
             {
-                if (File.Exists(MANAGER_LOG_NAME))
+                if (File.Exists(Path.Combine(MANAGER_LOGS_FOLDER, MANAGER_LOG_NAME)))
                 {
-                    using (var fs = new FileStream(MANAGER_LOG_NAME, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var fs = new FileStream(Path.Combine(MANAGER_LOGS_FOLDER, MANAGER_LOG_NAME), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
                         using (var sr = new StreamReader(fs, Encoding.Default))
                         {

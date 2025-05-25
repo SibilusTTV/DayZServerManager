@@ -212,10 +212,6 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
         public void GetPlayers()
         {
             _rconClient.GetPlayers();
-            Task t = new Task(() => {
-                JSONSerializer.SerializeJSONFile<PlayersDB>(Path.Combine(Manager.SCHEDULER_PATH, Manager.PLAYER_DATABASE_NAME), _playersdb);
-            });
-            t.Start();
         }
 
         public void KickPlayer(string guid, string reason, string name)
