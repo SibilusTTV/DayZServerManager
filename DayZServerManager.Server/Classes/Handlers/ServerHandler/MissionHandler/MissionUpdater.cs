@@ -10,6 +10,7 @@ using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.EnvironmentClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.RarityFile;
 using Microsoft.VisualBasic.FileIO;
+using DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler;
 
 namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
 {
@@ -415,14 +416,20 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
                         RarityFile? customFilesRarityFile = JSONSerializer.DeserializeJSONFile<RarityFile>(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME));
                         if (vanillaRarity != null)
                         {
+                            UpdateVanillaRarities(missionPath, vanillaRarity);
+                            JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_VANILLA_RARITIES_FILE_NAME), vanillaRarity);
                             UpdateHardlineRarity(hardlineFile, vanillaRarity);
                         }
                         if (expansionRarity != null)
                         {
+                            UpdateExpansionRarities(expansionTemplatePath, expansionRarity);
+                            JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_EXPANSION_RARITIES_FILE_NAME), expansionRarity);
                             UpdateHardlineRarity(hardlineFile, expansionRarity);
                         }
                         if (customFilesRarityFile != null)
                         {
+                            UpdateCustomFilesRarities(missionTemplatePath, customFilesRarityFile);
+                            JSONSerializer.SerializeJSONFile(Path.Combine(missionTemplatePath, Manager.MISSION_CUSTOM_FILES_RARITIES_FILE_NAME), customFilesRarityFile);
                             UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
                         }
                         JSONSerializer.SerializeJSONFile(Path.Combine(missionPath, Manager.MISSION_EXPANSION_FOLDER_NAME, Manager.MISSION_EXPANSION_SETTINGS_FOLDER_NAME, Manager.MISSION_EXPANSION_HARDLINE_SETTINGS_FILE_NAME), hardlineFile);
@@ -589,30 +596,6 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
             }
         }
 
-        // Searches for the matching TypesItem and returns it
-        private static TypesItem? SearchForTypesItemInMultiple(string name, TypesFile[] typesFiles)
-        {
-            try
-            {
-                foreach (TypesFile typesFile in typesFiles)
-                {
-                    foreach (TypesItem item in typesFile.typesItems)
-                    {
-                        if (item.name.ToLower().Trim() == name.ToLower().Trim())
-                        {
-                            return item;
-                        }
-                    }
-                }
-                return null;
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Error when searching for TypesItem");
-                return null;
-            }
-        }
-
         private static string SearchForExpansionTemplate(string folderPath)
         {
             try
@@ -738,69 +721,6 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
                     foreach (RarityItem rarityitem in rarityFile.ItemRarity)
                     {
                         TypesItem? item = SearchForTypesItem(rarityitem.name, typesFile);
-                        if (item != null)
-                        {
-                            switch (rarityitem.rarity)
-                            {
-                                case 0:
-                                    item.nominal = 0;
-                                    item.min = 0;
-                                    break;
-                                case 1:
-                                    item.nominal = Manager.POOR_NOMINAL;
-                                    item.min = Manager.POOR_MINIMAL;
-                                    break;
-                                case 2:
-                                    item.nominal = Manager.COMMON_NOMINAL;
-                                    item.min = Manager.COMMON_MINIMAL;
-                                    break;
-                                case 3:
-                                    item.nominal = Manager.UNCOMMON_NOMINAL;
-                                    item.min = Manager.UNCOMMON_MINIMAL;
-                                    break;
-                                case 4:
-                                    item.nominal = Manager.RARE_NOMINAL;
-                                    item.min = Manager.RARE_MINIMAL;
-                                    break;
-                                case 5:
-                                    item.nominal = Manager.EPIC_NOMINAL;
-                                    item.min = Manager.EPIC_MINIMAL;
-                                    break;
-                                case 6:
-                                    item.nominal = Manager.LEGENDARY_NOMINAL;
-                                    item.min = Manager.LEGENDARY_MINIMAL;
-                                    break;
-                                case 7:
-                                    item.nominal = Manager.MYTHIC_NOMINAL;
-                                    item.min = Manager.MYTHIC_MINIMAL;
-                                    break;
-                                case 8:
-                                    item.nominal = Manager.EXOTIC_NOMINAL;
-                                    item.min = Manager.EXOTIC_MINIMAL;
-                                    break;
-                            }
-                        }
-                    }
-                    Logger.Info("Finished updating types with rarity");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Error when updating types with rarity");
-            }
-        }
-
-        // Updates the spawning of items in the given TypesFile with the rarities of the rarityFile
-        public static void UpdateTypesWithRarityInMultiple(TypesFile[] typesFiles, RarityFile rarityFile)
-        {
-            try
-            {
-                if (rarityFile.ItemRarity != null)
-                {
-                    Logger.Info("Updating types with rarity");
-                    foreach (RarityItem rarityitem in rarityFile.ItemRarity)
-                    {
-                        TypesItem? item = SearchForTypesItemInMultiple(rarityitem.name, typesFiles);
                         if (item != null)
                         {
                             switch (rarityitem.rarity)
@@ -1034,7 +954,128 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.MissionHandler
                 Logger.Error(ex, "Error when updating EconomyCore");
             }
         }
+
+        private static void UpdateVanillaRarities(string missionFolder, RarityFile rarityFile)
+        {
+            string typesFilePath = Path.Combine(missionFolder, Manager.MISSION_DB_FOLDER_NAME, Manager.MISSION_TYPES_FILE_NAME);
+            TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typesFilePath);
+            if (typesFile != null)
+            {
+                foreach (TypesItem type in typesFile.typesItems)
+                {
+                    if (rarityFile.ItemRarity.Find(rarity => rarity.name.ToLower() == type.name.ToLower()) == null)
+                    {
+                        rarityFile.ItemRarity.Add(GetNewRarityItem(type, GetNextId(rarityFile.ItemRarity)));
+                    }
+                }
+            }
+        }
+
+        private static void UpdateExpansionRarities(string missionFolder, RarityFile rarityFile)
+        {
+            List<string> typesFilePaths = RarityEditor.GetAllCustomTypesFiles(missionFolder);
+
+            string? expansionTypesPath = typesFilePaths.Find(type => type.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH));
+
+            if (expansionTypesPath != null)
+            {
+                TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(expansionTypesPath);
+                if (typesFile != null)
+                {
+                    foreach (TypesItem type in typesFile.typesItems)
+                    {
+                        if (rarityFile.ItemRarity.Find(rarity => rarity.name.ToLower() == type.name.ToLower()) == null)
+                        {
+                            rarityFile.ItemRarity.Add(GetNewRarityItem(type, GetNextId(rarityFile.ItemRarity)));
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void UpdateCustomFilesRarities(string missionFolder, RarityFile rarityFile)
+        {
+            List<string> typesFilePaths = RarityEditor.GetAllCustomTypesFiles(missionFolder);
+
+            List<string> filteredTypePaths = typesFilePaths.FindAll(type => !type.ToLower().Contains(Manager.EXPANSION_MOD_SEARCH));
+
+            foreach (string typePath in filteredTypePaths)
+            {
+                TypesFile? typesFile = XMLSerializer.DeserializeXMLFile<TypesFile>(typePath);
+                if (typesFile != null)
+                {
+                    foreach (TypesItem type in typesFile.typesItems)
+                    {
+                        if (rarityFile.ItemRarity.Find(rarity => rarity.name.ToLower() == type.name.ToLower()) == null)
+                        {
+                            rarityFile.ItemRarity.Add(GetNewRarityItem(type, GetNextId(rarityFile.ItemRarity)));
+                        }
+                    }
+                }
+            }
+        }
         #endregion UpdateFunctions
+
+        #region GetFunctions
+        private static RarityItem GetNewRarityItem(TypesItem type, int id)
+        {
+            RarityItem newRarityItem = new RarityItem();
+            newRarityItem.id = id;
+            newRarityItem.name = type.name;
+
+            if (type.nominal > 120)
+            {
+                newRarityItem.rarity = 1;
+            }
+            else if (60 < type.nominal && type.nominal <= 120)
+            {
+                newRarityItem.rarity = 2;
+            }
+            else if (30 < type.nominal && type.nominal <= 60)
+            {
+                newRarityItem.rarity = 3;
+            }
+            else if (15 < type.nominal && type.nominal <= 30)
+            {
+                newRarityItem.rarity = 4;
+            }
+            else if (7 < type.nominal && type.nominal <= 15)
+            {
+                newRarityItem.rarity = 5;
+            }
+            else if (3 < type.nominal && type.nominal <= 7)
+            {
+                newRarityItem.rarity = 6;
+            }
+            else if (2 == type.nominal || 3 == type.nominal)
+            {
+                newRarityItem.rarity = 7;
+            }
+            else if (1 == type.nominal)
+            {
+                newRarityItem.rarity = 8;
+            }
+            else
+            {
+                newRarityItem.rarity = 0;
+            }
+
+            return newRarityItem;
+        }
+
+        private static int GetNextId(List<RarityItem> items)
+        {
+            int nextId = 0;
+            for (; nextId < items.Count; nextId++)
+            {
+                if (items.Find(item => item.id == nextId) == null)
+                {
+                    return nextId;
+                }
+            }
+            return nextId;
+        }
+        #endregion GetFunctions
 
         #region CopyFunctions
         private static void CopyVanillaMissionFolder(string missionPath, string vanillaMissionPath, string backupPath)

@@ -5,6 +5,7 @@ using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.Rarit
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesChangesClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.MissionClasses.TypesClasses;
 using DayZServerManager.Server.Classes.SerializationClasses.Serializers;
+using System.Linq;
 
 namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
 {
@@ -21,6 +22,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
             return null;
         }
 
+        #region UpdateFunctions
         public static void UpdateRaritiesAndTypes(string name, RarityFile rarityFile)
         {
             Logger.Info("Updating Rarity and Types");
@@ -50,7 +52,6 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
             }
         }
 
-        #region UpdateTypes
         private static void UpdateCustomTypes(string folderPath, RarityFile rarityFile)
         {
             List<string> typesFilePaths = GetAllCustomTypesFiles(folderPath);
@@ -64,10 +65,10 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
                 }
             }
         }
-        #endregion UpdateTypes
+        #endregion UpdateFunctions
 
-        #region GetTypesFiles
-        private static List<string> GetAllCustomTypesFiles(string folderPath)
+        #region GetFunctions
+        public static List<string> GetAllCustomTypesFiles(string folderPath)
         {
             List<string> typesFiles = new List<string>();
             if (File.Exists(Path.Combine(folderPath, Manager.MISSION_ECONOMYCORE_FILE_NAME)))
@@ -90,7 +91,7 @@ namespace DayZServerManager.Server.Classes.Handlers.ServerHandler.RarityHandler
             }
             return typesFiles;
         }
-        #endregion GetTypesFiles
+        #endregion GetFunctions
 
         #region GetTypesChanges
         private static TypesChangesFile? GetExpansionTypesChangesFile(string folderPath)
