@@ -63,6 +63,12 @@ namespace DayZServerManager.Server.Controllers
             {
                 return true;
             }
+            else if (Manager.props.managerStatus == Manager.STATUS_ERROR)
+            {
+                Manager.KillServerProcesses();
+                Manager.props.managerStatus = Manager.STATUS_LISTENING;
+                return true;
+            }
             else
             {
                 return false;

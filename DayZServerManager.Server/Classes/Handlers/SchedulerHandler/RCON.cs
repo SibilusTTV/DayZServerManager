@@ -67,6 +67,10 @@ namespace DayZServerManager.Server.Classes.Handlers.SchedulerHandler
             {
                 SendCommand("players");
             }
+            else
+            {
+                _players.Clear();
+            }
         }
 
         public void KickPlayer(int id, string reason, string name)

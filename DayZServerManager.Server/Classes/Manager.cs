@@ -305,6 +305,10 @@ namespace DayZServerManager.Server.Classes
             {
                 kill = true;
                 props.managerStatus = STATUS_STOPPING_SERVER;
+                if (SteamCMDManager.steamCMDProcess != null && !SteamCMDManager.steamCMDProcess.HasExited)
+                {
+                    SteamCMDManager.KillSteamCMD();
+                }
             }
             else
             {
