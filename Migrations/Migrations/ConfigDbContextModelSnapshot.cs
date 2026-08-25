@@ -19,8 +19,7 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.CustomMessage", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Color")
@@ -31,7 +30,7 @@ namespace Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("Instanceid")
+                    b.Property<string>("Instanceid")
                         .HasColumnType("TEXT");
 
                     b.Property<TimeSpan>("Interval")
@@ -60,8 +59,7 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.Instance", b =>
                 {
-                    b.Property<Guid>("id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("id")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("RConPassword")
@@ -165,10 +163,10 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.InstanceClientMod", b =>
                 {
-                    b.Property<Guid>("InstanceId")
+                    b.Property<string>("InstanceId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ModId")
+                    b.Property<string>("ModId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("InstanceId", "ModId");
@@ -180,10 +178,10 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.InstanceServerMod", b =>
                 {
-                    b.Property<Guid>("InstanceId")
+                    b.Property<string>("InstanceId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("ModId")
+                    b.Property<string>("ModId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("InstanceId", "ModId");
@@ -195,8 +193,7 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.Mod", b =>
                 {
-                    b.Property<Guid>("id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("id")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("name")
@@ -213,9 +210,8 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.SteamCredentials", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("SteamPassword")
                         .IsRequired()
@@ -232,8 +228,7 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Scheduler.Ban", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("BanId")
@@ -253,8 +248,7 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Scheduler.Player", b =>
                 {
-                    b.Property<Guid>("Guid")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Ip")
@@ -279,8 +273,7 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Scheduler.SchedulerConfig", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
                     b.PrimitiveCollection<string>("BadNames")
@@ -291,7 +284,8 @@ namespace Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("InstanceId")
+                    b.Property<string>("InstanceId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Timeout")
@@ -307,14 +301,14 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Scheduler.ServerPlayer", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("BanId")
+                    b.Property<string>("BanId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("InstanceId")
+                    b.Property<string>("InstanceId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsBanned")
@@ -323,7 +317,8 @@ namespace Migrations.Migrations
                     b.Property<bool>("IsWhitelisted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid>("PlayerId")
+                    b.Property<string>("PlayerId")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Role")

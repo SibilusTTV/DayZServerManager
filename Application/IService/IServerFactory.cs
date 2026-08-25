@@ -4,5 +4,5 @@ namespace Application.IService;
 
 public interface IServerFactory
 {
-    public IServerInstance CreateServerAsync(Guid id);
+    public IServerInstance CreateServerAsync(string id);
 }

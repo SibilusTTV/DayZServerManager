@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using Domain.Manager;
@@ -6,18 +7,18 @@ namespace Domain.Scheduler;
 
 public class ServerPlayer
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     
     [ForeignKey(nameof(Instance))]
-    public Guid InstanceId { get; set; }
+    public string InstanceId { get; set; }
     public Instance Instance { get; set; }
     
     [ForeignKey(nameof(Player))]
-    public Guid PlayerId { get; set; }
+    public string PlayerId { get; set; }
     public Player Player { get; set; }
     
     [ForeignKey(nameof(Ban))]
-    public Guid? BanId { get; set; }
+    public string? BanId { get; set; }
     public Ban? Ban { get; set; }
     
     public bool IsWhitelisted { get; set; }
@@ -29,9 +30,9 @@ public class ServerPlayer
         
     }
     
-    public ServerPlayer(Guid id, Guid instanceId, Guid playerId, bool isWhitelisted, bool isBanned, string role)
+    public ServerPlayer(string instanceId, string playerId, bool isWhitelisted, bool isBanned, string role)
     {
-        Id = id;
+        this.Id = Guid.NewGuid().ToString().ToLower();
         InstanceId = instanceId;
         PlayerId = playerId;
         IsWhitelisted = isWhitelisted;

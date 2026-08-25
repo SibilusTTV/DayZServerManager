@@ -1,8 +1,8 @@
 
 <div class="table-container-div">
   <ag-grid-angular
+    [rowData]="serverPlayerInformations()"
     [columnDefs]="colDefs"
-    [rowData]="players()"
     [autoSizeStrategy]="autoSizeStrategy"
     style="width: 100%; flex: 1;"
   />

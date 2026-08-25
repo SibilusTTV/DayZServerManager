@@ -9,7 +9,10 @@ app-root {
   flex-direction: column;
 }
 app-home,
-players-db {
+players-db,
+server-players-db,
+instance-root,
+app-mod-list {
   display: flex;
   min-height: 100%;
   flex-direction: column;

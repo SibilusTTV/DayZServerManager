@@ -20,9 +20,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+Environment.SetEnvironmentVariable("AppendManifestToken_SQLiteProviderManifest",";BinaryGUID=True;");
+
 builder.Services.AddDbContext<ConfigDbContext>(options =>
     options.UseSqlite(
-        "Data Source=config.db", 
+        "Data Source=config.db;", 
         x => x.MigrationsAssembly("Migrations"))
     );
 

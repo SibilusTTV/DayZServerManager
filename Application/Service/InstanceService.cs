@@ -11,7 +11,7 @@ namespace Application.Service;
 
 public class InstanceService : IInstanceService, IDisposable
 {
-    private readonly ConcurrentDictionary<Guid, IServerInstance> _servers 
+    private readonly ConcurrentDictionary<string, IServerInstance> _servers 
         = new();
     private readonly ILogger<InstanceService> _logger;
     private readonly IServiceScope _serviceScope;
@@ -82,12 +82,12 @@ public class InstanceService : IInstanceService, IDisposable
         return instanceRepository?.CreateInstance(instanceConfig) ?? HttpStatusCode.InternalServerError;
     }
     
-    public IServerInstance? GetServer(Guid id)
+    public IServerInstance? GetServer(string id)
     {
         return _servers.GetValueOrDefault(id);
     }
 
-    public Instance? GetInstance(Guid id)
+    public Instance? GetInstance(string id)
     {
         var instanceRepository = _serviceScope.ServiceProvider.GetService<IInstanceRepository>();
         return instanceRepository?.GetInstance(id);
@@ -99,7 +99,7 @@ public class InstanceService : IInstanceService, IDisposable
         return instanceRepository?.GetInstances() ?? [];
     }
 
-    public ServerInformation GetServerInformation(Guid id)
+    public ServerInformation GetServerInformation(string id)
     {
         var server = GetServer(id);
         return server?.GetServerInformation() ?? new ServerInformation();
@@ -144,13 +144,13 @@ public class InstanceService : IInstanceService, IDisposable
         return instanceRepository?.UpdateInstance(instanceConfig) ?? HttpStatusCode.NotFound;
     }
 
-    public ServerConfig GetServerConfig(Guid id)
+    public ServerConfig GetServerConfig(string id)
     {
         var server = GetServer(id);
         return server != null ? server.ServerConfig : new ServerConfig();
     }
 
-    public HttpStatusCode SaveServerConfig(ServerConfig serverConfig, Guid id)
+    public HttpStatusCode SaveServerConfig(ServerConfig serverConfig, string id)
     {
         var instanceConfig = GetInstance(id);
 
@@ -163,13 +163,13 @@ public class InstanceService : IInstanceService, IDisposable
         return HttpStatusCode.OK;
     }
 
-    public void SetMissionNeedsUpdatingForServer(Guid id)
+    public void SetMissionNeedsUpdatingForServer(string id)
     {
         var server = GetServer(id);
         server?.MissionNeedsUpdating = true;
     }
 
-    public void StartServer(Guid id)
+    public void StartServer(string id)
     {
         var server = GetServer(id);
         var credentials = GetSteamCredentials();
@@ -179,13 +179,13 @@ public class InstanceService : IInstanceService, IDisposable
         server.StartTimer(credentials.SteamUsername, credentials.SteamPassword);
     }
 
-    public void StopServer(Guid id)
+    public void StopServer(string id)
     {
         var server = GetServer(id);
         server?.Stop();
     }
     
-    public void RemoveServer(Guid id)
+    public void RemoveServer(string id)
     {
         if (_servers.TryRemove(id, out var server))
         {

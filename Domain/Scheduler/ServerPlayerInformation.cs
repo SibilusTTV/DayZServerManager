@@ -2,8 +2,9 @@ namespace Domain.Scheduler;
 
 public class ServerPlayerInformation
 {
-    public Guid Id { get; set; }
-    public Guid ServerPlayerId { get; set; }
+    public string Id { get; set; }
+    public string? ServerPlayerId { get; set; }
+    public string? InstanceId { get; set; }
     public string Name { get; set; }
     public string Uid { get; set; }
     public bool IsVerified { get; set; }
@@ -11,10 +12,14 @@ public class ServerPlayerInformation
     public bool IsWhitelisted { get; set; }
     public bool IsBanned { get; set; }
     public string Role { get; set; }
-    public Guid InstanceId { get; set; }
 
-    public ServerPlayerInformation(Guid id, Guid serverPlayerId, string name, string uid, string ip, bool isVerified, bool isWhitelisted,
-        bool isBanned, string role, Guid instanceId)
+    public ServerPlayerInformation()
+    {
+        
+    }
+
+    public ServerPlayerInformation(string id, string? serverPlayerId, string name, string uid, string ip, bool isVerified, bool isWhitelisted,
+        bool isBanned, string role, string? instanceId)
     {
         Id = id;
         ServerPlayerId = serverPlayerId;

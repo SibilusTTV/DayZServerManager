@@ -1,6 +1,6 @@
 import {Component, Input, input, signal, WritableSignal} from '@angular/core';
-import {CustomMessage, Mod} from '../api';
-import {ColDef} from 'ag-grid-community';
+import {CustomMessage, Mod} from '../../api';
+import {type AutoSizeStrategy, ColDef} from 'ag-grid-community';
 import {v4} from 'uuid';
 import {AgGridAngular} from 'ag-grid-angular';
 import {MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
@@ -72,15 +72,19 @@ export default class InstanceConfig {
     },
     {
       field: "workshopID",
-      cellEditor: "agNumberCellEditor"
+      cellEditor: "agNumberCellEditor",
+      resizable: false,
+      maxWidth: 160
     },
     {
-      headerName: "Remove",
+      headerName: "Actions",
       field: "id",
       cellRenderer: GridRemoveButton,
       cellRendererParams: {
         remove: this.onClientGridRemove.bind(this)
-      }
+      },
+      resizable: false,
+      maxWidth: 100
     }
   ];
 
@@ -91,15 +95,19 @@ export default class InstanceConfig {
     },
     {
       field: "workshopID",
-      cellEditor: "agNumberCellEditor"
+      cellEditor: "agNumberCellEditor",
+      resizable: false,
+      maxWidth: 160
     },
     {
-      headerName: "Remove",
+      headerName: "Actions",
       field: "id",
       cellRenderer: GridRemoveButton,
       cellRendererParams: {
         remove: this.onServerGridRemove.bind(this)
-      }
+      },
+      resizable: false,
+      maxWidth: 100
     }
   ];
 
@@ -107,7 +115,8 @@ export default class InstanceConfig {
     {
       field: "isTimeOfDay",
       cellEditor: "agCheckboxCellEditor",
-      width: 140,
+      resizable: false,
+      maxWidth: 140,
       rowDrag: true
     },
     {
@@ -120,7 +129,8 @@ export default class InstanceConfig {
         timespan: params.waitTime,
         change: this.onMessageWaitTimeChange.bind(this)
       }),
-      width: 280
+      resizable: false,
+      maxWidth: 200
     },
     {
       field: "interval",
@@ -131,36 +141,39 @@ export default class InstanceConfig {
         timespan: params.waitTime,
         change: this.onMessageIntervalChange.bind(this)
       }),
-      width: 280
+      resizable: false,
+      maxWidth: 140
     },
     {
-      field: "title",
-      width: 120
+      field: "title"
     },
     {
       field: "message"
     },
     {
-      field: "icon",
-      width: 160
+      field: "icon"
     },
     {
-      field: "color",
-      width: 120
+      field: "color"
     },
     {
-      headerName: "Remove",
+      headerName: "Actions",
       field: "id",
       cellRenderer: GridRemoveButton,
       cellRendererParams: {
         remove: this.onMessageGridRemove.bind(this)
       },
-      width: 100
+      resizable: false,
+      maxWidth: 100
     }
   ]
 
   public defaultColDef: ColDef = {
     editable: true
+  }
+
+  public autoSizeStrategy: AutoSizeStrategy ={
+    type: "fitGridWidth"
   }
 
   constructor() {
@@ -171,7 +184,7 @@ export default class InstanceConfig {
     this.clientMods.set([
       ...this.clientMods(),
       {
-        id: v4(),
+        id: v4().toLowerCase(),
         name: "",
         workshopID: 0
       }
@@ -182,7 +195,7 @@ export default class InstanceConfig {
     this.serverMods.set([
       ...this.serverMods(),
       {
-        id: v4(),
+        id: v4().toLowerCase(),
         name: "",
         workshopID: 0
       }
@@ -193,7 +206,7 @@ export default class InstanceConfig {
     this.customMessages.set([
       ...this.customMessages(),
       {
-        id: v4(),
+        id: v4().toLowerCase(),
         isTimeOfDay: false,
         waitTime: "00:00:00",
         interval: "00:00:00",

@@ -25,7 +25,7 @@ public class ServerInstance : IServerInstance
     private List<long> _updatedModIds;
     private string _battlEyeFolderPath;
     private string _profilePath;
-    private Guid _guid;
+    private string _id;
 
     private Timer? _serverLoopTimer;
     private Timer? _serverUpdateTimer;
@@ -46,10 +46,10 @@ public class ServerInstance : IServerInstance
     
     public bool MissionNeedsUpdating { get; set; }
     
-    public ServerInstance(ILogger<ServerInstance> logger, Guid guid, IServiceScopeFactory scopeFactory, ISteamCmdService steamCmdService)
+    public ServerInstance(ILogger<ServerInstance> logger, string id, IServiceScopeFactory scopeFactory, ISteamCmdService steamCmdService)
     {
         _logger = logger;
-        _guid = guid;
+        _id = id;
         _serverScope = scopeFactory.CreateScope();
         var instanceConfig = GetInstanceConfig();
         _serverInformation = new ServerInformation();
@@ -140,7 +140,7 @@ public class ServerInstance : IServerInstance
     private Instance GetInstanceConfig()
     {
         var instanceRepository = _serverScope.ServiceProvider.GetService<IInstanceRepository>();
-        return instanceRepository?.GetInstance(_guid) ?? new Instance(Guid.NewGuid());
+        return instanceRepository?.GetInstance(_id) ?? new Instance();
     }
 
     private void ServerLoop(object? state)

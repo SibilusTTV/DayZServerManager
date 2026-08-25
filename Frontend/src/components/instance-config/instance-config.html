@@ -160,6 +160,7 @@
       [stopEditingWhenCellsLoseFocus]="true"
       [rowDragManaged]="true"
       (rowDragEnd)="onClientRowDragEnd($event)"
+      [autoSizeStrategy]="autoSizeStrategy"
     />
   </div>
   <div style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
@@ -175,6 +176,7 @@
       [stopEditingWhenCellsLoseFocus]="true"
       [rowDragManaged]="true"
       (rowDragEnd)="onServerRowDragEnd($event)"
+      [autoSizeStrategy]="autoSizeStrategy"
     />
   </div>
 </div>
@@ -191,4 +193,5 @@
   [rowDragManaged]="true"
   (rowDragEnd)="onMessageRowDragEnd($event)"
   [rowHeight]="60"
+  [autoSizeStrategy]="autoSizeStrategy"
 />

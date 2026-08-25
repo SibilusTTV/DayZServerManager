@@ -4,11 +4,7 @@ namespace Domain.Manager;
 
 public class CustomMessage
 {
-    public Guid Id { get; set; }
-    
-    // [ForeignKey(nameof(Instance))]
-    // public int InstanceId { get; set; }
-    
+    public string Id { get; set; }
     public bool IsTimeOfDay { get; set; }
     public TimeSpan WaitTime { get; set; }
     public TimeSpan Interval { get; set; }
@@ -24,7 +20,7 @@ public class CustomMessage
 
     public CustomMessage(bool isTimeOfDay, TimeSpan waitTime, TimeSpan interval, string title, string message, string icon, string color)
     {
-        Id = Guid.NewGuid();
+        Id = Guid.NewGuid().ToString().ToLower();
         IsTimeOfDay = isTimeOfDay;
         WaitTime = waitTime;
         Interval = interval;

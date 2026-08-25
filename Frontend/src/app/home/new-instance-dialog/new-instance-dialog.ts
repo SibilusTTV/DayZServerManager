@@ -8,7 +8,7 @@ import {
 import {MatButton} from '@angular/material/button';
 import {CustomMessage, Instance, InstanceService, Mod} from '../../../api';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import InstanceConfig from '../../../components/instance-config';
+import InstanceConfig from '../../../components/instance-config/instance-config';
 
 @Component({
   selector: 'new-instance-dialog',

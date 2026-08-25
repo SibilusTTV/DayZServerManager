@@ -1,6 +1,6 @@
-import {Component} from '@angular/core';
+import {Component, signal, WritableSignal} from '@angular/core';
 import {AgGridAngular} from 'ag-grid-angular';
-import {ColDef} from 'ag-grid-community';
+import {type AutoSizeStrategy, ColDef} from 'ag-grid-community';
 import {Player, PlayerService} from '../../api';
 
 
@@ -12,7 +12,7 @@ import {Player, PlayerService} from '../../api';
   templateUrl: 'players-db.html'
 })
 export default class PlayersDb {
-  public players: Player[] = [];
+  public players: WritableSignal<Player[]> = signal([]);
 
   public colDefs: ColDef[] = [
     {
@@ -32,10 +32,13 @@ export default class PlayersDb {
     },
   ]
 
+  public autoSizeStrategy: AutoSizeStrategy ={
+    type: "fitGridWidth"
+  }
 
   constructor() {
     PlayerService.getApiPlayerGetPlayers().then((response) => {
-      this.players = response;
+      this.players.set(response);
     });
   }
 }

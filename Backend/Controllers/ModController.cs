@@ -20,7 +20,7 @@ public class ModController : ControllerBase
     }
 
     [HttpGet]
-    public Mod? Get(Guid id)
+    public Mod? Get(string id)
     {
         return _modService.Get(id);
     }
@@ -32,7 +32,7 @@ public class ModController : ControllerBase
     }
 
     [HttpDelete]
-    public HttpStatusCode DeleteMod(Guid id)
+    public HttpStatusCode DeleteMod(string id)
     {
         return _modService.RemoveMod(id);
     }

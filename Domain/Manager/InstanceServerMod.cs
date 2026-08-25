@@ -5,12 +5,12 @@ namespace Domain.Manager;
 public class InstanceServerMod
 {
     [ForeignKey(nameof(Instance))]
-    public Guid InstanceId { get; set; }
+    public string InstanceId { get; set; }
     
     public Instance Instance { get; set; }
     
     [ForeignKey(nameof(Mod))]
-    public Guid ModId { get; set; }
+    public string ModId { get; set; }
     
     public Mod Mod { get; set; }
 }

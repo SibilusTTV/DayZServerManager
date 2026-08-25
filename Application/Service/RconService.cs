@@ -82,14 +82,17 @@ public class RconService : IRconService
         }
     }
 
-    public void BanPlayer(Guid guid, string reason, int duration, string name)
+    public HttpStatusCode BanPlayer(string guid, string reason, int duration, string name)
     {
         if (IsConnected())
         {
             _client?.Send(new BanPlayerCommand(guid.ToString(), reason, TimeSpan.FromMinutes(duration))).WaitUntilAcknowledged();
             _logger.LogInformation($"The player {name} was banned for reason \"{reason}\" for {duration} minutes");
             ReloadBans();
+            return HttpStatusCode.OK;
         }
+
+        return HttpStatusCode.ServiceUnavailable;
     }
 
     public void UnbanPlayer(int banId, string name)
@@ -175,11 +178,11 @@ public class RconService : IRconService
             var remainingTime = int.Parse(match.Groups["remainingTime"].Value);
             var reason = match.Groups["reason"].Value;
             
-            var bannedPlayer = playerRepository?.GetBannedServerPlayer(banId, Guid.Parse(guid), reason);
+            var bannedPlayer = playerRepository?.GetBannedServerPlayer(banId, guid, reason);
 
             if (bannedPlayer == null && remainingTime > 0)
             {
-                playerRepository?.CreateNewBan(banId, Guid.Parse(guid), remainingTime, reason);
+                playerRepository?.CreateNewBan(banId, guid, remainingTime, reason);
             }
             else if (bannedPlayer != null && bannedPlayer.Ban != null)
             {
@@ -235,10 +238,10 @@ public class RconService : IRconService
             
             var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
             
-            var player = playerRepository?.GetPlayer(Guid.Parse(guid));
+            var player = playerRepository?.GetPlayer(guid);
             if (player == null)
             {
-                playerRepository?.CreateEditPlayer(new Player(Guid.Parse(guid), name, "", isVerified, ip));
+                playerRepository?.CreateEditPlayer(new Player(guid, name, "", isVerified, ip));
             }
         }
         ConnectedPlayers = onlinePlayers;

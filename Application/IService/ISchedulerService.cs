@@ -1,3 +1,4 @@
+using System.Net;
 using Application.Service;
 using Domain.Manager;
 using Domain.Scheduler;
@@ -13,7 +14,7 @@ public interface ISchedulerService
     public bool Connect();
     public SchedulerInformation GetSchedulerInformation();
     public List<string> GetWhitelistedPlayers(string serverFolderName);
-    public void SaveWhitelistedPlayers(string serverFolderName, List<string> whitelistedPlayers);
+    public HttpStatusCode SaveWhitelistedPlayers(string serverFolderName, List<string> whitelistedPlayers);
     public void Disconnect();
     public void ChangeToNormalMode();
     public void ChangeToUpdateMode();
@@ -21,11 +22,11 @@ public interface ISchedulerService
     public void KillCustomTasks();
     public bool IsConnected();
     public void GetPlayers();
-    public void KickPlayer(string guid, string reason, string name);
-    public void BanPlayer(Guid serverPlayerId, string reason, int duration);
-    public void UnbanPlayer(Guid serverPlayerId);
-    public void WhitelistPlayer(Guid serverPlayerId, string name, string serverFolderName);
-    public void UnwhitelistPlayer(Guid serverPlayerId, string name, string serverFolderName);
+    public void KickPlayer(string id, string reason, string name);
+    public HttpStatusCode BanPlayer(string serverPlayerId, string reason, int duration);
+    public HttpStatusCode UnbanPlayer(string serverPlayerId);
+    public HttpStatusCode WhitelistPlayer(string serverPlayerId, string name);
+    public void UnwhitelistPlayer(string serverPlayerId, string name);
     public void SendCommand(string command);
     public void Shutdown();
     public void LoadBans();

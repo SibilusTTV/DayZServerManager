@@ -19,6 +19,7 @@ export type { RarityFile } from './models/RarityFile';
 export type { RarityItem } from './models/RarityItem';
 export type { ServerConfig } from './models/ServerConfig';
 export type { ServerInformation } from './models/ServerInformation';
+export type { ServerPlayerInformation } from './models/ServerPlayerInformation';
 export type { SteamCredentials } from './models/SteamCredentials';
 export type { SteamInformation } from './models/SteamInformation';
 
@@ -26,5 +27,6 @@ export { InstanceService } from './services/InstanceService';
 export { ModService } from './services/ModService';
 export { PlayerService } from './services/PlayerService';
 export { RarityService } from './services/RarityService';
+export { SchedulerService } from './services/SchedulerService';
 export { ServerConfigService } from './services/ServerConfigService';
 export { SteamService } from './services/SteamService';

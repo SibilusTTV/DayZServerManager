@@ -5,10 +5,10 @@ namespace Domain.Scheduler;
 
 public class SchedulerConfig
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     
     [ForeignKey(nameof(Instance))]
-    public Guid InstanceId { get; set; }
+    public string InstanceId { get; set; }
     
     public bool UseNickFilter { get; set; }
     public string FilteredNickMsg { get; set; }
@@ -17,6 +17,7 @@ public class SchedulerConfig
 
     public SchedulerConfig()
     {
+        Id = Guid.NewGuid().ToString().ToLower();
         UseNickFilter = true;
         FilteredNickMsg = "You are using forbidden words in your user name";
         BadNames = new List<string>();

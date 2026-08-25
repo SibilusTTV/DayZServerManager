@@ -23,7 +23,7 @@ public class InstanceController : ControllerBase
     }
 
     [HttpGet]
-    public void StartServer(Guid id)
+    public void StartServer(string id)
     {
         var steamCmdStatus = _steamCmdService.GetSteamInformation().steamCmdStatus;
         
@@ -31,25 +31,25 @@ public class InstanceController : ControllerBase
     }
 
     [HttpGet]
-    public void StopServer(Guid id)
+    public void StopServer(string id)
     {
         _instanceService.StopServer(id);
     }
 
     [HttpDelete]
-    public void RemoveServer(Guid id)
+    public void RemoveServer(string id)
     {
         _instanceService.RemoveServer(id);
     }
     
     [HttpGet]
-    public ServerInformation? GetServerInformation(Guid id)
+    public ServerInformation? GetServerInformation(string id)
     {
         return _instanceService.GetServerInformation(id);
     }
 
     [HttpGet]
-    public Instance? GetInstance(Guid id)
+    public Instance? GetInstance(string id)
     {
         return _instanceService.GetInstance(id);
     }

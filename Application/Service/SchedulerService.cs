@@ -1,3 +1,4 @@
+using System.Net;
 using Application.Handlers;
 using Application.IRepository;
 using Application.IService;
@@ -104,16 +105,11 @@ public class SchedulerService : ISchedulerService
         return schedulerRepository?.LoadWhitelistedPlayers(serverFolderName) ?? [];
     }
 
-    public void SaveWhitelistedPlayers(string serverFolderName, List<string> whitelistedPlayers)
+    public HttpStatusCode SaveWhitelistedPlayers(string serverFolderName, List<string> whitelistedPlayers)
     {
         var schedulerRepository = _serverScope.ServiceProvider.GetService<ISchedulerRepository>();
-        schedulerRepository?.SaveWhitelistedPlayers(serverFolderName, whitelistedPlayers);
+        return schedulerRepository?.SaveWhitelistedPlayers(serverFolderName, whitelistedPlayers) ?? HttpStatusCode.InternalServerError;
     }
-
-    // public List<ServerPlayer> GetServerPlayers()
-    // {
-    //     
-    // }
 
     public void ChangeToNormalMode()
     {
@@ -157,72 +153,81 @@ public class SchedulerService : ISchedulerService
         RconClient?.GetPlayers();
     }
 
-    public void KickPlayer(string guid, string reason, string name)
+    public void KickPlayer(string id, string reason, string name)
     {
-        var connectedPlayer = RconClient?.ConnectedPlayers.Find(x => x.Guid == guid);
+        var connectedPlayer = RconClient?.ConnectedPlayers.Find(x => x.Guid == id);
         if (connectedPlayer != null)
         {
             RconClient?.KickPlayer(connectedPlayer.Id, reason, name);
         }
     }
 
-    public void BanPlayer(Guid serverPlayerId, string reason, int duration)
+    public HttpStatusCode BanPlayer(string serverPlayerId, string reason, int duration)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         
+        var player = playerRepository?.GetServerPlayer(serverPlayerId);
+        
+        if (player == null) return HttpStatusCode.NotFound;
+        
+        return RconClient?.BanPlayer(player.Player.Guid, reason, duration, player.Player.Name) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public HttpStatusCode UnbanPlayer(string serverPlayerId)
+    {
+        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
+        
+        var player = playerRepository?.GetServerPlayer(serverPlayerId);
+
+        if (player?.Ban == null) return HttpStatusCode.NotFound;
+        RconClient?.UnbanPlayer(player.Ban.BanId, player.Player.Name);
+        return playerRepository?.RemoveBan(player.Ban.Id) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public HttpStatusCode WhitelistPlayer(string serverPlayerId, string name)
+    {
+        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
+        var player = playerRepository?.GetServerPlayer(serverPlayerId);
+        
+        if (player == null) return HttpStatusCode.NotFound;
+        
+        var instanceService = _serverScope.ServiceProvider.GetService<IInstanceService>();
+        var instance = instanceService?.GetInstance(player.InstanceId);
+        
+        if (instance == null) return HttpStatusCode.NotFound;
+        var whitelistedPlayers = GetWhitelistedPlayers(instance.serverFolder);
+
+        playerRepository?.WhitelistPlayer(player.Id);
+        if (!whitelistedPlayers.Contains(player.Player.Uid))
+        {
+            whitelistedPlayers.Add(player.Player.Uid);
+        }
+
+        _logger.LogInformation($"{name} was whitelisted");
+        return SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
+    }
+
+    public void UnwhitelistPlayer(string serverPlayerId, string name)
+    {
+        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         var player = playerRepository?.GetServerPlayer(serverPlayerId);
         
         if (player == null) return;
         
-        RconClient?.BanPlayer(player.Player.Guid, reason, duration, player.Player.Name);
-    }
-
-    public void UnbanPlayer(Guid serverPlayerId)
-    {
-        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
+        var instanceService = _serverScope.ServiceProvider.GetService<IInstanceService>();
+        var instance = instanceService?.GetInstance(player.InstanceId);
         
-        var player = playerRepository?.GetServerPlayer(serverPlayerId);
-
-        if (player?.Ban == null) return;
-        RconClient?.UnbanPlayer(player.Ban.BanId, player.Player.Name);
-        playerRepository?.RemoveBan(player.Ban.Id);
-    }
-
-    public void WhitelistPlayer(Guid serverPlayerId, string name, string serverFolderName)
-    {
-        var whitelistedPlayers = GetWhitelistedPlayers(serverFolderName);
-        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
-        var player = playerRepository?.GetServerPlayer(serverPlayerId);
-
-        if (player != null)
+        if (instance == null) return;
+        
+        var whitelistedPlayers = GetWhitelistedPlayers(instance.serverFolder);
+        
+        playerRepository?.UnWhitelistPlayer(player.Id);
+        if (whitelistedPlayers.Contains(player.Player.Uid))
         {
-            playerRepository?.WhitelistPlayer(player.Id);
-            if (!whitelistedPlayers.Contains(player.Player.Uid))
-            {
-                whitelistedPlayers.Add(player.Player.Uid);
-            }
+            whitelistedPlayers.Remove(player.Player.Uid);
         }
 
-        SaveWhitelistedPlayers(serverFolderName, whitelistedPlayers);
-        _logger.LogInformation($"{name} was whitelisted");
-    }
-
-    public void UnwhitelistPlayer(Guid serverPlayerId, string name, string serverFolderName)
-    {
-        var whitelistedPlayers = GetWhitelistedPlayers(serverFolderName);
-        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
-        var player = playerRepository?.GetServerPlayer(serverPlayerId);
-        
-        if (player != null)
-        {
-            playerRepository?.UnWhitelistPlayer(player.Id);
-            if (whitelistedPlayers.Contains(player.Player.Uid))
-            {
-                whitelistedPlayers.Remove(player.Player.Uid);
-            }
-        }
-
-        SaveWhitelistedPlayers(serverFolderName, whitelistedPlayers);
+        SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
         _logger.LogInformation($"{name} was unwhitelisted");
     }
 

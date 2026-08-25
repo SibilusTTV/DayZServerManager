@@ -2,7 +2,7 @@ namespace Domain.Manager;
 
 public class Instance
 {
-    public Guid id { get; set; }
+    public string id { get; set; }
     public int instanceId { get; set; }
     public string serverFolder { get; set; }
     public string hostName { get; set; }
@@ -40,9 +40,9 @@ public class Instance
         
     }
     
-    public Instance(Guid id)
+    public Instance(Guid guid)
     {
-        this.id = id;
+        id = guid.ToString().ToLower();
         instanceId = 1;
         serverFolder = "server";
         hostName = "Testserver";
@@ -83,7 +83,7 @@ public class Instance
     
     public Instance(int instanceId, string serverFolder, int steamPort, int serverPort, int steamQueryPort, int rConPort, List<Mod> clientMods)
     {
-        this.id = Guid.NewGuid();
+        this.id = Guid.NewGuid().ToString().ToLower();
         this.instanceId = instanceId;
         this.serverFolder = serverFolder;
         this.hostName = "Testserver " + instanceId;

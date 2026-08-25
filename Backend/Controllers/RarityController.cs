@@ -19,13 +19,13 @@ public class RarityController : ControllerBase
     }
 
     [HttpGet]
-    public RarityFile? Get(Guid instanceId, string name)
+    public RarityFile? Get(string instanceId, string name)
     {
         return _rarityService.Get(instanceId, name);
     }
 
     [HttpPut]
-    public void Update(Guid instanceId, string name, RarityFile rarityFile)
+    public void Update(string instanceId, string name, RarityFile rarityFile)
     {
         _rarityService.UpdateRaritiesAndTypes(instanceId, name, rarityFile);
     }

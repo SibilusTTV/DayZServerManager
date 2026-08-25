@@ -4,7 +4,7 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatIcon} from '@angular/material/icon';
 import {CustomMessage, Instance, InstanceService, Mod} from '../../../../api';
 import {ActivatedRoute} from '@angular/router';
-import InstanceConfig from '../../../../components/instance-config';
+import InstanceConfig from '../../../../components/instance-config/instance-config';
 
 @Component({
   selector: 'instance-config-editor',

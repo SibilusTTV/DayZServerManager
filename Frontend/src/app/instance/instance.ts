@@ -38,6 +38,10 @@ export default class Instance {
     return "instance/" + this.id + "/server-config-editor";
   }
 
+  public getServerPlayersDbRoute(){
+    return "instance/" + this.id + "/server-players-db";
+  }
+
   public getVanillaRaritiesRoute(){
     return "instance/" + this.id + "/vanilla-rarities";
   }

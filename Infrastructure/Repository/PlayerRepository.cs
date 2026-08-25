@@ -1,3 +1,4 @@
+using System.Net;
 using Application.IRepository;
 using Domain.Scheduler;
 using Infrastructure.Context;
@@ -35,7 +36,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public Player? GetPlayer(Guid id)
+    public Player? GetPlayer(string id)
     {
         lock (_configDbContext)
         {
@@ -43,6 +44,7 @@ public class PlayerRepository : IPlayerRepository
             {
                 return _configDbContext.PLAYERS
                     .AsNoTracking()
+                    .ToArray()
                     .FirstOrDefault(x => x.Guid == id);
             }
             catch (Exception ex)
@@ -72,7 +74,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<string> GetWhitelistedPlayerNames(Guid instanceId)
+    public List<string> GetWhitelistedPlayerNames(string instanceId)
     {
         lock (_configDbContext)
         {
@@ -92,13 +94,15 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public void WhitelistPlayer(Guid serverPlayerId)
+    public void WhitelistPlayer(string serverPlayerId)
     {
         lock (_configDbContext)
         {
             try
             {
-                var playerDb = _configDbContext.SERVER_PLAYERS.FirstOrDefault(x => x.Id == serverPlayerId);
+                var playerDb = _configDbContext.SERVER_PLAYERS
+                    .ToArray()
+                    .FirstOrDefault(x => x.Id == serverPlayerId);
                 if (playerDb == null) return;
                 playerDb.IsWhitelisted = true;
                 _configDbContext.SaveChanges();
@@ -110,7 +114,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public void UnWhitelistPlayer(Guid serverPlayerId)
+    public void UnWhitelistPlayer(string serverPlayerId)
     {
         lock (_configDbContext)
         {
@@ -153,7 +157,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<ServerPlayer> GetServerPlayersForInstance(Guid instanceId)
+    public List<ServerPlayer> GetServerPlayersForInstance(string instanceId)
     {
         lock (_configDbContext)
         {
@@ -174,7 +178,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public ServerPlayer? GetServerPlayer(Guid playerId)
+    public ServerPlayer? GetServerPlayer(string playerId)
     {
         lock (_configDbContext)
         {
@@ -182,6 +186,7 @@ public class PlayerRepository : IPlayerRepository
             {
                 return _configDbContext.SERVER_PLAYERS
                     .AsNoTracking()
+                    .ToArray()
                     .FirstOrDefault(x => x.Id == playerId);
             }
             catch (Exception ex)
@@ -192,23 +197,32 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<ServerPlayerInformation> GetServerPlayerInformationForInstance(Guid instanceId)
+    public List<ServerPlayerInformation> GetServerPlayerInformationForInstance(string instanceId)
     {
         lock (_configDbContext)
         {
             try
             {
-                return _configDbContext.PLAYERS
-                    .LeftJoin(_configDbContext.SERVER_PLAYERS,
-                        player => player.Guid,
-                        serverPlayer => serverPlayer.Id,
-                        (player, serverPlayer) => new ServerPlayerInformation(
-                            player.Guid, (serverPlayer != null ? serverPlayer.Id : Guid.NewGuid()), player.Name, player.Uid, player.Ip, player.IsVerified,
-                            (serverPlayer != null && serverPlayer.IsWhitelisted), (serverPlayer != null && serverPlayer.IsBanned),
-                            (serverPlayer != null ? serverPlayer.Role : ""), (serverPlayer != null ? serverPlayer.InstanceId : Guid.NewGuid())
-                        ))
-                    .Where(player => player.InstanceId == instanceId)
-                    .ToList();
+                var result =
+                    from player in _configDbContext.PLAYERS
+                    join sp in _configDbContext.SERVER_PLAYERS
+                            .Where(sp => sp.InstanceId == instanceId)
+                        on player.Guid equals sp.PlayerId into spGroup
+                    from sp in spGroup.DefaultIfEmpty()
+                    select new ServerPlayerInformation(
+                        player.Guid,
+                        sp != null ? sp.Id : null,
+                        player.Name,
+                        player.Uid,
+                        player.Ip,
+                        player.IsVerified,
+                        sp != null && sp.IsWhitelisted,
+                        sp != null && sp.IsBanned,
+                        sp != null ? sp.Role : "",
+                        sp != null ? sp.InstanceId : null
+                    );
+                
+                return result.ToList();
             }
             catch (Exception ex)
             {
@@ -218,7 +232,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
     
-    public void CreateEditServerPlayer(ServerPlayer player)
+    public HttpStatusCode CreateEditServerPlayer(ServerPlayer player)
     {
         lock (_configDbContext)
         {
@@ -232,21 +246,29 @@ public class PlayerRepository : IPlayerRepository
                 if (playerDB == null)
                 {
                     _configDbContext.SERVER_PLAYERS.Add(player);
+                    _configDbContext.SaveChanges();
+                    return HttpStatusCode.Created;
                 }
                 else
                 {
                     _configDbContext.Entry(playerDB).CurrentValues.SetValues(player);
+                    _configDbContext.SaveChanges();
                     if (player.Ban == null && playerDB.Ban != null)
                     {
                         var ban = _configDbContext.BANS.FirstOrDefault(x => x.Id == playerDB.Ban.Id);
-                        if (ban == null) return;
+                        if (ban == null) return HttpStatusCode.NotFound;
                         _configDbContext.BANS.Remove(ban);
+                        _configDbContext.SaveChanges();
                     }
+
+                    return HttpStatusCode.OK;
                 }
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving player");
+                return HttpStatusCode.InternalServerError;
             }
         }
     }
@@ -270,7 +292,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public ServerPlayer? GetBannedServerPlayer(int banId, Guid guid, string reason)
+    public ServerPlayer? GetBannedServerPlayer(int banId, string guid, string reason)
     {
         lock (_configDbContext)
         {
@@ -290,7 +312,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public void CreateNewBan(int banId, Guid guid, int remainingTime, string reason)
+    public void CreateNewBan(int banId, string guid, int remainingTime, string reason)
     {
         lock (_configDbContext)
         {
@@ -313,25 +335,27 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public void RemoveBan(Guid id)
+    public HttpStatusCode RemoveBan(string id)
     {
         lock (_configDbContext)
         {
             try
             {
                 var ban = _configDbContext.BANS.FirstOrDefault(x => x.Id == id);
-                if (ban == null) return;
+                if (ban == null) return HttpStatusCode.NotFound;
                 _configDbContext.BANS.Remove(ban);
                 _configDbContext.SaveChanges();
+                return HttpStatusCode.OK;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error removing ban");
+                return HttpStatusCode.InternalServerError;
             }
         }
     }
     
-    public void UpdateRemainingTime(Guid id, int remainingTime)
+    public void UpdateRemainingTime(string id, int remainingTime)
     {
         lock (_configDbContext)
         {

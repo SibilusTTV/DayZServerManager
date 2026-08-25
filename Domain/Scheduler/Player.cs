@@ -6,7 +6,7 @@ namespace Domain.Scheduler;
 public class Player
 {
     [Key]
-    public Guid Guid { get; set; }
+    public string Guid { get; set; }
     public string Name { get; set; }
     public string Uid { get; set; }
     public bool IsVerified { get; set; }
@@ -18,9 +18,9 @@ public class Player
     }
     
     [JsonConstructor]
-    public Player(Guid guid, string name, string uid, bool isVerified, string ip)
+    public Player(string guid, string name, string uid, bool isVerified, string ip)
     {
-        Guid = guid;
+        Guid = guid.ToLower();
         Name = name;
         Uid = uid;
         IsVerified = isVerified;

@@ -17,7 +17,7 @@ public class ModService : IModService
         _modRepository = modRepository;
     }
     
-    public Mod? Get(Guid id)
+    public Mod? Get(string id)
     {
         return _modRepository.Get(id);
     }
@@ -32,7 +32,7 @@ public class ModService : IModService
         return _modRepository.GetMods();
     }
 
-    public HttpStatusCode RemoveMod(Guid id)
+    public HttpStatusCode RemoveMod(string id)
     {
         return _modRepository.RemoveMod(id);
     }

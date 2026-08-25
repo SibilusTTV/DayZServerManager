@@ -1,3 +1,4 @@
+using System.Net;
 using Application.IRepository;
 using Domain.Constants;
 using Domain.Scheduler;
@@ -20,7 +21,7 @@ public class SchedulerRepository : ISchedulerRepository
         _configDbContext = configDbContext;
     }
 
-    public SchedulerConfig? Get(Guid instanceId)
+    public SchedulerConfig? Get(string instanceId)
     {
         lock (_configDbContext)
         {
@@ -44,7 +45,8 @@ public class SchedulerRepository : ISchedulerRepository
         {
             try
             {
-                var schedulerConfigDb = _configDbContext.SCHEDULER_CONFIGS.FirstOrDefault(s => s.InstanceId == config.InstanceId);
+                var schedulerConfigDb = _configDbContext.SCHEDULER_CONFIGS
+                    .FirstOrDefault(s => s.InstanceId == config.InstanceId);
                 if (schedulerConfigDb == null)
                 {
                     _configDbContext.SCHEDULER_CONFIGS.Add(config);
@@ -101,7 +103,7 @@ public class SchedulerRepository : ISchedulerRepository
         return whitelistedPlayers;
     }
 
-    public void SaveWhitelistedPlayers(string serverFolderName, List<string> whitelistedPlayers)
+    public HttpStatusCode SaveWhitelistedPlayers(string serverFolderName, List<string> whitelistedPlayers)
     {
         try
         {
@@ -113,10 +115,13 @@ public class SchedulerRepository : ISchedulerRepository
                     writer.WriteLine(whitelistedPlayer);
                 }
             }
+
+            return HttpStatusCode.OK;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error when saving the whitelisted players");
+            return HttpStatusCode.InternalServerError;
         }
     }
 }

@@ -18,7 +18,7 @@ public class InstanceRepository : IInstanceRepository
         _configDbContext = configDbContext;
     }
 
-    public Instance? GetInstance(Guid id)
+    public Instance? GetInstance(string id)
     {
         lock (_configDbContext)
         {
@@ -282,7 +282,7 @@ public class InstanceRepository : IInstanceRepository
         }
     }
 
-    public HttpStatusCode DeleteInstance(Guid id)
+    public HttpStatusCode DeleteInstance(string id)
     {
         lock (_configDbContext)
         {

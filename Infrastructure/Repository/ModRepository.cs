@@ -18,7 +18,7 @@ public class ModRepository : IModRepository
         _configDbContext = configDbContext;
     }
 
-    public Mod? Get(Guid id)
+    public Mod? Get(string id)
     {
         lock (_configDbContext)
         {
@@ -72,7 +72,7 @@ public class ModRepository : IModRepository
         }
     }
 
-    public HttpStatusCode RemoveMod(Guid id)
+    public HttpStatusCode RemoveMod(string id)
     {
         lock (_configDbContext)
         {

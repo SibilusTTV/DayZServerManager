@@ -2,7 +2,7 @@ namespace Domain.Manager;
 
 public class Mod
 {
-    public Guid id { get; set; }
+    public string id { get; set; }
     public string name { get; set; }
     public long workshopID { get; set; }
 
@@ -14,7 +14,7 @@ public class Mod
     
     public Mod(string name, long workshopID)
     {
-        this.id = Guid.NewGuid();
+        id = Guid.NewGuid().ToString().ToLower();
         this.name = name;
         this.workshopID = workshopID;
     }
