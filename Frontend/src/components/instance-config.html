@@ -1,0 +1,194 @@
+
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+  <mat-form-field style="height: 80px; width: 100px;">
+    <mat-label>Instance ID</mat-label>
+    <input matInput disabled [(ngModel)]="instanceId"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 120px;">
+    <mat-label>Server Folder</mat-label>
+    <input matInput [(ngModel)]="serverFolder"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 320px;">
+    <mat-label>Hostname</mat-label>
+    <input matInput [(ngModel)]="hostName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 320px;">
+    <mat-label>Mission Name</mat-label>
+    <input matInput [(ngModel)]="missionName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 320px;">
+    <mat-label>Vanilla Mission Name</mat-label>
+    <input matInput [(ngModel)]="vanillaMissionName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 320px;">
+    <mat-label>Mission Template Name</mat-label>
+    <input matInput [(ngModel)]="missionTemplateName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Server Config Name</mat-label>
+    <input matInput [(ngModel)]="serverConfigName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Profile Name</mat-label>
+    <input matInput [(ngModel)]="profileName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 320px;">
+    <mat-label>Scheduler Config Name</mat-label>
+    <input matInput [(ngModel)]="schedulerConfigName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 100px;">
+    <mat-label>Steam Port</mat-label>
+    <input matInput type="number" [(ngModel)]="steamPort"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 100px;">
+    <mat-label>Server Port</mat-label>
+    <input matInput type="number" [(ngModel)]="serverPort"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 140px;">
+    <mat-label>Steam Query Port</mat-label>
+    <input matInput type="number" [(ngModel)]="steamQueryPort"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 100px;">
+    <mat-label>RCon Port</mat-label>
+    <input matInput type="number" [(ngModel)]="rConPort"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 320px;">
+    <mat-label>RCon Password</mat-label>
+    <input matInput [(ngModel)]="rConPassword"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 100px;">
+    <mat-label>CPU Count</mat-label>
+    <input matInput type="number" [(ngModel)]="cpuCount"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>No File Patching</mat-label>
+    <mat-select [(ngModel)]="noFilePatching">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Do Logs</mat-label>
+    <mat-select [(ngModel)]="doLogs">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Admin Log</mat-label>
+    <mat-select [(ngModel)]="adminLog">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Freeze Check</mat-label>
+    <mat-select [(ngModel)]="freezeCheck">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Net Log</mat-label>
+    <mat-select [(ngModel)]="netLog">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 120px;">
+    <mat-label>Limit FPS</mat-label>
+    <input matInput type="number" [(ngModel)]="limitFPS"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Map Name</mat-label>
+    <input matInput [(ngModel)]="mapName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Restart On Update</mat-label>
+    <mat-select [(ngModel)]="restartOnUpdate">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 120px;">
+    <mat-label>Restart Interval</mat-label>
+    <input matInput type="number" [(ngModel)]="restartInterval"/>
+    <mat-hint>In Hours</mat-hint>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Auto Start Server</mat-label>
+    <mat-select [(ngModel)]="autoStartServer">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Make Backups</mat-label>
+    <mat-select [(ngModel)]="makeBackups">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Delete Backups</mat-label>
+    <mat-select [(ngModel)]="deleteBackups">
+      <mat-option [value]="false">False</mat-option>
+      <mat-option [value]="true">True</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 120px;">
+    <mat-label>Backup Path</mat-label>
+    <input matInput [(ngModel)]="backupPath"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Max Backup Keep Time</mat-label>
+    <input matInput type="number" [(ngModel)]="maxKeepTime"/>
+    <mat-hint>In Days</mat-hint>
+  </mat-form-field>
+</div>
+<div style="display: flex; flex-direction: row; gap: 20px">
+  <div style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+    <div style="display: flex; flex-direction: row; gap: 40px; align-items: center;">
+      <h3>Client Mods</h3>
+      <button mat-icon-button (click)="onAddClientModClick()"><mat-icon>add</mat-icon></button>
+    </div>
+    <ag-grid-angular
+      [columnDefs]="clientColDefs"
+      [rowData]="clientMods()"
+      [defaultColDef]="defaultColDef"
+      style="height: 200px"
+      [stopEditingWhenCellsLoseFocus]="true"
+      [rowDragManaged]="true"
+      (rowDragEnd)="onClientRowDragEnd($event)"
+    />
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1;">
+    <div style="display: flex; flex-direction: row; gap: 40px; align-items: center;">
+      <h3>Server Mods</h3>
+      <button mat-icon-button (click)="onAddServerModClick()"><mat-icon>add</mat-icon></button>
+    </div>
+    <ag-grid-angular
+      [columnDefs]="serverColDefs"
+      [rowData]="serverMods()"
+      [defaultColDef]="defaultColDef"
+      style="height: 200px"
+      [stopEditingWhenCellsLoseFocus]="true"
+      [rowDragManaged]="true"
+      (rowDragEnd)="onServerRowDragEnd($event)"
+    />
+  </div>
+</div>
+<div style="display: flex; flex-direction: row; gap: 40px; align-items: center;">
+  <h3>Custom Messages</h3>
+  <button mat-icon-button (click)="onAddCustomMessageClick()"><mat-icon>add</mat-icon></button>
+</div>
+<ag-grid-angular
+  [columnDefs]="messageColDefs"
+  [rowData]="customMessages()"
+  [defaultColDef]="defaultColDef"
+  style="height: 200px"
+  [stopEditingWhenCellsLoseFocus]="true"
+  [rowDragManaged]="true"
+  (rowDragEnd)="onMessageRowDragEnd($event)"
+  [rowHeight]="60"
+/>

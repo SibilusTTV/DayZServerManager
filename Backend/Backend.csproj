@@ -1,0 +1,88 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <SpaRoot>..\Frontend</SpaRoot>
+        <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
+        <SpaProxyServerUrl>http://0.0.0.0:4200</SpaProxyServerUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+        <ProjectReference Include="..\Frontend\Frontend.esproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+        <ProjectReference Include="..\Application\Application.csproj" />
+        <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+        <ProjectReference Include="..\Migrations\Migrations.csproj" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Compile Remove="Debug\**" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Debug\**" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Content Remove="Debug\**" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <None Remove="Debug\**" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Debug\config.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.chernarusplus\cfgeffectarea.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.chernarusplus\cfggameplay.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.chernarusplus\cfgundergroundtriggers.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.enoch\cfgeffectarea.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.enoch\cfggameplay.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.enoch\cfgundergroundtriggers.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.sakhal\cfgeffectarea.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.sakhal\cfggameplay.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.sakhal\cfgundergroundtriggers.json" />
+      <_ContentIncludedByDefault Remove="Debug\deploy\mpmissions\dayzOffline.sakhal\pra\warheadstorage.json" />
+      <_ContentIncludedByDefault Remove="Debug\scheduler\players_db.json" />
+      <_ContentIncludedByDefault Remove="Debug\scheduler\schedulerConfig1.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.chernarusplus\cfgeffectarea.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.chernarusplus\cfggameplay.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.chernarusplus\cfgundergroundtriggers.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.enoch\cfgeffectarea.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.enoch\cfggameplay.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.enoch\cfgundergroundtriggers.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.sakhal\cfgeffectarea.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.sakhal\cfggameplay.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.sakhal\cfgundergroundtriggers.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\dayzOffline.sakhal\pra\warheadstorage.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\Expansion.ChernarusPlus\cfgeffectarea.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\Expansion.ChernarusPlus\cfggameplay.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\Expansion.ChernarusPlus\cfgundergroundtriggers.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\template.chernarus\customFilesRarities.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\template.chernarus\vanillaRarities.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\mpmissions\template.chernarus\vanillaTypesChanges.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\Profiles\CommunityOnlineTools\Teleports_ChernarusPlus.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\Profiles\CommunityOnlineTools\Weather.json" />
+      <_ContentIncludedByDefault Remove="Debug\server1\Profiles\CommunityOnlineTools\Webhooks.json" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,29 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+  min-height: 600px;
+  min-width: 800px;
+}
+app-root {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+app-home,
+players-db {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+  margin: 20px;
+}
+.table-container-div{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: stretch;
+  flex: 1;
+}
+instance-root {
+  margin: 20px;
+}

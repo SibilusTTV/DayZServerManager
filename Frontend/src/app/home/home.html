@@ -1,0 +1,26 @@
+
+<header style="display: flex; gap: 10px;">
+  <mat-form-field style="height: 80px;">
+    <mat-label>Steam Username</mat-label>
+    <input matInput [(ngModel)]="steamUsername"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px;">
+    <mat-label>Steam Password</mat-label>
+    <input matInput type="password" [(ngModel)]="steamPassword"/>
+  </mat-form-field>
+  <div style="display: flex; height: 60px; align-items: center">
+    <button mat-icon-button (click)="onSaveClicked()" ><mat-icon>save</mat-icon></button>
+  </div>
+  <div style="display: flex; height: 60px; align-items: center">
+    <button matButton="elevated" (click)="onNewInstanceClicked()">Create new Instance</button>
+  </div>
+</header>
+
+<div class="table-container-div">
+  <ag-grid-angular
+    [columnDefs]="colDefs"
+    [rowData]="instances()"
+    (rowDoubleClicked)="onRowDoubleClick($event)"
+    style="width: 100%; flex: 1"
+  />
+</div>

@@ -1,0 +1,11 @@
+<h2 mat-dialog-title>Steam Guard</h2>
+<mat-dialog-content>
+  <mat-form-field>
+    <mat-label>Steam Guard</mat-label>
+    <input matInput [(ngModel)]="steamGuard"/>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button matButton (click)="onNoClick()">No Thanks</button>
+  <button matButton (click)="onOkClick()">Ok</button>
+</mat-dialog-actions>

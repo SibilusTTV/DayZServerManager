@@ -1,0 +1,1 @@
+npx openapi-typescript-codegen --input ./src/swagger/swagger.json --output ./src/api -c fetch --useUnionTypes

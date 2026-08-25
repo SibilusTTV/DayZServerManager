@@ -1,0 +1,1230 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Backend",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/Instance/StartServer": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Instance/StopServer": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Instance/RemoveServer": {
+      "delete": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Instance/GetServerInformation": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerInformation"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerInformation"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerInformation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GetInstance": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/GetInstances": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/CreateEmptyInstance": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Instance/CreateServer": {
+      "post": {
+        "tags": [
+          "Instance"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Instance/UpdateInstance": {
+      "put": {
+        "tags": [
+          "Instance"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Instance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Mod/Get": {
+      "get": {
+        "tags": [
+          "Mod"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mod"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mod"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mod"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Mod/GetMods": {
+      "get": {
+        "tags": [
+          "Mod"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Mod"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Mod"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Mod"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Mod/DeleteMod": {
+      "delete": {
+        "tags": [
+          "Mod"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpStatusCode"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpStatusCode"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpStatusCode"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Player/GetPlayers": {
+      "get": {
+        "tags": [
+          "Player"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Player"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Player"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Player"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Rarity/Get": {
+      "get": {
+        "tags": [
+          "Rarity"
+        ],
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RarityFile"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RarityFile"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RarityFile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Rarity/Update": {
+      "put": {
+        "tags": [
+          "Rarity"
+        ],
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RarityFile"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RarityFile"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RarityFile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ServerConfig/Get": {
+      "get": {
+        "tags": [
+          "ServerConfig"
+        ],
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerConfig"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerConfig"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ServerConfig/Post": {
+      "post": {
+        "tags": [
+          "ServerConfig"
+        ],
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerConfig"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerConfig"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpStatusCode"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpStatusCode"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpStatusCode"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Steam/GetSteamInformation": {
+      "get": {
+        "tags": [
+          "Steam"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SteamInformation"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SteamInformation"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SteamInformation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Steam/WriteSteamGuard": {
+      "post": {
+        "tags": [
+          "Steam"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Steam/GetSteamCredentials": {
+      "get": {
+        "tags": [
+          "Steam"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SteamCredentials"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SteamCredentials"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SteamCredentials"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Steam/SaveSteamCredentials": {
+      "post": {
+        "tags": [
+          "Steam"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SteamCredentials"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SteamCredentials"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SteamCredentials"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConnectedPlayer": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "guid": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ping": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isVerified": {
+            "type": "boolean"
+          },
+          "isInLobby": {
+            "type": "boolean"
+          },
+          "ip": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CustomMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isTimeOfDay": {
+            "type": "boolean"
+          },
+          "waitTime": {
+            "type": "string",
+            "format": "date-span"
+          },
+          "interval": {
+            "type": "string",
+            "format": "date-span"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DataType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "HttpStatusCode": {
+        "enum": [
+          100,
+          101,
+          102,
+          103,
+          200,
+          201,
+          202,
+          203,
+          204,
+          205,
+          206,
+          207,
+          208,
+          226,
+          300,
+          301,
+          302,
+          303,
+          304,
+          305,
+          306,
+          307,
+          308,
+          400,
+          401,
+          402,
+          403,
+          404,
+          405,
+          406,
+          407,
+          408,
+          409,
+          410,
+          411,
+          412,
+          413,
+          414,
+          415,
+          416,
+          417,
+          421,
+          422,
+          423,
+          424,
+          426,
+          428,
+          429,
+          431,
+          451,
+          500,
+          501,
+          502,
+          503,
+          504,
+          505,
+          506,
+          507,
+          508,
+          510,
+          511
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Instance": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instanceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "serverFolder": {
+            "type": "string",
+            "nullable": true
+          },
+          "hostName": {
+            "type": "string",
+            "nullable": true
+          },
+          "missionName": {
+            "type": "string",
+            "nullable": true
+          },
+          "vanillaMissionName": {
+            "type": "string",
+            "nullable": true
+          },
+          "missionTemplateName": {
+            "type": "string",
+            "nullable": true
+          },
+          "serverConfigName": {
+            "type": "string",
+            "nullable": true
+          },
+          "profileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "steamPort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "serverPort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "steamQueryPort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rConPort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rConPassword": {
+            "type": "string",
+            "nullable": true
+          },
+          "cpuCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noFilePatching": {
+            "type": "boolean"
+          },
+          "doLogs": {
+            "type": "boolean"
+          },
+          "adminLog": {
+            "type": "boolean"
+          },
+          "freezeCheck": {
+            "type": "boolean"
+          },
+          "netLog": {
+            "type": "boolean"
+          },
+          "limitFPS": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mapName": {
+            "type": "string",
+            "nullable": true
+          },
+          "restartOnUpdate": {
+            "type": "boolean"
+          },
+          "restartInterval": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "autoStartServer": {
+            "type": "boolean"
+          },
+          "makeBackups": {
+            "type": "boolean"
+          },
+          "deleteBackups": {
+            "type": "boolean"
+          },
+          "backupPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "maxKeepTime": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "clientMods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Mod"
+            },
+            "nullable": true
+          },
+          "serverMods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Mod"
+            },
+            "nullable": true
+          },
+          "customMessages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomMessage"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Mod": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "workshopID": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Player": {
+        "type": "object",
+        "properties": {
+          "guid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "uid": {
+            "type": "string",
+            "nullable": true
+          },
+          "isVerified": {
+            "type": "boolean"
+          },
+          "ip": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PropertyValue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "propertyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dataType": {
+            "$ref": "#/components/schemas/DataType"
+          },
+          "value": {
+            "nullable": true
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RarityFile": {
+        "type": "object",
+        "properties": {
+          "itemRarity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RarityItem"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RarityItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "rarity": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServerConfig": {
+        "type": "object",
+        "properties": {
+          "properties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PropertyValue"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServerInformation": {
+        "type": "object",
+        "properties": {
+          "managerStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "dayzServerStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "playersCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConnectedPlayer"
+            },
+            "nullable": true
+          },
+          "chatLog": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminLog": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SteamCredentials": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "steamUsername": {
+            "type": "string",
+            "nullable": true
+          },
+          "steamPassword": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SteamInformation": {
+        "type": "object",
+        "properties": {
+          "steamCmdStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "steamUpdateLoop": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Instance"
+    },
+    {
+      "name": "Mod"
+    },
+    {
+      "name": "Player"
+    },
+    {
+      "name": "Rarity"
+    },
+    {
+      "name": "ServerConfig"
+    },
+    {
+      "name": "Steam"
+    }
+  ]
+}

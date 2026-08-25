@@ -1,0 +1,13 @@
+<mat-toolbar style="display: flex; gap: 10px;">
+  <a matButton="elevated" [href]="getOverviewRoute()">Overview</a>
+  <a matButton="elevated" [href]="getInstanceConfigEditorRoute()">Modify Instance</a>
+  <a matButton="elevated" [href]="getServerConfigEditorRoute()">Modify Server Config</a>
+  <button matButton="elevated" [matMenuTriggerFor]="menu">Modify Rarity Config</button>
+  <mat-menu #menu="matMenu">
+    <a mat-menu-item [href]="getVanillaRaritiesRoute()">Vanilla Rarities</a>
+    <a mat-menu-item [href]="getCustomFilesRaritiesRoute()">Custom Files Rarities</a>
+    <a mat-menu-item [href]="getExpansionRaritiesRoute()">Expansion Rarities</a>
+  </mat-menu>
+</mat-toolbar>
+
+<router-outlet />
