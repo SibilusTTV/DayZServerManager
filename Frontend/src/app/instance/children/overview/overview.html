@@ -9,15 +9,15 @@
   <div style="display: flex; flex-direction: row; gap: 20px;">
     <mat-form-field style="height: 80px; width: 160px;">
       <mat-label>Manager Status</mat-label>
-      <input matInput disabled [value]="serverInformation().managerStatus" style="color: black;"/>
+      <input matInput disabled [value]="serverInformation().managerStatus"/>
     </mat-form-field>
     <mat-form-field style="height: 80px; width: 160px;">
       <mat-label>DayZ Server Status</mat-label>
-      <input matInput disabled [value]="serverInformation().dayzServerStatus" style="color: black;"/>
+      <input matInput disabled [value]="serverInformation().dayzServerStatus"/>
     </mat-form-field>
     <mat-form-field style="height: 80px; width: 160px;">
       <mat-label>Player Count</mat-label>
-      <input matInput disabled [value]="serverInformation().playersCount" style="color: black;"/>
+      <input matInput disabled [value]="serverInformation().playersCount"/>
     </mat-form-field>
   </div>
 </div>
@@ -28,6 +28,7 @@
   <ag-grid-angular
     [columnDefs]="ColDefs"
     [rowData]="serverInformation().players"
-    style="width: 100%; flex: 1;"
+    [autoSizeStrategy]="autoSizeStrategy"
+    class="full-width-grid"
   />
 </div>

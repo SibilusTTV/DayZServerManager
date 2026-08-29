@@ -7,7 +7,7 @@ import {
   MatDialogRef,
   MatDialogTitle
 } from '@angular/material/dialog';
-import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
+import {MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input';
 import {FormsModule} from '@angular/forms';
 import {MatButton} from '@angular/material/button';
 
@@ -26,7 +26,8 @@ export interface BanWindowProps {
     MatDialogContent,
     MatDialogActions,
     MatButton,
-    MatDialogTitle
+    MatDialogTitle,
+    MatHint
   ],
   templateUrl: './ban-window.html'
 })

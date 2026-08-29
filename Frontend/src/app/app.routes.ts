@@ -7,6 +7,7 @@ import PlayersDb from './players-db/players-db';
 import ServerPlayersDb from './instance/children/server-players-db/server-players-db';
 import ModList from './mod-list/mod-list';
 import ServerConfigEditor from './instance/children/server-config-editor/server-config-editor';
+import {RarityEditor} from './instance/children/rarity-editor/rarity-editor';
 
 export const routes: Routes = [
   {
@@ -44,6 +45,10 @@ export const routes: Routes = [
       {
         path: 'server-players-db',
         component: ServerPlayersDb
+      },
+      {
+        path: ':rarity',
+        component: RarityEditor
       }
     ]
   }

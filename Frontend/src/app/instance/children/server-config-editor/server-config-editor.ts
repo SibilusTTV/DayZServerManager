@@ -25,16 +25,19 @@ export default class ServerConfigEditor {
     {
       field: "propertyName",
       maxWidth: 320,
-      editable: params => this.isEditable(params)
+      editable: params => this.isEditable(params),
+      filter: true
     },
     {
       field: "value",
       maxWidth: 320,
-      editable: params => this.isEditable(params)
+      editable: params => this.isEditable(params),
+      filter: true
     },
     {
       field: "comment",
-      editable: true
+      editable: true,
+      filter: true
     },
     {
       cellRenderer: ServerConfigActionsCell,

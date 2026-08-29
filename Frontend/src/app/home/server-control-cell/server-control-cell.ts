@@ -36,10 +36,4 @@ export default class ServerControlCell implements ICellRendererAngularComp{
   public onStopClicked(){
     InstanceService.getApiInstanceStopServer(this.id).then();
   }
-
-  public onRemoveClicked(){
-    InstanceService.deleteApiInstanceRemoveServer(this.id).then(() => {
-      this.params.reloadManager();
-    });
-  }
 }

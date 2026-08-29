@@ -1,0 +1,28 @@
+
+<div style="display: flex; flex-direction: row; gap: 10px; align-items: center;">
+  <button matIconButton (click)="onAddClick()"><mat-icon>add</mat-icon></button>
+  <h3>Bulk:</h3>
+  <button matButton (click)="onBulkEditClick(0)">Empty (0)</button>
+  <button matButton (click)="onBulkEditClick(1)">Poor (1)</button>
+  <button matButton (click)="onBulkEditClick(2)">Common (2)</button>
+  <button matButton (click)="onBulkEditClick(3)">Uncommon (3)</button>
+  <button matButton (click)="onBulkEditClick(4)">Rare (4)</button>
+  <button matButton (click)="onBulkEditClick(5)">Epic (5)</button>
+  <button matButton (click)="onBulkEditClick(6)">Legendary (6)</button>
+  <button matButton (click)="onBulkEditClick(7)">Mythic (7)</button>
+  <button matButton (click)="onBulkEditClick(8)">Exotic (8)</button>
+  <button matButton (click)="onBulkEditClick(9)">Quest (9)</button>
+  <button matButton (click)="onBulkEditClick(10)">Collectable (10)</button>
+  <button matButton (click)="onBulkEditClick(11)">Ingredient (11)</button>
+</div>
+
+<div class="table-container-div">
+  <ag-grid-angular
+    [columnDefs]="ColDefs"
+    [rowData]="rarities()"
+    class="full-width-grid"
+    [rowSelection]="rowSelection"
+    (selectionChanged)="onSelectionChange($event)"
+    [autoSizeStrategy]="autoSizeStrategy"
+  />
+</div>

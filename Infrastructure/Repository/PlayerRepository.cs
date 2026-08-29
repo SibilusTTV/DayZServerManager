@@ -533,7 +533,7 @@ public class PlayerRepository : IPlayerRepository
             }
 
             var players = Directory.GetFiles(Path.Combine(profileFolder, Folders.PermissionFolderName,
-                Folders.RolesFolderName));
+                Folders.PlayersFolderName));
             
             foreach (var playerFile in players)
             {
@@ -558,6 +558,8 @@ public class PlayerRepository : IPlayerRepository
                 }
                 else
                 {
+                    if (serverPlayer.RoleId == role.Id) continue;
+                    
                     serverPlayer.Role = role;
                 }
                 

@@ -25,7 +25,7 @@ public class JsonSerializerRepository : IJsonSerializerRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error when serializing json file");
+            _logger.LogError(ex, "Error when serializing json file at {path}", path);
         }
     }
 
@@ -47,7 +47,7 @@ public class JsonSerializerRepository : IJsonSerializerRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error when deserializing json file");
+            _logger.LogError(ex, "Error when deserializing json file {path}", path);
             return default(JSONFile);
         }
     }

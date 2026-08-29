@@ -28,4 +28,5 @@ public interface IInstanceService
     public void KickPlayer(string playerGuid, string instanceId, string reason);
     public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId);
     public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId);
+    public void SetMissionNeedsUpdatingForServer(string id);
 }

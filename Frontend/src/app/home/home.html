@@ -21,6 +21,7 @@
     [columnDefs]="colDefs"
     [rowData]="instances()"
     (rowDoubleClicked)="onRowDoubleClick($event)"
-    style="width: 100%; flex: 1"
+    [autoSizeStrategy]="autoSizeStrategy"
+    class="full-width-grid"
   />
 </div>

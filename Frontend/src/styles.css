@@ -27,18 +27,28 @@ app-mod-list{
   align-items: stretch;
   flex: 1;
 }
-instance-config-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 server-config-editor,
 server-players-db,
-instance-overview{
+instance-overview,
+rarity-editor,
+instance-config,
+instance-config-editor{
   display: flex;
   min-height: 100%;
   flex-direction: column;
   align-items: stretch;
   flex: 1;
   gap: 10px;
+}
+.full-width-grid {
+  width: 100%;
+  flex: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  ag-grid-angular {
+    --ag-background-color: black;
+    --ag-foreground-color: white;
+    --ag-browser-color-scheme: dark;
+  }
 }

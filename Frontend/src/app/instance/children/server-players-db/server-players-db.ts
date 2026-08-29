@@ -25,31 +25,39 @@ export default class ServerPlayersDb {
   public colDefs: ColDef[] = [
     {
       field: 'id',
-      headerName: "Guid"
+      headerName: "Guid",
+      filter: true
     },
     {
-      field: 'name'
+      field: 'name',
+      filter: true
     },
     {
-      field: 'uid'
+      field: 'uid',
+      filter: true
     },
     {
-      field: 'isVerified'
+      field: 'isVerified',
+      filter: true
     },
     {
-      field: 'ip'
+      field: 'ip',
+      filter: true
     },
     {
-      field: 'isWhitelisted'
+      field: 'isWhitelisted',
+      filter: true
     },
     {
-      field: 'isBanned'
+      field: 'isBanned',
+      filter: true
     },
     {
       field: 'role',
       cellEditor: "agSelectCellEditor",
       cellEditorParams: this.getCellSelectorArray.bind(this),
-      editable: true
+      editable: true,
+      filter: true
     },
     {
       field: 'id',

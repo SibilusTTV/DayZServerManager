@@ -11,11 +11,13 @@ public class RarityController : ControllerBase
 {
     private readonly ILogger<InstanceController> _logger;
     private readonly IRarityService _rarityService;
+    private readonly IInstanceService _instanceService;
 
-    public RarityController(ILogger<InstanceController> logger, IRarityService rarityService)
+    public RarityController(ILogger<InstanceController> logger, IRarityService rarityService, IInstanceService instanceService)
     {
         _logger = logger;
         _rarityService = rarityService;
+        _instanceService = instanceService;
     }
 
     [HttpGet]
@@ -28,5 +30,6 @@ public class RarityController : ControllerBase
     public void Update(string instanceId, string name, RarityFile rarityFile)
     {
         _rarityService.UpdateRaritiesAndTypes(instanceId, name, rarityFile);
+        _instanceService.SetMissionNeedsUpdatingForServer(instanceId);
     }
 }

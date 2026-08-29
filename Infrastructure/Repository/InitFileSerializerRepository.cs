@@ -22,7 +22,7 @@ public class InitFileSerializerRepository : IInitFileSerializerRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error when serializing init file");
+            _logger.LogError(ex, "Error when serializing init file {path}", path);
         }
     }
     
@@ -35,7 +35,7 @@ public class InitFileSerializerRepository : IInitFileSerializerRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error when deserializing init file");
+            _logger.LogError(ex, "Error when deserializing init file {path}", path);
             return string.Empty;
         }
     }

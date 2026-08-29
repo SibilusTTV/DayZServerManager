@@ -29,7 +29,7 @@ public class ServerConfigRepository : IServerConfigRepository
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error when loading server config");
+                _logger.LogError(ex, "Error when loading server config {configPath}", configPath);
             }
         }
 
@@ -50,7 +50,7 @@ public class ServerConfigRepository : IServerConfigRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving the server config");
+            _logger.LogError(ex, "Error saving the server config {configPath}", serverConfigPath);
         }
     }
 }

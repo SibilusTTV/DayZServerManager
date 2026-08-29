@@ -1,16 +1,55 @@
 
+<h3>General</h3>
 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-  <mat-form-field style="height: 80px; width: 100px;">
+  <mat-form-field style="height: 80px; width: 160px;">
     <mat-label>Instance ID</mat-label>
     <input matInput disabled [(ngModel)]="instanceId"/>
   </mat-form-field>
-  <mat-form-field style="height: 80px; width: 120px;">
+  <mat-form-field style="height: 80px; width: 160px;">
     <mat-label>Server Folder</mat-label>
     <input matInput [(ngModel)]="serverFolder"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Server Config Name</mat-label>
+    <input matInput [(ngModel)]="serverConfigName"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Profile Name</mat-label>
+    <input matInput [(ngModel)]="profileName"/>
   </mat-form-field>
   <mat-form-field style="height: 80px; width: 320px;">
     <mat-label>Hostname</mat-label>
     <input matInput [(ngModel)]="hostName"/>
+  </mat-form-field>
+</div>
+<h3>Ports and Rcon</h3>
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Steam Port</mat-label>
+    <input matInput type="number" [(ngModel)]="steamPort"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Server Port</mat-label>
+    <input matInput type="number" [(ngModel)]="serverPort"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Steam Query Port</mat-label>
+    <input matInput type="number" [(ngModel)]="steamQueryPort"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>RCon Port</mat-label>
+    <input matInput type="number" [(ngModel)]="rConPort"/>
+  </mat-form-field>
+  <mat-form-field style="height: 80px; width: 320px;">
+    <mat-label>RCon Password</mat-label>
+    <input matInput [(ngModel)]="rConPassword"/>
+  </mat-form-field>
+</div>
+<h3>Mission Configs</h3>
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+  <mat-form-field style="height: 80px; width: 160px;">
+    <mat-label>Map Name</mat-label>
+    <input matInput [(ngModel)]="mapName"/>
   </mat-form-field>
   <mat-form-field style="height: 80px; width: 320px;">
     <mat-label>Mission Name</mat-label>
@@ -24,35 +63,10 @@
     <mat-label>Mission Template Name</mat-label>
     <input matInput [(ngModel)]="missionTemplateName"/>
   </mat-form-field>
+</div>
+<h3>Server Start Parameters</h3>
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
   <mat-form-field style="height: 80px; width: 160px;">
-    <mat-label>Server Config Name</mat-label>
-    <input matInput [(ngModel)]="serverConfigName"/>
-  </mat-form-field>
-  <mat-form-field style="height: 80px; width: 160px;">
-    <mat-label>Profile Name</mat-label>
-    <input matInput [(ngModel)]="profileName"/>
-  </mat-form-field>
-  <mat-form-field style="height: 80px; width: 100px;">
-    <mat-label>Steam Port</mat-label>
-    <input matInput type="number" [(ngModel)]="steamPort"/>
-  </mat-form-field>
-  <mat-form-field style="height: 80px; width: 100px;">
-    <mat-label>Server Port</mat-label>
-    <input matInput type="number" [(ngModel)]="serverPort"/>
-  </mat-form-field>
-  <mat-form-field style="height: 80px; width: 140px;">
-    <mat-label>Steam Query Port</mat-label>
-    <input matInput type="number" [(ngModel)]="steamQueryPort"/>
-  </mat-form-field>
-  <mat-form-field style="height: 80px; width: 100px;">
-    <mat-label>RCon Port</mat-label>
-    <input matInput type="number" [(ngModel)]="rConPort"/>
-  </mat-form-field>
-  <mat-form-field style="height: 80px; width: 320px;">
-    <mat-label>RCon Password</mat-label>
-    <input matInput [(ngModel)]="rConPassword"/>
-  </mat-form-field>
-  <mat-form-field style="height: 80px; width: 100px;">
     <mat-label>CPU Count</mat-label>
     <input matInput type="number" [(ngModel)]="cpuCount"/>
   </mat-form-field>
@@ -91,14 +105,13 @@
       <mat-option [value]="true">True</mat-option>
     </mat-select>
   </mat-form-field>
-  <mat-form-field style="height: 80px; width: 120px;">
+  <mat-form-field style="height: 80px; width: 160px;">
     <mat-label>Limit FPS</mat-label>
     <input matInput type="number" [(ngModel)]="limitFPS"/>
   </mat-form-field>
-  <mat-form-field style="height: 80px; width: 160px;">
-    <mat-label>Map Name</mat-label>
-    <input matInput [(ngModel)]="mapName"/>
-  </mat-form-field>
+</div>
+<h3>Restart and Backup</h3>
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
   <mat-form-field style="height: 80px; width: 160px;">
     <mat-label>Restart On Update</mat-label>
     <mat-select [(ngModel)]="restartOnUpdate">
@@ -106,7 +119,7 @@
       <mat-option [value]="true">True</mat-option>
     </mat-select>
   </mat-form-field>
-  <mat-form-field style="height: 80px; width: 120px;">
+  <mat-form-field style="height: 80px; width: 160px;">
     <mat-label>Restart Interval</mat-label>
     <input matInput type="number" [(ngModel)]="restartInterval"/>
     <mat-hint>In Hours</mat-hint>
@@ -132,7 +145,7 @@
       <mat-option [value]="true">True</mat-option>
     </mat-select>
   </mat-form-field>
-  <mat-form-field style="height: 80px; width: 120px;">
+  <mat-form-field style="height: 80px; width: 160px;">
     <mat-label>Backup Path</mat-label>
     <input matInput [(ngModel)]="backupPath"/>
   </mat-form-field>
@@ -152,7 +165,7 @@
       [columnDefs]="clientColDefs"
       [rowData]="clientMods()"
       [defaultColDef]="defaultColDef"
-      style="height: 200px"
+      style="height: 400px"
       [stopEditingWhenCellsLoseFocus]="true"
       [rowDragManaged]="true"
       (rowDragEnd)="onClientRowDragEnd($event)"
@@ -168,7 +181,7 @@
       [columnDefs]="serverColDefs"
       [rowData]="serverMods()"
       [defaultColDef]="defaultColDef"
-      style="height: 200px"
+      style="height: 400px"
       [stopEditingWhenCellsLoseFocus]="true"
       [rowDragManaged]="true"
       (rowDragEnd)="onServerRowDragEnd($event)"
@@ -184,7 +197,7 @@
   [columnDefs]="messageColDefs"
   [rowData]="customMessages()"
   [defaultColDef]="defaultColDef"
-  style="height: 200px"
+  style="height: 400px; align-items: center;"
   [stopEditingWhenCellsLoseFocus]="true"
   [rowDragManaged]="true"
   (rowDragEnd)="onMessageRowDragEnd($event)"

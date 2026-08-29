@@ -36,9 +36,6 @@ public class RconService : IRconService
         _client = new RconClient(ip, port, password);
         _client.ReconnectOnFailure = true;
         _client.MessageReceived += _client_BattlEyeMessageReceived;
-        ConnectedPlayers.Add(
-            new ConnectedPlayer("Sibilus", "122ad483-acf1-461d-9368-48547520b745", 0, 30, true, false, "localhost")
-        );
     }
 
     public bool Connect()
@@ -89,7 +86,7 @@ public class RconService : IRconService
     {
         if (IsConnected())
         {
-            _client?.Send(new BanPlayerCommand(guid.ToString(), reason, TimeSpan.FromMinutes(duration))).WaitUntilAcknowledged();
+            _client?.Send(new BanPlayerCommand(guid, reason, TimeSpan.FromMinutes(duration))).WaitUntilAcknowledged();
             _logger.LogInformation($"The player {name} was banned for reason \"{reason}\" for {duration} minutes");
             ReloadBans();
             return HttpStatusCode.OK;

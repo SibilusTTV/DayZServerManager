@@ -1,6 +1,6 @@
 import {Component, inject, signal, WritableSignal} from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-import type {ColDef} from 'ag-grid-community';
+import type {AutoSizeStrategy, ColDef} from 'ag-grid-community';
 import {RowDoubleClickedEvent} from 'ag-grid-community';
 import {Router} from '@angular/router';
 import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
@@ -39,13 +39,16 @@ export default class Home {
 
   public colDefs: ColDef[] = [
     {
-      field: "instanceId"
+      field: "instanceId",
+      filter: true
     },
     {
-      field: "hostName"
+      field: "hostName",
+      filter: true
     },
     {
-      field: "serverFolder"
+      field: "serverFolder",
+      filter: true
     },
     {
       field: "id",
@@ -60,7 +63,11 @@ export default class Home {
         reloadManager: this.getManagerConfig.bind(this)
       }
     }
-  ]
+  ];
+
+  public autoSizeStrategy: AutoSizeStrategy ={
+    type: "fitGridWidth"
+  }
 
   constructor() {
     this.getManagerConfig();

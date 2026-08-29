@@ -43,14 +43,14 @@ export default class Instance {
   }
 
   public getVanillaRaritiesRoute(){
-    return "instance/" + this.id + "/vanilla-rarities";
+    return "instance/" + this.id + "/vanillaRarities";
   }
 
   public getCustomFilesRaritiesRoute(){
-    return "instance/" + this.id + "/custom-files-rarities";
+    return "instance/" + this.id + "/customFilesRarities";
   }
 
   public getExpansionRaritiesRoute(){
-    return "instance/" + this.id + "/expansion-rarities";
+    return "instance/" + this.id + "/expansionRarities";
   }
 }

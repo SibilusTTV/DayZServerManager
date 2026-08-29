@@ -29,7 +29,7 @@ public class XmlSerializerRepository : IXmlSerializerRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error when serializing xml file");
+            _logger.LogError(ex, "Error when serializing xml file {path}", path);
         }
     }
 
@@ -52,7 +52,7 @@ public class XmlSerializerRepository : IXmlSerializerRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error when deserializing xml file");
+            _logger.LogError(ex, "Error when deserializing xml file {path}", path);
             return default(XMLFile);
         }
     }

@@ -6,7 +6,7 @@ import {MatIcon} from '@angular/material/icon';
 import {FormsModule} from '@angular/forms';
 import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
 import {AgGridAngular} from 'ag-grid-angular';
-import {ColDef} from 'ag-grid-community';
+import {type AutoSizeStrategy, ColDef} from 'ag-grid-community';
 import ServerConfigActionsCell from '../server-config-editor/server-config-actions-cell/server-config-actions-cell';
 import OverviewActionsCell from './overview-actions-cell/overview-actions-cell';
 
@@ -33,28 +33,36 @@ export default class Overview implements OnInit, OnDestroy {
 
   public ColDefs: ColDef[] = [
     {
-      field: "name"
-    },
-    {
-      field: "guid"
-    },
-    {
-      field: "id"
-    },
-    {
-      field: "ping"
-    },
-    {
-      field: "isVerified"
-    },
-    {
-      field: "isInLobby"
-    },
-    {
-      field: "ip"
+      field: "name",
+      filter: true
     },
     {
       field: "guid",
+      filter: true
+    },
+    {
+      field: "id",
+      filter: true
+    },
+    {
+      field: "ping",
+      filter: true
+    },
+    {
+      field: "isVerified",
+      filter: true
+    },
+    {
+      field: "isInLobby",
+      filter: true
+    },
+    {
+      field: "ip",
+      filter: true
+    },
+    {
+      field: "guid",
+      headerName: "Actions",
       cellRenderer: OverviewActionsCell,
       cellRendererParams: (params: any) => ({
         instanceId: this.instanceId,
@@ -62,7 +70,11 @@ export default class Overview implements OnInit, OnDestroy {
       }),
       maxWidth: 160
     }
-  ]
+  ];
+
+  public autoSizeStrategy: AutoSizeStrategy ={
+    type: "fitGridWidth"
+  }
 
   constructor(private route: ActivatedRoute) {
     this.route.params.subscribe(params => {
@@ -94,8 +106,10 @@ export default class Overview implements OnInit, OnDestroy {
   }
 
   public onRemoveClicked(){
-    InstanceService.deleteApiInstanceRemoveServer(this.instanceId).then(() => {
-      this.router.navigate(['/']);
-    });
+    if (confirm("Are you sure you want to remove this server?")) {
+      InstanceService.deleteApiInstanceRemoveServer(this.instanceId).then(() => {
+        this.router.navigate(['/']);
+      });
+    }
   }
 }
