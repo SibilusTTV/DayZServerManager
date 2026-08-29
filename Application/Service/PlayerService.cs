@@ -34,15 +34,88 @@ public class PlayerService : IPlayerService
         return _playerRepository.GetServerPlayerInformationForInstance(id);
     }
 
-    public HttpStatusCode CreateServerPlayer(string playerId, string instanceId, bool isWhitelisted, bool isBanned)
+    public HttpStatusCode CreateServerPlayer(string playerId, string instanceId, bool isWhitelisted, bool isBanned, string roleName)
     {
+        var role = GetRole(roleName, instanceId);
+        
+        if (role == null)
+        {
+            AddRole(roleName, instanceId);
+            role = GetRole(roleName, instanceId);
+            if (role == null) return HttpStatusCode.InternalServerError;
+        }
+        
         var serverPlayer = new ServerPlayer(
             instanceId,
             playerId,
             isWhitelisted,
             isBanned,
-            "everyone");
+            role.Id);
         
         return _playerRepository.CreateEditServerPlayer(serverPlayer);
+    }
+
+    public List<Role> GetRoles(string instanceId)
+    {
+        return _playerRepository.GetRoles(instanceId);
+    }
+
+    public List<string> GetRoleNames(string instanceId)
+    {
+        return _playerRepository.GetRoleNames(instanceId);
+    }
+
+    public Role? GetRole(string name, string instanceId)
+    {
+        return _playerRepository.GetRole(name, instanceId);
+    }
+
+    public HttpStatusCode AddRole(string name, string instanceId)
+    {
+        return _playerRepository.AddRole(name, instanceId);
+    }
+
+    public void ReadOutRoles(string instanceId)
+    {
+        var instance = _instanceRepository.GetInstance(instanceId);
+
+        if (instance == null) return;
+        
+        _playerRepository.ReadOutRoles(Path.Combine(instance.serverFolder, instance.profileName), instanceId);
+    }
+
+    public void ReadOutServerPlayerRoles(string instanceId)
+    {
+        var instance = _instanceRepository.GetInstance(instanceId);
+
+        if (instance == null) return;
+        
+        _playerRepository.ReadOutServerPlayerRoles(Path.Combine(instance.serverFolder, instance.profileName), instanceId);
+    }
+
+    public HttpStatusCode SaveServerPlayerRole(string serverPlayerId, string playerGuid, string instanceId, string roleName)
+    {
+        var instance = _instanceRepository.GetInstance(instanceId);
+        if (instance == null) return HttpStatusCode.NotFound;
+        
+        var role = GetRole(roleName, instanceId);
+        if (role == null) return HttpStatusCode.NotFound;
+        
+        var serverPlayer = _playerRepository.GetServerPlayer(serverPlayerId);
+        if (serverPlayer == null)
+        {
+            var player = GetPlayer(playerGuid);
+            if (player == null) return HttpStatusCode.BadRequest;
+            
+            serverPlayer = new ServerPlayer(instanceId, playerGuid, false, false, role.Id);
+        }
+        else
+        {
+            serverPlayer.Role = role;
+            serverPlayer.RoleId = role.Id;
+        }
+
+        return _playerRepository.SaveServerPlayerRole(Path.Combine(instance.serverFolder, instance.profileName),
+            serverPlayer, roleName);
     }
 }

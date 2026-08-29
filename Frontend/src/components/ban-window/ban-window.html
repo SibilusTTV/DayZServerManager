@@ -1,0 +1,19 @@
+
+<h3 mat-dialog-title>Ban</h3>
+<mat-dialog-content>
+  <p>Please give a reason and a duration</p>
+  <div style="display: flex; flex-direction: row; gap: 10px;">
+    <mat-form-field>
+      <mat-label>Reason</mat-label>
+      <input matInput [(ngModel)]="banReason"/>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Duration</mat-label>
+      <input matInput type="number" [(ngModel)]="banDuration"/>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button matButton (click)="onNoClick()">Cancel</button>
+  <button matButton (click)="onBanClick()">Ban</button>
+</mat-dialog-actions>

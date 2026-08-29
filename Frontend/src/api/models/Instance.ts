@@ -5,7 +5,7 @@
 import type { CustomMessage } from './CustomMessage';
 import type { Mod } from './Mod';
 export type Instance = {
-    id?: string;
+    id?: string | null;
     instanceId?: number;
     serverFolder?: string | null;
     hostName?: string | null;

@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type SteamCredentials = {
-    id?: number;
+    id?: string | null;
     steamUsername?: string | null;
     steamPassword?: string | null;
 };

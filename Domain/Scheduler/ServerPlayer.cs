@@ -23,20 +23,23 @@ public class ServerPlayer
     
     public bool IsWhitelisted { get; set; }
     public bool IsBanned { get; set; }
-    public string Role { get; set; }
+    
+    [ForeignKey(nameof(Role))]
+    public string RoleId { get; set; }
+    public Role Role { get; set; }
 
     public ServerPlayer()
     {
         
     }
     
-    public ServerPlayer(string instanceId, string playerId, bool isWhitelisted, bool isBanned, string role)
+    public ServerPlayer(string instanceId, string playerId, bool isWhitelisted, bool isBanned, string roleId)
     {
         this.Id = Guid.NewGuid().ToString().ToLower();
         InstanceId = instanceId;
         PlayerId = playerId;
         IsWhitelisted = isWhitelisted;
         IsBanned = isBanned;
-        Role = role;
+        RoleId = roleId;
     }
 }

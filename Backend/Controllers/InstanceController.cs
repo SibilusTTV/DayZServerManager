@@ -1,3 +1,4 @@
+using System.Net;
 using Application.IService;
 using Application.Service;
 using Domain.Constants;
@@ -77,5 +78,35 @@ public class InstanceController : ControllerBase
     public void UpdateInstance([FromBody] Instance instance)
     {
         _instanceService.UpdateInstanceConfig(instance);
+    }
+
+    [HttpGet]
+    public IActionResult BanPlayer(string playerGuid, string instanceId, string reason, int duration)
+    {
+        return StatusCode((int)_instanceService.BanPlayer(playerGuid, instanceId, reason, duration));
+    }
+
+    [HttpGet]
+    public IActionResult UnbanPlayer(string playerGuid, string instanceId)
+    {
+        return StatusCode((int)_instanceService.UnbanPlayer(playerGuid, instanceId));
+    }
+
+    [HttpGet]
+    public void KickPlayer(string playerGuid, string instanceId, string reason)
+    {
+        _instanceService.KickPlayer(playerGuid, instanceId, reason);
+    }
+
+    [HttpGet]
+    public void WhitelistPlayer(string playerGuid, string instanceId)
+    {
+        _instanceService.WhitelistPlayer(playerGuid, instanceId);
+    }
+
+    [HttpGet]
+    public void UnwhitelistPlayer(string playerGuid, string instanceId)
+    {
+        _instanceService.UnwhitelistPlayer(playerGuid, instanceId);
     }
 }

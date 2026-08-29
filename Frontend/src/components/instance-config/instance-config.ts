@@ -43,7 +43,6 @@ export default class InstanceConfig {
   @Input() missionTemplateName: WritableSignal<string> = signal("");
   @Input() serverConfigName: WritableSignal<string> = signal("");
   @Input() profileName: WritableSignal<string> = signal("");
-  @Input() schedulerConfigName: WritableSignal<string> = signal("");
   @Input() steamPort: WritableSignal<number> = signal(0);
   @Input() serverPort: WritableSignal<number> = signal(0);
   @Input() steamQueryPort: WritableSignal<number> = signal(0);

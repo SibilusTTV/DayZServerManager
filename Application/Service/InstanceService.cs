@@ -144,21 +144,26 @@ public class InstanceService : IInstanceService, IDisposable
         return instanceRepository?.UpdateInstance(instanceConfig) ?? HttpStatusCode.NotFound;
     }
 
-    public ServerConfig GetServerConfig(string id)
+    public List<PropertyValue> GetServerConfig(string id)
     {
         var server = GetServer(id);
-        return server != null ? server.ServerConfig : new ServerConfig();
+        return server != null ? server.ServerConfig.Properties : [];
     }
 
-    public HttpStatusCode SaveServerConfig(ServerConfig serverConfig, string id)
+    public HttpStatusCode SaveServerConfig(List<PropertyValue> properties, string id)
     {
+        var serverConfig = new ServerConfig()
+        {
+            Properties = properties
+        };
+        
         var instanceConfig = GetInstance(id);
-
+        
         var serverConfigService = _serviceScope.ServiceProvider.GetService<ServerConfigService>();
         if (serverConfigService != null && instanceConfig != null) serverConfigService.UpdateServerConfig(serverConfig, instanceConfig.missionName, instanceConfig.hostName, instanceConfig.instanceId, instanceConfig.steamPort, instanceConfig.steamQueryPort);
         
         var server = GetServer(id);
-        server?.ServerConfig = serverConfig;
+        server?.ServerConfig.Properties = properties;
 
         return HttpStatusCode.OK;
     }
@@ -219,6 +224,36 @@ public class InstanceService : IInstanceService, IDisposable
         }
         _steamCmdService.Dispose();
         _servers.Clear();
+    }
+
+    public HttpStatusCode BanPlayer(string playerGuid, string instanceId, string reason, int duration)
+    {
+        var server = GetServer(instanceId);
+        return server?.BanPlayer(playerGuid, instanceId, reason, duration) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public HttpStatusCode UnbanPlayer(string playerGuid, string instanceId)
+    {
+        var server = GetServer(instanceId);
+        return server?.UnbanPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public void KickPlayer(string playerGuid, string instanceId, string reason)
+    {
+        var server = GetServer(instanceId);
+        server?.KickPlayer(playerGuid, instanceId, reason);
+    }
+
+    public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId)
+    {
+        var server = GetServer(instanceId);
+        return server?.WhitelistPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId)
+    {
+        var server = GetServer(instanceId);
+        return server?.UnwhitelistPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
     }
 
     private void StartSteamCmdService()

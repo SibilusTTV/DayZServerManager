@@ -15,7 +15,7 @@ namespace Migrations.Migrations
                 name: "BANS",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
                     BanId = table.Column<int>(type: "INTEGER", nullable: false),
                     RemainingTime = table.Column<int>(type: "INTEGER", nullable: false),
                     Reason = table.Column<string>(type: "TEXT", nullable: false)
@@ -29,7 +29,7 @@ namespace Migrations.Migrations
                 name: "INSTANCES",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    id = table.Column<string>(type: "TEXT", nullable: false),
                     instanceId = table.Column<int>(type: "INTEGER", nullable: false),
                     serverFolder = table.Column<string>(type: "TEXT", nullable: false),
                     hostName = table.Column<string>(type: "TEXT", nullable: false),
@@ -68,7 +68,7 @@ namespace Migrations.Migrations
                 name: "MODS",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    id = table.Column<string>(type: "TEXT", nullable: false),
                     name = table.Column<string>(type: "TEXT", nullable: false),
                     workshopID = table.Column<long>(type: "INTEGER", nullable: false)
                 },
@@ -81,7 +81,7 @@ namespace Migrations.Migrations
                 name: "PLAYERS",
                 columns: table => new
                 {
-                    Guid = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Guid = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Uid = table.Column<string>(type: "TEXT", nullable: false),
                     IsVerified = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -93,11 +93,24 @@ namespace Migrations.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ROLES",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    InstanceId = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ROLES", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SCHEDULER_CONFIGS",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    InstanceId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    InstanceId = table.Column<string>(type: "TEXT", nullable: false),
                     UseNickFilter = table.Column<bool>(type: "INTEGER", nullable: false),
                     FilteredNickMsg = table.Column<string>(type: "TEXT", nullable: false),
                     BadNames = table.Column<string>(type: "TEXT", nullable: false),
@@ -112,8 +125,7 @@ namespace Migrations.Migrations
                 name: "STEAM_CREDENTIALS",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
                     SteamUsername = table.Column<string>(type: "TEXT", nullable: false),
                     SteamPassword = table.Column<string>(type: "TEXT", nullable: false)
                 },
@@ -126,7 +138,7 @@ namespace Migrations.Migrations
                 name: "MESSAGES",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
                     IsTimeOfDay = table.Column<bool>(type: "INTEGER", nullable: false),
                     WaitTime = table.Column<TimeSpan>(type: "TEXT", nullable: false),
                     Interval = table.Column<TimeSpan>(type: "TEXT", nullable: false),
@@ -134,7 +146,7 @@ namespace Migrations.Migrations
                     Message = table.Column<string>(type: "TEXT", nullable: false),
                     Icon = table.Column<string>(type: "TEXT", nullable: false),
                     Color = table.Column<string>(type: "TEXT", nullable: false),
-                    Instanceid = table.Column<Guid>(type: "TEXT", nullable: true)
+                    Instanceid = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -148,11 +160,35 @@ namespace Migrations.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "INSTANCE_CLIENT_MODS",
+                columns: table => new
+                {
+                    InstanceId = table.Column<string>(type: "TEXT", nullable: false),
+                    ModId = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_INSTANCE_CLIENT_MODS", x => new { x.InstanceId, x.ModId });
+                    table.ForeignKey(
+                        name: "FK_INSTANCE_CLIENT_MODS_INSTANCES_InstanceId",
+                        column: x => x.InstanceId,
+                        principalTable: "INSTANCES",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_INSTANCE_CLIENT_MODS_MODS_ModId",
+                        column: x => x.ModId,
+                        principalTable: "MODS",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "INSTANCE_SERVER_MODS",
                 columns: table => new
                 {
-                    InstanceId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ModId = table.Column<Guid>(type: "TEXT", nullable: false)
+                    InstanceId = table.Column<string>(type: "TEXT", nullable: false),
+                    ModId = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -175,13 +211,13 @@ namespace Migrations.Migrations
                 name: "SERVER_PLAYERS",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    InstanceId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    PlayerId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    BanId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    InstanceId = table.Column<string>(type: "TEXT", nullable: false),
+                    PlayerId = table.Column<string>(type: "TEXT", nullable: false),
+                    BanId = table.Column<string>(type: "TEXT", nullable: true),
                     IsWhitelisted = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsBanned = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Role = table.Column<string>(type: "TEXT", nullable: false)
+                    RoleId = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -203,7 +239,18 @@ namespace Migrations.Migrations
                         principalTable: "PLAYERS",
                         principalColumn: "Guid",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SERVER_PLAYERS_ROLES_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "ROLES",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_INSTANCE_CLIENT_MODS_ModId",
+                table: "INSTANCE_CLIENT_MODS",
+                column: "ModId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_INSTANCE_SERVER_MODS_ModId",
@@ -230,11 +277,19 @@ namespace Migrations.Migrations
                 name: "IX_SERVER_PLAYERS_PlayerId",
                 table: "SERVER_PLAYERS",
                 column: "PlayerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SERVER_PLAYERS_RoleId",
+                table: "SERVER_PLAYERS",
+                column: "RoleId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "INSTANCE_CLIENT_MODS");
+
             migrationBuilder.DropTable(
                 name: "INSTANCE_SERVER_MODS");
 
@@ -261,6 +316,9 @@ namespace Migrations.Migrations
 
             migrationBuilder.DropTable(
                 name: "PLAYERS");
+
+            migrationBuilder.DropTable(
+                name: "ROLES");
         }
     }
 }

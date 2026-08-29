@@ -138,4 +138,108 @@ export class InstanceService {
             mediaType: 'application/json',
         });
     }
+    /**
+     * @param playerGuid
+     * @param instanceId
+     * @param reason
+     * @param duration
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static getApiInstanceBanPlayer(
+        playerGuid?: string,
+        instanceId?: string,
+        reason?: string,
+        duration?: number,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/Instance/BanPlayer',
+            query: {
+                'playerGuid': playerGuid,
+                'instanceId': instanceId,
+                'reason': reason,
+                'duration': duration,
+            },
+        });
+    }
+    /**
+     * @param playerGuid
+     * @param instanceId
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static getApiInstanceUnbanPlayer(
+        playerGuid?: string,
+        instanceId?: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/Instance/UnbanPlayer',
+            query: {
+                'playerGuid': playerGuid,
+                'instanceId': instanceId,
+            },
+        });
+    }
+    /**
+     * @param playerGuid
+     * @param instanceId
+     * @param reason
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static getApiInstanceKickPlayer(
+        playerGuid?: string,
+        instanceId?: string,
+        reason?: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/Instance/KickPlayer',
+            query: {
+                'playerGuid': playerGuid,
+                'instanceId': instanceId,
+                'reason': reason,
+            },
+        });
+    }
+    /**
+     * @param playerGuid
+     * @param instanceId
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static getApiInstanceWhitelistPlayer(
+        playerGuid?: string,
+        instanceId?: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/Instance/WhitelistPlayer',
+            query: {
+                'playerGuid': playerGuid,
+                'instanceId': instanceId,
+            },
+        });
+    }
+    /**
+     * @param playerGuid
+     * @param instanceId
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static getApiInstanceUnwhitelistPlayer(
+        playerGuid?: string,
+        instanceId?: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/Instance/UnwhitelistPlayer',
+            query: {
+                'playerGuid': playerGuid,
+                'instanceId': instanceId,
+            },
+        });
+    }
 }

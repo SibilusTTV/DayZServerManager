@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text.RegularExpressions;
 using Application.IRepository;
@@ -165,6 +166,7 @@ public class ServerInstance : IServerInstance
         }
         else
         {
+            ReadOutRolesAndPlayers(instanceConfig.id);
             GetAdminLog(instanceConfig);
             _scheduler?.GetPlayers();
             _logger.LogInformation($"The Server is still running with {_scheduler?.RconClient?.PlayersCount} players playing on it");
@@ -237,6 +239,7 @@ public class ServerInstance : IServerInstance
             
             connectTask = new Task(() => { _scheduler?.Connect(); });
             connectTask.Start();
+            ReadOutRolesAndPlayers(instance.id);
         }
         catch (Exception ex)
         {
@@ -348,6 +351,31 @@ public class ServerInstance : IServerInstance
             _serverProcess = null;
             return false;
         }
+    }
+
+    public HttpStatusCode BanPlayer(string playerGuid, string instanceId, string reason, int duration)
+    {
+        return _scheduler?.BanPlayer(playerGuid, instanceId, reason, duration) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public HttpStatusCode UnbanPlayer(string playerGuid, string instanceId)
+    {
+        return _scheduler?.UnbanPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public void KickPlayer(string playerGuid, string instanceId, string reason)
+    {
+        _scheduler?.KickPlayer(playerGuid, instanceId, reason);
+    }
+
+    public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId)
+    {
+        return _scheduler?.WhitelistPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId)
+    {
+        return _scheduler?.UnwhitelistPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
     }
     
     private void MoveAndBackupServer(Instance instance)
@@ -540,5 +568,12 @@ public class ServerInstance : IServerInstance
         var serverConfigService = _serverScope.ServiceProvider.GetService<IServerConfigService>();
         serverConfigService?.UpdateServerConfig(ServerConfig, instance.missionName, instance.hostName, instance.instanceId, instance.steamPort, instance.steamQueryPort);
         serverConfigService?.Save(ServerConfig, Path.Combine(instance.serverFolder, instance.serverConfigName));
+    }
+
+    private void ReadOutRolesAndPlayers(string id)
+    {
+        var playerService = _serverScope.ServiceProvider.GetService<IPlayerService>();
+        playerService?.ReadOutRoles(id);
+        playerService?.ReadOutServerPlayerRoles(id);
     }
 }

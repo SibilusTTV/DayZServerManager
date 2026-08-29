@@ -6,6 +6,7 @@ import {InstanceConfigEditor} from './instance/children/instance-config-editor/i
 import PlayersDb from './players-db/players-db';
 import ServerPlayersDb from './instance/children/server-players-db/server-players-db';
 import ModList from './mod-list/mod-list';
+import ServerConfigEditor from './instance/children/server-config-editor/server-config-editor';
 
 export const routes: Routes = [
   {
@@ -35,6 +36,10 @@ export const routes: Routes = [
       {
         path: 'instance-config-editor',
         component: InstanceConfigEditor
+      },
+      {
+        path: 'server-config-editor',
+        component: ServerConfigEditor
       },
       {
         path: 'server-players-db',

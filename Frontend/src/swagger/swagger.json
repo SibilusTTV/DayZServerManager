@@ -15,8 +15,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -37,8 +36,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -59,8 +57,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -81,8 +78,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -120,8 +116,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -278,6 +273,168 @@
         }
       }
     },
+    "/api/Instance/BanPlayer": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "playerGuid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "duration",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Instance/UnbanPlayer": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "playerGuid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Instance/KickPlayer": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "playerGuid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Instance/WhitelistPlayer": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "playerGuid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Instance/UnwhitelistPlayer": {
+      "get": {
+        "tags": [
+          "Instance"
+        ],
+        "parameters": [
+          {
+            "name": "playerGuid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Mod/Get": {
       "get": {
         "tags": [
@@ -288,8 +445,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -365,8 +521,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -442,8 +597,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -481,8 +635,7 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -529,16 +682,14 @@
             "name": "playerId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           {
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           {
@@ -553,6 +704,102 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "name": "roleName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Player/GetRoleNames": {
+      "get": {
+        "tags": [
+          "Player"
+        ],
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Player/SetRole": {
+      "post": {
+        "tags": [
+          "Player"
+        ],
+        "parameters": [
+          {
+            "name": "serverPlayerId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "playerGuid",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "roleName",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -573,8 +820,7 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           {
@@ -619,8 +865,7 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           {
@@ -657,72 +902,6 @@
         }
       }
     },
-    "/api/Scheduler/BanPlayer": {
-      "get": {
-        "tags": [
-          "Scheduler"
-        ],
-        "parameters": [
-          {
-            "name": "serverPlayerId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "reason",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "duration",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/Scheduler/WhitelistPlayer": {
-      "get": {
-        "tags": [
-          "Scheduler"
-        ],
-        "parameters": [
-          {
-            "name": "serverPlayerId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "reason",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/ServerConfig/Get": {
       "get": {
         "tags": [
@@ -733,8 +912,7 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -744,17 +922,26 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ServerConfig"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PropertyValue"
+                  }
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ServerConfig"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PropertyValue"
+                  }
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ServerConfig"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PropertyValue"
+                  }
                 }
               }
             }
@@ -772,8 +959,7 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -781,17 +967,26 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ServerConfig"
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PropertyValue"
+                }
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/ServerConfig"
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PropertyValue"
+                }
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/ServerConfig"
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PropertyValue"
+                }
               }
             }
           }
@@ -980,7 +1175,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
           },
           "isTimeOfDay": {
             "type": "boolean"
@@ -1011,19 +1206,6 @@
           }
         },
         "additionalProperties": false
-      },
-      "DataType": {
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "type": "integer",
-        "format": "int32"
       },
       "HttpStatusCode": {
         "enum": [
@@ -1097,7 +1279,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
           },
           "instanceId": {
             "type": "integer",
@@ -1231,7 +1413,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
           },
           "name": {
             "type": "string",
@@ -1249,7 +1431,7 @@
         "properties": {
           "guid": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
           },
           "name": {
             "type": "string",
@@ -1272,18 +1454,12 @@
       "PropertyValue": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
           "propertyName": {
             "type": "string",
             "nullable": true
           },
-          "dataType": {
-            "$ref": "#/components/schemas/DataType"
-          },
           "value": {
+            "type": "string",
             "nullable": true
           },
           "comment": {
@@ -1320,19 +1496,6 @@
           "rarity": {
             "type": "integer",
             "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ServerConfig": {
-        "type": "object",
-        "properties": {
-          "properties": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PropertyValue"
-            },
-            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1375,16 +1538,14 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
           },
           "serverPlayerId": {
             "type": "string",
-            "format": "uuid",
             "nullable": true
           },
           "instanceId": {
             "type": "string",
-            "format": "uuid",
             "nullable": true
           },
           "name": {
@@ -1419,8 +1580,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "nullable": true
           },
           "steamUsername": {
             "type": "string",
@@ -1461,9 +1622,6 @@
     },
     {
       "name": "Rarity"
-    },
-    {
-      "name": "Scheduler"
     },
     {
       "name": "ServerConfig"

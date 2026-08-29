@@ -1,3 +1,13 @@
 
-<button matIconButton (click)="onWhitelistClicked()"><mat-icon>thumb_up</mat-icon></button>
-<button matIconButton (click)="onBanClicked()"><mat-icon>gavel</mat-icon></button>
+@if (params.data.isWhitelisted){
+  <button matIconButton (click)="onUnwhitelistClicked()"><mat-icon>thumb_down</mat-icon></button>
+}
+@else{
+  <button matIconButton (click)="onWhitelistClicked()"><mat-icon>thumb_up</mat-icon></button>
+}
+@if (params.data.isBanned){
+  <button matIconButton (click)="onUnbanClicked()"><mat-icon>not_interested</mat-icon></button>
+}
+@else {
+  <button matIconButton (click)="onBanClicked()"><mat-icon>gavel</mat-icon></button>
+}

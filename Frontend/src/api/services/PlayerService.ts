@@ -55,6 +55,7 @@ export class PlayerService {
      * @param instanceId
      * @param isWhitelisted
      * @param isBanned
+     * @param roleName
      * @returns any OK
      * @throws ApiError
      */
@@ -63,6 +64,7 @@ export class PlayerService {
         instanceId?: string,
         isWhitelisted?: boolean,
         isBanned?: boolean,
+        roleName?: string,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
@@ -72,6 +74,48 @@ export class PlayerService {
                 'instanceId': instanceId,
                 'isWhitelisted': isWhitelisted,
                 'isBanned': isBanned,
+                'roleName': roleName,
+            },
+        });
+    }
+    /**
+     * @param instanceId
+     * @returns string OK
+     * @throws ApiError
+     */
+    public static getApiPlayerGetRoleNames(
+        instanceId?: string,
+    ): CancelablePromise<Array<string>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/Player/GetRoleNames',
+            query: {
+                'instanceId': instanceId,
+            },
+        });
+    }
+    /**
+     * @param serverPlayerId
+     * @param playerGuid
+     * @param instanceId
+     * @param roleName
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static postApiPlayerSetRole(
+        serverPlayerId?: string,
+        playerGuid?: string,
+        instanceId?: string,
+        roleName?: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/Player/SetRole',
+            query: {
+                'serverPlayerId': serverPlayerId,
+                'playerGuid': playerGuid,
+                'instanceId': instanceId,
+                'roleName': roleName,
             },
         });
     }

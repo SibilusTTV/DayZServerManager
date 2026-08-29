@@ -1,0 +1,16 @@
+
+<div style="display: flex; flex-direction: row;">
+  <button mat-icon-button (click)="onSaveClick()" ><mat-icon>save</mat-icon></button>
+  <button mat-icon-button (click)="LoadServerConfig()" ><mat-icon>autorenew</mat-icon></button>
+  <button mat-icon-button (click)="onAddPropertyClick()"><mat-icon>add</mat-icon></button>
+</div>
+
+<div class="table-container-div">
+  <ag-grid-angular
+    [rowData]="properties()"
+    [columnDefs]="ColDefs"
+    [defaultColDef]="DefaultColDef"
+    style="width: 100%; flex: 1;"
+    [autoSizeStrategy]="autoSizeStrategy"
+  />
+</div>

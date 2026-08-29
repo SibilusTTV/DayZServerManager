@@ -1,9 +1,9 @@
-
 <div class="table-container-div">
   <ag-grid-angular
     [rowData]="serverPlayerInformations()"
     [columnDefs]="colDefs"
     [autoSizeStrategy]="autoSizeStrategy"
     style="width: 100%; flex: 1;"
+    (cellEditingStopped)="onChangeRole($event)"
   />
 </div>

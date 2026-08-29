@@ -17,10 +17,10 @@ import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
   templateUrl: './instance.html'
 })
 export default class Instance {
-  public id: number;
+  public id: string;
 
   constructor(private route: ActivatedRoute) {
-    this.id = 0;
+    this.id = "";
     this.route.params.subscribe(params => {
       this.id = params['id'];
     });

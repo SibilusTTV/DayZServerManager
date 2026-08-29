@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type CustomMessage = {
-    id?: string;
+    id?: string | null;
     isTimeOfDay?: boolean;
     waitTime?: string;
     interval?: string;

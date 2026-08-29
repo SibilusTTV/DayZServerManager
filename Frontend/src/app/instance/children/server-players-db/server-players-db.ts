@@ -2,9 +2,12 @@ import {Component, signal, WritableSignal} from '@angular/core';
 import {PlayerService, ServerPlayerInformation} from '../../../../api';
 import {ActivatedRoute} from '@angular/router';
 import {AgGridAngular} from 'ag-grid-angular';
-import {ColDef} from 'ag-grid-community';
-import type {AutoSizeStrategy} from 'ag-grid-community';
+import {ColDef, ISelectCellEditorParams} from 'ag-grid-community';
+import type {AutoSizeStrategy, CellEditingStoppedEvent} from 'ag-grid-community';
 import {PlayersActionsCell} from './players-actions-cell/players-actions-cell';
+import {MatIconButton} from '@angular/material/button';
+import {MatIcon} from '@angular/material/icon';
+import {v4} from 'uuid';
 
 
 @Component({
@@ -17,6 +20,7 @@ import {PlayersActionsCell} from './players-actions-cell/players-actions-cell';
 export default class ServerPlayersDb {
   public serverPlayerInformations: WritableSignal<ServerPlayerInformation[]> = signal([]);
   public id: string = "";
+  public roles: string[] = [];
 
   public colDefs: ColDef[] = [
     {
@@ -42,10 +46,13 @@ export default class ServerPlayersDb {
       field: 'isBanned'
     },
     {
-      field: 'role'
+      field: 'role',
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: this.getCellSelectorArray.bind(this),
+      editable: true
     },
     {
-      field: 'serverPlayerId',
+      field: 'id',
       headerName: 'Actions',
       cellRenderer: PlayersActionsCell,
       cellRendererParams: (params: any) => ({
@@ -63,8 +70,9 @@ export default class ServerPlayersDb {
   public constructor(private route: ActivatedRoute){
     this.route.params.subscribe(params => {
       this.id = params["id"];
-      PlayerService.getApiPlayerGetServerPlayerInformation(this.id).then(serverPlayerInformations => {
-        this.serverPlayerInformations.set(serverPlayerInformations);
+      this.Reload();
+      PlayerService.getApiPlayerGetRoleNames(this.id).then(roleNames => {
+        this.roles = ["", ...roleNames];
       })
     });
   }
@@ -73,5 +81,19 @@ export default class ServerPlayersDb {
     PlayerService.getApiPlayerGetServerPlayerInformation(this.id).then(serverPlayerInformations => {
       this.serverPlayerInformations.set(serverPlayerInformations);
     })
+  }
+
+  public getCellSelectorArray(): ISelectCellEditorParams{
+    return {
+      values: this.roles
+    }
+  }
+
+  public onChangeRole(event: CellEditingStoppedEvent<ServerPlayerInformation>): void {
+    const playerId = event.data?.serverPlayerId ?? v4();
+    const instanceId = this.id;
+    const roleName = event.data?.role ?? "";
+    const playerGuid = event.data?.id ?? "";
+    PlayerService.postApiPlayerSetRole(playerId, playerGuid, instanceId, roleName).then(() => this.Reload());
   }
 }

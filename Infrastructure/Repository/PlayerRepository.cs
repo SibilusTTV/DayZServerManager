@@ -1,9 +1,12 @@
 using System.Net;
 using Application.IRepository;
+using Domain.Constants;
+using Domain.Profile;
 using Domain.Scheduler;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic.FileIO;
 
 namespace Infrastructure.Repository;
 
@@ -11,11 +14,13 @@ public class PlayerRepository : IPlayerRepository
 {
     private readonly ILogger<PlayerRepository> _logger;
     private readonly ConfigDbContext _configDbContext;
+    private readonly IJsonSerializerRepository _jsonSerializer;
     
-    public PlayerRepository(ILogger<PlayerRepository> logger, ConfigDbContext configDbContext)
+    public PlayerRepository(ILogger<PlayerRepository> logger, ConfigDbContext configDbContext, IJsonSerializerRepository jsonSerializer)
     {
         _logger = logger;
         _configDbContext = configDbContext;
+        _jsonSerializer = jsonSerializer;
     }
 
     public List<Player> GetAllPlayers()
@@ -178,16 +183,39 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public ServerPlayer? GetServerPlayer(string playerId)
+    public ServerPlayer? GetServerPlayer(string serverPlayerId)
     {
         lock (_configDbContext)
         {
             try
             {
                 return _configDbContext.SERVER_PLAYERS
+                    .Include(x => x.Player)
+                    .Include(x => x.Ban)
+                    .Include(x => x.Role)
                     .AsNoTracking()
-                    .ToArray()
-                    .FirstOrDefault(x => x.Id == playerId);
+                    .FirstOrDefault(x => x.Id == serverPlayerId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting player");
+                return null;
+            }
+        }
+    }
+
+    public ServerPlayer? GetServerPlayerByGuid(string playerGuid, string instanceId)
+    {
+        lock (_configDbContext)
+        {
+            try
+            {
+                return _configDbContext.SERVER_PLAYERS
+                    .Include(x => x.Player)
+                    .Include(x => x.Ban)
+                    .Include(x => x.Role)
+                    .AsNoTracking()
+                    .FirstOrDefault(x => x.InstanceId == instanceId && x.Player.Guid == playerGuid);
             }
             catch (Exception ex)
             {
@@ -218,7 +246,7 @@ public class PlayerRepository : IPlayerRepository
                         player.IsVerified,
                         sp != null && sp.IsWhitelisted,
                         sp != null && sp.IsBanned,
-                        sp != null ? sp.Role : "",
+                        sp != null ? sp.Role.Name : "",
                         sp != null ? sp.InstanceId : null
                     );
                 
@@ -241,6 +269,7 @@ public class PlayerRepository : IPlayerRepository
                 var playerDB = _configDbContext.SERVER_PLAYERS
                     .Include(x => x.Player)
                     .Include(x => x.Ban)
+                    .Include(x => x.Role)
                     .FirstOrDefault(x => x.Id == player.Id);
                 
                 if (playerDB == null)
@@ -370,6 +399,207 @@ public class PlayerRepository : IPlayerRepository
             {
                 _logger.LogError(ex, "Error updating remaining time");
             }
+        }
+    }
+
+    public List<Role> GetRoles(string instanceId)
+    {
+        lock (_configDbContext)
+        {
+            try
+            {
+                return _configDbContext.ROLES
+                    .Where(x => x.InstanceId == instanceId)
+                    .AsNoTracking()
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting roles");
+                return [];
+            }
+        }
+    }
+
+    public List<string> GetRoleNames(string instanceId)
+    {
+        lock (_configDbContext)
+        {
+            try
+            {
+                return _configDbContext.ROLES
+                    .Where(x => x.InstanceId == instanceId)
+                    .Select(x => x.Name)
+                    .AsNoTracking()
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting roles");
+                return [];
+            }
+        }
+    }
+
+    public Role? GetRole(string name, string instanceId)
+    {
+        lock (_configDbContext)
+        {
+            try
+            {
+                return _configDbContext.ROLES
+                    .Where(x => x.Name == name && x.InstanceId == instanceId)
+                    .AsNoTracking()
+                    .FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting role");
+                return null;
+            }
+        }
+    }
+
+    public HttpStatusCode AddRole(string name, string instanceId)
+    {
+        lock (_configDbContext)
+        {
+            try
+            {
+                var role = _configDbContext.ROLES.FirstOrDefault(x => x.Name == name);
+                
+                if (role != null) return HttpStatusCode.BadRequest;
+                
+                _configDbContext.ROLES.Add(new Role(name, instanceId));
+                _configDbContext.SaveChanges();
+                return HttpStatusCode.Created;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding role");
+                return HttpStatusCode.InternalServerError;
+            }
+        }
+    }
+
+    public void ReadOutRoles(string profileFolder, string instanceId)
+    {
+        try
+        {
+            if (!Directory.Exists(Path.Combine(profileFolder, Folders.PermissionFolderName)))
+            {
+                Directory.CreateDirectory(Path.Combine(profileFolder, Folders.PermissionFolderName));
+            }
+            
+            if (!Directory.Exists(Path.Combine(profileFolder, Folders.PermissionFolderName, Folders.RolesFolderName)))
+            {
+                Directory.CreateDirectory(Path.Combine(profileFolder, Folders.PermissionFolderName,
+                    Folders.RolesFolderName));
+            }
+
+            var roles = Directory.GetFiles(Path.Combine(profileFolder, Folders.PermissionFolderName,
+                Folders.RolesFolderName));
+
+            foreach (var roleFile in roles)
+            {
+                var roleName = Path.GetFileNameWithoutExtension(roleFile);
+                var role = GetRole(roleName, instanceId);
+                
+                if (role == null) AddRole(roleName, instanceId);
+                
+                // TODO: Add Logic to update the rights a role has
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading roles");
+        }
+    }
+
+    public void ReadOutServerPlayerRoles(string profileFolder, string instanceId)
+    {
+        try
+        {
+            if (!Directory.Exists(Path.Combine(profileFolder, Folders.PermissionFolderName)))
+            {
+                Directory.CreateDirectory(Path.Combine(profileFolder, Folders.PermissionFolderName));
+            }
+            
+            if (!Directory.Exists(Path.Combine(profileFolder, Folders.PermissionFolderName, Folders.PlayersFolderName)))
+            {
+                Directory.CreateDirectory(Path.Combine(profileFolder, Folders.PermissionFolderName,
+                    Folders.PlayersFolderName));
+            }
+
+            var players = Directory.GetFiles(Path.Combine(profileFolder, Folders.PermissionFolderName,
+                Folders.RolesFolderName));
+            
+            foreach (var playerFile in players)
+            {
+                var playerGuid = Path.GetFileNameWithoutExtension(playerFile);
+                var serverPlayer = GetServerPlayerByGuid(playerGuid, instanceId);
+                
+                var playerPermissionsFile = _jsonSerializer.DeserializeJSONFile<PlayerPermissions>(playerFile);
+                if (playerPermissionsFile == null || playerPermissionsFile.Roles.Count <= 0) return;
+                    
+                var roleName = playerPermissionsFile.Roles.FirstOrDefault();
+                if (roleName == null) return;
+                
+                var role = GetRole(roleName, instanceId);
+                if (role == null) return;
+
+                if (serverPlayer == null)
+                {
+                    var player = GetPlayer(playerGuid);
+                    if (player == null) return;
+
+                    serverPlayer = new ServerPlayer(instanceId, player.Guid, false, false, role.Id);
+                }
+                else
+                {
+                    serverPlayer.Role = role;
+                }
+                
+                CreateEditServerPlayer(serverPlayer);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading player roles");
+        }
+    }
+
+    public HttpStatusCode SaveServerPlayerRole(string profileFolder, ServerPlayer serverPlayer, string roleName)
+    {
+        try
+        {
+            if (!Directory.Exists(Path.Combine(profileFolder, Folders.PermissionFolderName)))
+            {
+                Directory.CreateDirectory(Path.Combine(profileFolder, Folders.PermissionFolderName));
+            }
+
+            if (!Directory.Exists(Path.Combine(profileFolder, Folders.PermissionFolderName, Folders.PlayersFolderName)))
+            {
+                Directory.CreateDirectory(Path.Combine(profileFolder, Folders.PermissionFolderName,
+                    Folders.PlayersFolderName));
+            }
+            
+            var playerJsonFile = new PlayerPermissions()
+            {
+                Roles = [roleName]
+            };
+
+            _jsonSerializer.SerializeJSONFile(
+                Path.Combine(profileFolder, Folders.PermissionFolderName, Folders.PlayersFolderName,
+                    serverPlayer.PlayerId + ".json"), playerJsonFile);
+
+            return CreateEditServerPlayer(serverPlayer);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving player role");
+            return HttpStatusCode.InternalServerError;
         }
     }
 }

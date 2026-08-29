@@ -5,16 +5,21 @@ import {MatIconButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
 import {FormsModule} from '@angular/forms';
 import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
+import {AgGridAngular} from 'ag-grid-angular';
+import {ColDef} from 'ag-grid-community';
+import ServerConfigActionsCell from '../server-config-editor/server-config-actions-cell/server-config-actions-cell';
+import OverviewActionsCell from './overview-actions-cell/overview-actions-cell';
 
 @Component({
-  selector: ' instance-overview',
+  selector: 'instance-overview',
   imports: [
     MatIcon,
     MatIconButton,
     FormsModule,
     MatFormField,
     MatInput,
-    MatLabel
+    MatLabel,
+    AgGridAngular
   ],
   templateUrl: './overview.html',
   styleUrl: './overview.css'
@@ -25,6 +30,39 @@ export default class Overview implements OnInit, OnDestroy {
   public serverInformation: WritableSignal<ServerInformation> = signal({});
 
   private timer: number = 5;
+
+  public ColDefs: ColDef[] = [
+    {
+      field: "name"
+    },
+    {
+      field: "guid"
+    },
+    {
+      field: "id"
+    },
+    {
+      field: "ping"
+    },
+    {
+      field: "isVerified"
+    },
+    {
+      field: "isInLobby"
+    },
+    {
+      field: "ip"
+    },
+    {
+      field: "guid",
+      cellRenderer: OverviewActionsCell,
+      cellRendererParams: (params: any) => ({
+        instanceId: this.instanceId,
+        params
+      }),
+      maxWidth: 160
+    }
+  ]
 
   constructor(private route: ActivatedRoute) {
     this.route.params.subscribe(params => {

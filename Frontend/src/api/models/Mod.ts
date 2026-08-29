@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type Mod = {
-    id?: string;
+    id?: string | null;
     name?: string | null;
     workshopID?: number;
 };

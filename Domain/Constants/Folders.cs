@@ -27,6 +27,9 @@ public static class Folders
     public const string WorkshopFolderName = "workshop";
     public const string ContentFolderName = "content";
     public const string ExpansionDownloadFolderPath = "DayZ-Expansion-Missions";
+    public const string PermissionFolderName = "PermissionsFramework";
+    public const string PlayersFolderName = "Player";
+    public const string RolesFolderName = "Roles";
     public static readonly string BattleyeFolderName = OperatingSystem.IsWindows() ? "BattlEye" : "battleye";
     public static readonly string WorkshopFolderPath = Path.Combine(SteamappsFolderName, WorkshopFolderName, ContentFolderName, SteamCmd.DayZGameBranch.ToString());
     public static readonly string SteamcmdConsoleLogFolderPath = OperatingSystem.IsWindows() ? 

@@ -1,0 +1,13 @@
+
+<h3 mat-dialog-title>Kick</h3>
+<mat-dialog-content>
+  <p>Please give a reason</p>
+    <mat-form-field>
+      <mat-label>Reason</mat-label>
+      <input matInput [(ngModel)]="kickReason"/>
+    </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button matButton (click)="onNoClick()">Cancel</button>
+  <button matButton (click)="onKickClick()">Ban</button>
+</mat-dialog-actions>

@@ -3,19 +3,19 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { HttpStatusCode } from '../models/HttpStatusCode';
-import type { ServerConfig } from '../models/ServerConfig';
+import type { PropertyValue } from '../models/PropertyValue';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class ServerConfigService {
     /**
      * @param instanceId
-     * @returns ServerConfig OK
+     * @returns PropertyValue OK
      * @throws ApiError
      */
     public static getApiServerConfigGet(
         instanceId?: string,
-    ): CancelablePromise<ServerConfig> {
+    ): CancelablePromise<Array<PropertyValue>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/ServerConfig/Get',
@@ -32,7 +32,7 @@ export class ServerConfigService {
      */
     public static postApiServerConfigPost(
         instanceId?: string,
-        requestBody?: ServerConfig,
+        requestBody?: Array<PropertyValue>,
     ): CancelablePromise<HttpStatusCode> {
         return __request(OpenAPI, {
             method: 'POST',

@@ -11,7 +11,8 @@ import {ServerInformationCell} from './server-information-cell/server-informatio
 import {MatDialog} from '@angular/material/dialog';
 import {NewInstanceDialog} from './new-instance-dialog/new-instance-dialog';
 import {MatIcon} from '@angular/material/icon';
-import {Instance, InstanceService, SteamService} from '../../api';
+import {Instance, InstanceService, SteamCredentials, SteamService} from '../../api';
+import {v4} from 'uuid';
 
 @Component({
   selector: 'app-home',
@@ -33,6 +34,7 @@ export default class Home {
   private router = inject(Router);
   public steamUsername: WritableSignal<string> = signal("");
   public steamPassword: WritableSignal<string> = signal("");
+  private steamCredentialsId: string = "";
   private readonly dialog = inject(MatDialog);
 
   public colDefs: ColDef[] = [
@@ -69,6 +71,7 @@ export default class Home {
       this.instances.set(response);
     });
     SteamService.getApiSteamGetSteamCredentials().then(response => {
+      this.steamCredentialsId = response.id ?? v4();
       this.steamUsername.set(response.steamUsername ?? "");
       this.steamPassword.set(response.steamPassword ?? "");
     });
@@ -81,7 +84,12 @@ export default class Home {
   }
 
   public onSaveClicked(){
-    SteamService.postApiSteamSaveSteamCredentials({steamUsername: this.steamUsername(), steamPassword: this.steamPassword()}).then();
+    const credentials: SteamCredentials = {
+      id: this.steamCredentialsId,
+      steamUsername: this.steamUsername(),
+      steamPassword: this.steamPassword()
+    }
+    SteamService.postApiSteamSaveSteamCredentials(credentials).then();
   }
 
   public onNewInstanceClicked(){

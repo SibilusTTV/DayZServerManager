@@ -22,7 +22,7 @@ public class ServerConfigService : IServerConfigService
         }
         else
         {
-            serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "template", DataType.Text, missionNameValue, ""));
+            serverConfig.Properties.Add(new PropertyValue("template", missionNameValue, ""));
         }
         
         var hostName = serverConfig.GetPropertyValue("hostname");
@@ -32,37 +32,37 @@ public class ServerConfigService : IServerConfigService
         }
         else
         {
-            serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "hostname", DataType.Text, hostNameValue, ""));
+            serverConfig.Properties.Add(new PropertyValue("hostname", hostNameValue, ""));
         }
 
         var instanceId = serverConfig.GetPropertyValue("instanceId");
         if (instanceId != null)
         {
-            instanceId.Value = instanceIdValue;
+            instanceId.Value = instanceIdValue.ToString();
         }
         else
         {
-            serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "instanceId", DataType.Text, instanceIdValue, ""));
+            serverConfig.Properties.Add(new PropertyValue("instanceId", instanceIdValue.ToString(), ""));
         }
 
         var steamPort = serverConfig.GetPropertyValue("steamPort");
         if (steamPort != null)
         {
-            steamPort.Value = steamPortValue;
+            steamPort.Value = steamPortValue.ToString();
         }
         else
         {
-            serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "steamQueryPort", DataType.Text, steamQueryPortValue, ""));
+            serverConfig.Properties.Add(new PropertyValue("steamQueryPort", steamQueryPortValue.ToString(), ""));
         }
 
         var steamQueryPort = serverConfig.GetPropertyValue("steamQueryPort");
         if (steamQueryPort != null)
         {
-            steamQueryPort.Value = steamQueryPortValue;
+            steamQueryPort.Value = steamQueryPortValue.ToString();
         }
         else
         {
-            serverConfig.Properties.Add(new PropertyValue(serverConfig.GetNextID(), "steamQueryPort", DataType.Text, steamQueryPortValue, ""));
+            serverConfig.Properties.Add(new PropertyValue("steamQueryPort", steamQueryPortValue.ToString(), ""));
         }
     }
 

@@ -10,15 +10,15 @@ app-root {
 }
 app-home,
 players-db,
-server-players-db,
 instance-root,
-app-mod-list {
+app-mod-list{
   display: flex;
   min-height: 100%;
   flex-direction: column;
   align-items: stretch;
   flex: 1;
   margin: 20px;
+  gap: 10px;
 }
 .table-container-div{
   display: flex;
@@ -27,6 +27,18 @@ app-mod-list {
   align-items: stretch;
   flex: 1;
 }
-instance-root {
-  margin: 20px;
+instance-config-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+server-config-editor,
+server-players-db,
+instance-overview{
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+  gap: 10px;
 }

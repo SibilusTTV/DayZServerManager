@@ -19,6 +19,7 @@ public class ConfigDbContext : DbContext
     public DbSet<SchedulerConfig> SCHEDULER_CONFIGS { get; set; }
     public DbSet<InstanceClientMod> INSTANCE_CLIENT_MODS { get; set; }
     public DbSet<InstanceServerMod> INSTANCE_SERVER_MODS { get; set; }
+    public DbSet<Role> ROLES { get; set; }
 
     public ConfigDbContext(ILogger<ConfigDbContext> logger, DbContextOptions<ConfigDbContext> options) : base(options)
     {
@@ -60,6 +61,10 @@ public class ConfigDbContext : DbContext
         
         modelBuilder.Entity<ServerPlayer>()
             .HasOne(player => player.Instance)
+            .WithMany();
+        
+        modelBuilder.Entity<ServerPlayer>()
+            .HasOne(player => player.Role)
             .WithMany();
     }
 }

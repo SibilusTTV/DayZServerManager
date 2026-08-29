@@ -2,12 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DataType } from './DataType';
 export type PropertyValue = {
-    id?: number;
     propertyName?: string | null;
-    dataType?: DataType;
-    value?: any;
+    value?: string | null;
     comment?: string | null;
 };
 

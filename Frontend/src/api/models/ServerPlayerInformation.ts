@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ServerPlayerInformation = {
-    id?: string;
+    id?: string | null;
     serverPlayerId?: string | null;
     instanceId?: string | null;
     name?: string | null;

@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type Player = {
-    guid?: string;
+    guid?: string | null;
     name?: string | null;
     uid?: string | null;
     isVerified?: boolean;

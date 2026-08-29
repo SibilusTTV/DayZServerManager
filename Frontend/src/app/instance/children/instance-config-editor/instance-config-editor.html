@@ -1,5 +1,8 @@
-<button mat-icon-button (click)="onSaveClick()" ><mat-icon>save</mat-icon></button>
-<button mat-icon-button (click)="LoadInstanceConfig()" ><mat-icon>autorenew</mat-icon></button>
+
+<div style="display: flex; flex-direction: row;">
+  <button mat-icon-button (click)="onSaveClick()" ><mat-icon>save</mat-icon></button>
+  <button mat-icon-button (click)="LoadInstanceConfig()" ><mat-icon>autorenew</mat-icon></button>
+</div>
 
 <instance-config
   [clientMods]="clientMods"
@@ -14,7 +17,6 @@
   [missionTemplateName]="missionTemplateName"
   [serverConfigName]="serverConfigName"
   [profileName]="profileName"
-  [schedulerConfigName]="schedulerConfigName"
   [steamPort]="steamPort"
   [serverPort]="serverPort"
   [steamQueryPort]="steamQueryPort"

@@ -1,7 +1,9 @@
 
-<button matIconButton (click)="onStartClick()"><mat-icon>play_arrow</mat-icon></button>
-<button matIconButton (click)="onStopClick()"><mat-icon>stop</mat-icon></button>
-<button matIconButton (click)="onRemoveClicked()"><mat-icon>delete</mat-icon></button>
+<div style="display: flex; flex-direction: row; gap: 10px;">
+  <button matIconButton (click)="onStartClick()"><mat-icon>play_arrow</mat-icon></button>
+  <button matIconButton (click)="onStopClick()"><mat-icon>stop</mat-icon></button>
+  <button matIconButton (click)="onRemoveClicked()"><mat-icon>delete</mat-icon></button>
+</div>
 <div style="display: flex; flex-direction: column;">
 
   <div style="display: flex; flex-direction: row; gap: 20px;">
@@ -18,17 +20,14 @@
       <input matInput disabled [value]="serverInformation().playersCount" style="color: black;"/>
     </mat-form-field>
   </div>
-  @if(serverInformation().playersCount) {
-    <div>
-      @for (player of serverInformation().players; track player){
-        <span>Player {{player.name}}</span>
-        <span>  guid: {{player.guid}}</span>
-        <span>  id: {{player.id}}</span>
-        <span>  Is In Lobby: {{player.isInLobby}}</span>
-        <span>  Is Verified: {{player.isVerified}}</span>
-        <span>  ip: {{player.ip}}</span>
-        <span>  Ping: {{player.ping}}</span>
-      }
-    </div>
-  }
+</div>
+
+<h2>Players:</h2>
+<div class="table-container-div">
+
+  <ag-grid-angular
+    [columnDefs]="ColDefs"
+    [rowData]="serverInformation().players"
+    style="width: 100%; flex: 1;"
+  />
 </div>

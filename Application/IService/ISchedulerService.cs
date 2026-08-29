@@ -22,11 +22,11 @@ public interface ISchedulerService
     public void KillCustomTasks();
     public bool IsConnected();
     public void GetPlayers();
-    public void KickPlayer(string id, string reason, string name);
-    public HttpStatusCode BanPlayer(string serverPlayerId, string reason, int duration);
-    public HttpStatusCode UnbanPlayer(string serverPlayerId);
-    public HttpStatusCode WhitelistPlayer(string serverPlayerId, string name);
-    public void UnwhitelistPlayer(string serverPlayerId, string name);
+    public void KickPlayer(string guid, string instanceId, string reason);
+    public HttpStatusCode BanPlayer(string playerGuid, string instanceId, string reason, int duration);
+    public HttpStatusCode UnbanPlayer(string playerGuid, string instanceId);
+    public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId);
+    public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId);
     public void SendCommand(string command);
     public void Shutdown();
     public void LoadBans();

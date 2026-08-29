@@ -153,41 +153,81 @@ public class SchedulerService : ISchedulerService
         RconClient?.GetPlayers();
     }
 
-    public void KickPlayer(string id, string reason, string name)
+    public void KickPlayer(string guid, string instanceId, string reason)
     {
-        var connectedPlayer = RconClient?.ConnectedPlayers.Find(x => x.Guid == id);
+        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
+        var player = playerRepository?.GetServerPlayerByGuid(guid, instanceId);
+        
+        if (player == null) return;
+        
+        var connectedPlayer = RconClient?.ConnectedPlayers.Find(x => x.Guid == guid);
         if (connectedPlayer != null)
         {
-            RconClient?.KickPlayer(connectedPlayer.Id, reason, name);
+            RconClient?.KickPlayer(connectedPlayer.Id, reason, player.Player.Name);
         }
     }
 
-    public HttpStatusCode BanPlayer(string serverPlayerId, string reason, int duration)
+    public HttpStatusCode BanPlayer(string playerGuid, string instanceId, string reason, int duration)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         
-        var player = playerRepository?.GetServerPlayer(serverPlayerId);
+        var player = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
         
         if (player == null) return HttpStatusCode.NotFound;
         
         return RconClient?.BanPlayer(player.Player.Guid, reason, duration, player.Player.Name) ?? HttpStatusCode.InternalServerError;
     }
 
-    public HttpStatusCode UnbanPlayer(string serverPlayerId)
+    public HttpStatusCode UnbanPlayer(string playerGuid, string instanceId)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         
-        var player = playerRepository?.GetServerPlayer(serverPlayerId);
+        var player = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
 
         if (player?.Ban == null) return HttpStatusCode.NotFound;
         RconClient?.UnbanPlayer(player.Ban.BanId, player.Player.Name);
         return playerRepository?.RemoveBan(player.Ban.Id) ?? HttpStatusCode.InternalServerError;
     }
 
-    public HttpStatusCode WhitelistPlayer(string serverPlayerId, string name)
+    public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
-        var player = playerRepository?.GetServerPlayer(serverPlayerId);
+        var serverPlayer = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
+        if (serverPlayer == null)
+        {
+            var player = playerRepository?.GetPlayer(playerGuid);
+            if (player == null) return HttpStatusCode.NotFound;
+            
+            var role = playerRepository?.GetRole("everyone", instanceId);
+            if (role == null)
+            {
+                role = playerRepository?.GetRoles(playerGuid).FirstOrDefault();
+                if (role == null) return HttpStatusCode.NotFound;
+            }
+            
+            serverPlayer = new ServerPlayer(instanceId, playerGuid, true, false, role.Id);
+        }
+        
+        var instanceRepository = _serverScope.ServiceProvider.GetService<IInstanceRepository>();
+        var instance = instanceRepository?.GetInstance(instanceId);
+        if (instance == null) return HttpStatusCode.NotFound;
+        
+        var whitelistedPlayers = GetWhitelistedPlayers(instance.serverFolder);
+
+        playerRepository?.WhitelistPlayer(serverPlayer.Id);
+        if (!whitelistedPlayers.Contains(playerGuid))
+        {
+            whitelistedPlayers.Add(playerGuid);
+        }
+
+        _logger.LogInformation($"{serverPlayer.Player.Name} was whitelisted");
+        return SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
+    }
+
+    public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId)
+    {
+        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
+        var player = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
         
         if (player == null) return HttpStatusCode.NotFound;
         
@@ -195,29 +235,6 @@ public class SchedulerService : ISchedulerService
         var instance = instanceService?.GetInstance(player.InstanceId);
         
         if (instance == null) return HttpStatusCode.NotFound;
-        var whitelistedPlayers = GetWhitelistedPlayers(instance.serverFolder);
-
-        playerRepository?.WhitelistPlayer(player.Id);
-        if (!whitelistedPlayers.Contains(player.Player.Uid))
-        {
-            whitelistedPlayers.Add(player.Player.Uid);
-        }
-
-        _logger.LogInformation($"{name} was whitelisted");
-        return SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
-    }
-
-    public void UnwhitelistPlayer(string serverPlayerId, string name)
-    {
-        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
-        var player = playerRepository?.GetServerPlayer(serverPlayerId);
-        
-        if (player == null) return;
-        
-        var instanceService = _serverScope.ServiceProvider.GetService<IInstanceService>();
-        var instance = instanceService?.GetInstance(player.InstanceId);
-        
-        if (instance == null) return;
         
         var whitelistedPlayers = GetWhitelistedPlayers(instance.serverFolder);
         
@@ -227,8 +244,8 @@ public class SchedulerService : ISchedulerService
             whitelistedPlayers.Remove(player.Player.Uid);
         }
 
-        SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
-        _logger.LogInformation($"{name} was unwhitelisted");
+        _logger.LogInformation($"{player.Player.Name} was unwhitelisted");
+        return SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
     }
 
     public void SendCommand(string command)

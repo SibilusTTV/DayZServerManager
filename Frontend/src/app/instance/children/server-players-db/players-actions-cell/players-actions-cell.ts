@@ -1,9 +1,11 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {ICellRendererParams} from 'ag-grid-community';
-import {PlayerService, SchedulerService} from '../../../../../api';
+import {InstanceService, PlayerService} from '../../../../../api';
 import {MatIconButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
 import {ICellRendererAngularComp} from 'ag-grid-angular';
+import {MatDialog} from '@angular/material/dialog';
+import {BanWindow} from '../../../../../components/ban-window/ban-window';
 
 @Component({
   selector: 'players-actions-cell',
@@ -14,46 +16,79 @@ import {ICellRendererAngularComp} from 'ag-grid-angular';
   ]
 })
 export class PlayersActionsCell implements ICellRendererAngularComp  {
-  public serverPlayerId: string = "";
-  private params: any;
+  private playerGuid: string = "";
+  public params: any;
+  private role: string = "";
+  private readonly dialog = inject(MatDialog);
 
   agInit(params: ICellRendererParams) {
-    this.params = params;
-    console.log(params);
-    this.serverPlayerId = params.valueFormatted ? params.valueFormatted : params.value;
+    this.init(params);
   }
 
   refresh(params: ICellRendererParams) {
-    this.params = params;
-    this.serverPlayerId = params.valueFormatted ? params.valueFormatted : params.value;
+    this.init(params);
     return true;
   }
 
-  public onWhitelistClicked(){
-    console.log(this.serverPlayerId)
-    if (this.serverPlayerId == null){
+  private init(params: ICellRendererParams) {
+    this.params = params;
+    this.playerGuid = params.valueFormatted ? params.valueFormatted : params.value;
+    PlayerService.getApiPlayerGetRoleNames(this.params.instanceId).then(response => {
+      if (response.length <= 0 || response.find(x => x == "everyone") != null){
+        this.role = "everyone";
+      }
+      else {
+        this.role = response[1];
+      }
+    })
+  }
 
-      PlayerService.postApiPlayerCreateServerPlayer(this.params.data.id, this.params.instanceId, true, false).then(() => {
+  public onWhitelistClicked(){
+    if (this.playerGuid == null){
+      PlayerService.postApiPlayerCreateServerPlayer(this.params.data.id, this.params.instanceId, true, false, "everyone").then(() => {
         this.params.reload();
       });
     }
     else{
-      SchedulerService.getApiSchedulerWhitelistPlayer(this.serverPlayerId, "1").then(() => {
+      InstanceService.getApiInstanceWhitelistPlayer(this.playerGuid, this.params.instanceId).then(() => {
         this.params.reload();
       });
     }
   }
 
   public onBanClicked(){
-    if (this.serverPlayerId == null){
-      PlayerService.postApiPlayerCreateServerPlayer(this.params.data.id, this.params.instanceId, false, true).then(() => {
+    if (this.playerGuid == null){
+      PlayerService.postApiPlayerCreateServerPlayer(this.params.data.id, this.params.instanceId, false, true, "everyone").then(() => {
         this.params.reload();
       });
     }
     else{
-      SchedulerService.getApiSchedulerBanPlayer(this.serverPlayerId, "1", 1).then(() => {
-        this.params.reload();
+      const dialogRef = this.dialog.open(BanWindow, {
+        data: {
+          guid: this.playerGuid,
+          instanceId: this.params.instanceId
+        }
       });
+
+      dialogRef.afterClosed().subscribe(result => {
+        this.params.reload();
+      })
+    }
+  }
+
+  public onUnbanClicked(){
+    if (this.playerGuid != null && this.params.data != null){
+      InstanceService.getApiInstanceUnbanPlayer(this.playerGuid, this.params.instanceId).then(() => {
+        this.params.reload();
+      })
+    }
+  }
+
+  public onUnwhitelistClicked(){
+    if (this.playerGuid != null && this.params.data != null){
+      InstanceService.getApiInstanceUnwhitelistPlayer(this.playerGuid, this.params.instanceId).then(() => {
+        this.params.reload();
+      })
     }
   }
 }

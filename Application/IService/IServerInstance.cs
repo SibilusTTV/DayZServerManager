@@ -1,3 +1,4 @@
+using System.Net;
 using Domain.Manager;
 using Domain.ServerConfig;
 
@@ -13,4 +14,9 @@ public interface IServerInstance
     void Dispose();
     public ServerInformation GetServerInformation();
     public void KillServerProcesses();
+    public HttpStatusCode BanPlayer(string playerGuid, string instanceId, string reason, int duration);
+    public HttpStatusCode UnbanPlayer(string playerGuid, string instanceId);
+    public void KickPlayer(string playerGuid, string instanceId, string reason);
+    public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId);
+    public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId);
 }

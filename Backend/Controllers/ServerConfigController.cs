@@ -23,14 +23,14 @@ public class ServerConfigController : ControllerBase
     }
 
     [HttpGet]
-    public ServerConfig Get(string instanceId)
+    public List<PropertyValue> Get(string instanceId)
     {
         return _instanceService.GetServerConfig(instanceId);
     }
 
     [HttpPost]
-    public HttpStatusCode Post([FromBody] ServerConfig serverConfig, string instanceId)
+    public HttpStatusCode Post(string instanceId, [FromBody] List<PropertyValue> properties)
     {
-        return _instanceService.SaveServerConfig(serverConfig, instanceId);
+        return _instanceService.SaveServerConfig(properties, instanceId);
     }
 }

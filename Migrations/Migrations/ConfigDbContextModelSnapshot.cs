@@ -271,6 +271,24 @@ namespace Migrations.Migrations
                     b.ToTable("PLAYERS");
                 });
 
+            modelBuilder.Entity("Domain.Scheduler.Role", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InstanceId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ROLES");
+                });
+
             modelBuilder.Entity("Domain.Scheduler.SchedulerConfig", b =>
                 {
                     b.Property<string>("Id")
@@ -321,7 +339,7 @@ namespace Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Role")
+                    b.Property<string>("RoleId")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -333,6 +351,8 @@ namespace Migrations.Migrations
                     b.HasIndex("InstanceId");
 
                     b.HasIndex("PlayerId");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("SERVER_PLAYERS");
                 });
@@ -401,11 +421,19 @@ namespace Migrations.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Scheduler.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Ban");
 
                     b.Navigation("Instance");
 
                     b.Navigation("Player");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("Domain.Manager.Instance", b =>
