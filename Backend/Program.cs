@@ -41,6 +41,7 @@ builder.Services.AddScoped<IRarityRepository, RarityRepository>();
 builder.Services.AddScoped<IMissionRepository, MissionRepository>();
 builder.Services.AddScoped<IManagerRepository, ManagerRepository>();
 builder.Services.AddScoped<ISchedulerRepository, SchedulerRepository>();
+builder.Services.AddScoped<IRconRepository, RconRepository>();
 
 // Database Repos
 builder.Services.AddScoped<IModRepository, ModRepository>();
@@ -49,7 +50,6 @@ builder.Services.AddScoped<ISteamCmdRepository, SteamCmdRepository>();
 builder.Services.AddScoped<IPlayerRepository, PlayerRepository>();
 
 // Services
-builder.Services.AddScoped<IRconService, RconService>();
 builder.Services.AddScoped<IRestartUpdaterService, RestartUpdaterService>();
 builder.Services.AddScoped<ISchedulerService, SchedulerService>();
 
@@ -102,6 +102,6 @@ app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapFallbackToFile("Frontend/browser/index.html");
+app.MapFallbackToFile("index.html");
 
 app.Run("http://0.0.0.0:" + port);

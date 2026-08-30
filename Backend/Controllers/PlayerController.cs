@@ -18,13 +18,13 @@ public class PlayerController : ControllerBase
     }
 
     [HttpGet]
-    public List<Player> GetPlayers()
+    public List<User> GetPlayers()
     {
         return _playersService.GetPlayers();
     }
     
     [HttpGet]
-    public Player? GetPlayer(string id)
+    public User? GetPlayer(string id)
     {
         return _playersService.GetPlayer(id);
     }

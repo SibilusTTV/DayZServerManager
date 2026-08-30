@@ -13,13 +13,9 @@ public class ServerPlayer
     public string InstanceId { get; set; }
     public Instance Instance { get; set; }
     
-    [ForeignKey(nameof(Player))]
+    [ForeignKey(nameof(User))]
     public string PlayerId { get; set; }
-    public Player Player { get; set; }
-    
-    [ForeignKey(nameof(Ban))]
-    public string? BanId { get; set; }
-    public Ban? Ban { get; set; }
+    public User User { get; set; }
     
     public bool IsWhitelisted { get; set; }
     public bool IsBanned { get; set; }

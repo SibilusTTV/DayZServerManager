@@ -1,28 +1,23 @@
-
 using System.Net;
+using BytexDigital.BattlEye.Rcon.Domain;
 using Domain.Scheduler;
 
-namespace Application.IService;
+namespace Application.IRepository;
 
-public interface IRconService
+public interface IRconRepository
 {
-    
     public string ChatLog { get; }
-    public int PlayersCount { get; }
     public List<ConnectedPlayer> ConnectedPlayers { get; }
-
-    public void InitializeRconService(string ip, int port, string password, SchedulerConfig Config);
-
+    public void InitializeRconRepository(string ip, int port, string password, SchedulerConfig Config);
     public bool Connect();
     public void SendCommand(string command);
     public void Disconnect();
     public bool IsConnected();
-    public void GetPlayers();
+    public List<ConnectedPlayer> GetPlayers(string instanceId);
     public void KickPlayer(int id, string reason, string name);
     public HttpStatusCode BanPlayer(string guid, string reason, int duration, string name);
-    public void UnbanPlayer(int banId, string name);
+    public HttpStatusCode UnbanPlayer(int banId, string name);
     public void ReloadBans();
-    public void GetBans();
+    public List<PlayerBan> GetBans();
     public void Shutdown();
-
 }

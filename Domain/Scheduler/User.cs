@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Scheduler;
 
-public class Player
+public class User
 {
     [Key]
     public string Guid { get; set; }
@@ -12,13 +12,13 @@ public class Player
     public bool IsVerified { get; set; }
     public string Ip { get; set; }
 
-    public Player()
+    public User()
     {
         
     }
     
     [JsonConstructor]
-    public Player(string guid, string name, string uid, bool isVerified, string ip)
+    public User(string guid, string name, string uid, bool isVerified, string ip)
     {
         Guid = guid.ToLower();
         Name = name;

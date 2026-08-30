@@ -4,7 +4,8 @@ namespace Domain.Manager;
 
 public class SchedulerInformation
 {
-    public int playersCount { get; set; }
-    public List<ConnectedPlayer> players { get; set; }
-    public string chatLog { get; set; }
+    public int PlayersCount { get; set; }
+    public List<ConnectedPlayer> Players { get; set; }
+    public string ChatLog { get; set; }
+    public string AdminLog { get; set; }
 }

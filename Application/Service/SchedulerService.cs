@@ -1,9 +1,11 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Application.Handlers;
 using Application.IRepository;
 using Application.IService;
 using Domain.Constants;
 using Domain.Manager;
+using Domain.Profile;
 using Domain.Scheduler;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,6 +16,7 @@ public class SchedulerService : ISchedulerService
 {
     private readonly ILogger<SchedulerService> _logger;
     private readonly IServiceScope _serverScope;
+    private readonly IRconRepository _rconRepository;
     
     private SchedulerConfig? _config;
     private Timer? _autoLoadBansTimer;
@@ -22,23 +25,22 @@ public class SchedulerService : ISchedulerService
     private bool _onlyRestarts;
     private int _interval;
     
-    public IRconService? RconClient { get; private set; }
+    private string _adminLog;
 
-    public SchedulerService(ILogger<SchedulerService> logger, IServiceScopeFactory scopeFactory)
+    public SchedulerService(ILogger<SchedulerService> logger, IRconRepository rconRepository, IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
+        _rconRepository = rconRepository;
         _serverScope = scopeFactory.CreateScope();
         _automaticMessages = [];
         _customMessages = [];
         _onlyRestarts = false;
         _interval = 1;
+        _adminLog = "";
     }
 
     public void InitializeScheduler(string ip, int port, string password, int interval, bool onlyRestarts, List<CustomMessage> customMessages, string serverFolderName)
     {
-        var rconService = _serverScope.ServiceProvider.GetService<IRconService>();
-        if (rconService != null) RconClient = rconService;
-        
         _onlyRestarts = onlyRestarts;
 
         if (interval < 1 && interval > 24)
@@ -49,8 +51,6 @@ public class SchedulerService : ISchedulerService
         {
             _interval = interval;
         }
-        
-        _autoLoadBansTimer = new Timer((state) => { LoadBans(); }, null, 10000, 10000);
 
         GetWhitelistedPlayers(serverFolderName);
 
@@ -58,7 +58,7 @@ public class SchedulerService : ISchedulerService
         _automaticMessages = restartUpdaterService?.CreateSchedule(false, _onlyRestarts, _interval, SendCommand, IsConnected) ?? [];
         _customMessages = restartUpdaterService?.CreateCustomJobTimers(_onlyRestarts, _interval, SendCommand, IsConnected, customMessages) ?? [];
 
-        RconClient?.InitializeRconService(ip, port, password, _config);
+        _rconRepository.InitializeRconRepository(ip, port, password, _config);
     }
     
     public bool Connect()
@@ -67,7 +67,7 @@ public class SchedulerService : ISchedulerService
         Thread.Sleep(_config?.Timeout * 1000 ?? 10000);
         _logger.LogInformation("Connecting to the Server");
         
-        if (!(RconClient?.Connect() ?? false))
+        if (!(_rconRepository?.Connect() ?? false))
         {
             Disconnect();
             return false;
@@ -80,7 +80,7 @@ public class SchedulerService : ISchedulerService
     {
         if (IsConnected())
         {
-            RconClient?.Disconnect();
+            _rconRepository?.Disconnect();
         }
 
         _autoLoadBansTimer?.Dispose();
@@ -93,9 +93,10 @@ public class SchedulerService : ISchedulerService
     {
         return new SchedulerInformation()
         {
-            players = RconClient?.ConnectedPlayers ?? [],
-            playersCount = RconClient?.PlayersCount ?? 0,
-            chatLog = RconClient?.ChatLog ?? "",
+            Players = _rconRepository.ConnectedPlayers,
+            PlayersCount = _rconRepository.ConnectedPlayers.Count,
+            ChatLog = _rconRepository.ChatLog,
+            AdminLog = _adminLog,
         };
     }
 
@@ -145,12 +146,73 @@ public class SchedulerService : ISchedulerService
 
     public bool IsConnected()
     {
-        return RconClient?.IsConnected() ?? false;
+        return _rconRepository.IsConnected();
     }
 
-    public void GetPlayers()
+    public int UpdatePlayers(string instanceId)
     {
-        RconClient?.GetPlayers();
+        if (!IsConnected()) return 0;
+        
+        var instance = _serverScope.ServiceProvider.GetService<IInstanceRepository>()?.GetInstance(instanceId);
+        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
+        
+        if (instance == null) return 0;
+        
+        var playerUids = GetAdminLog(instance);
+        var playerPermissions = ReadOutRolesAndPlayers(instanceId);
+        var newPlayers = _rconRepository.GetPlayers(instanceId);
+
+        foreach (var player in newPlayers)
+        {
+            if (!playerUids.TryGetValue(player.Name, out var uid)) continue;
+            if (!playerPermissions.TryGetValue(uid, out var playerPermission)) continue;
+            
+            var newPlayer = new User(player.Guid, player.Name, uid, player.IsVerified, player.Ip);
+            playerRepository?.CreateEditPlayer(newPlayer);
+            
+            var serverPlayer = playerRepository?.GetServerPlayerByGuid(player.Guid, instanceId);
+            
+            var roleName = playerPermission.Roles.FirstOrDefault();
+            if (roleName == null) continue;
+            
+            var role = playerRepository?.GetRole(roleName, instanceId);
+            if (role == null) continue;
+
+            if (serverPlayer == null)
+            {
+                serverPlayer = new ServerPlayer(instanceId, player.Guid, false, false, role.Id);
+            }
+            else
+            {
+                serverPlayer.RoleId = role.Id;
+                serverPlayer.Role = role;
+            }
+            
+            playerRepository?.CreateEditServerPlayer(serverPlayer);
+        }
+        
+        _rconRepository.ReloadBans();
+        var bans = _rconRepository.GetBans();
+        var bannedPlayers = playerRepository?.GetBannedServerPlayers(instanceId);
+        
+        foreach (var ban in bans)
+        {
+            var serverPlayer = playerRepository?.GetServerPlayerByGuid(ban.Guid, instanceId);
+            if (serverPlayer == null || bannedPlayers != null && bannedPlayers.Any(x => x.User.Guid == ban.Guid)) continue;
+            serverPlayer.IsBanned = true;
+            playerRepository?.CreateEditServerPlayer(serverPlayer);
+        }
+        
+        if (bannedPlayers == null) return _rconRepository.ConnectedPlayers.Count;
+        foreach (var bannedPlayer in bannedPlayers)
+        {
+            if (bans.Any(x => x.Guid == bannedPlayer.User.Guid)) continue;
+
+            bannedPlayer.IsBanned = false;
+            playerRepository?.CreateEditServerPlayer(bannedPlayer);
+        }
+
+        return _rconRepository.ConnectedPlayers.Count;
     }
 
     public void KickPlayer(string guid, string instanceId, string reason)
@@ -160,33 +222,37 @@ public class SchedulerService : ISchedulerService
         
         if (player == null) return;
         
-        var connectedPlayer = RconClient?.ConnectedPlayers.Find(x => x.Guid == guid);
+        var connectedPlayer = _rconRepository.ConnectedPlayers.Find(x => x.Guid == guid);
         if (connectedPlayer != null)
         {
-            RconClient?.KickPlayer(connectedPlayer.Id, reason, player.Player.Name);
+            _rconRepository.KickPlayer(connectedPlayer.Id, reason, player.User.Name);
         }
     }
 
     public HttpStatusCode BanPlayer(string playerGuid, string instanceId, string reason, int duration)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
+        var serverPlayer = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
+        if (serverPlayer == null) return HttpStatusCode.NotFound;
         
-        var player = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
-        
-        if (player == null) return HttpStatusCode.NotFound;
-        
-        return RconClient?.BanPlayer(player.Player.Guid, reason, duration, player.Player.Name) ?? HttpStatusCode.InternalServerError;
+        var code = _rconRepository.BanPlayer(serverPlayer.User.Guid, reason, duration, serverPlayer.User.Name);
+        serverPlayer.IsBanned = true;
+        return playerRepository?.CreateEditServerPlayer(serverPlayer) ?? code;
     }
 
     public HttpStatusCode UnbanPlayer(string playerGuid, string instanceId)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
+        var serverPlayer = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
+        if (serverPlayer == null) return HttpStatusCode.NotFound;
         
-        var player = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
-
-        if (player?.Ban == null) return HttpStatusCode.NotFound;
-        RconClient?.UnbanPlayer(player.Ban.BanId, player.Player.Name);
-        return playerRepository?.RemoveBan(player.Ban.Id) ?? HttpStatusCode.InternalServerError;
+        var bans = _rconRepository.GetBans();
+        var playerBan = bans.FirstOrDefault(x => x.Guid == serverPlayer.User.Guid);
+        if (playerBan == null) return HttpStatusCode.NotFound;
+        
+        var code = _rconRepository.UnbanPlayer(playerBan.Id, serverPlayer.User.Name);
+        serverPlayer.IsBanned = false;
+        return playerRepository?.CreateEditServerPlayer(serverPlayer) ?? code;
     }
 
     public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId)
@@ -220,7 +286,7 @@ public class SchedulerService : ISchedulerService
             whitelistedPlayers.Add(playerGuid);
         }
 
-        _logger.LogInformation($"{serverPlayer.Player.Name} was whitelisted");
+        _logger.LogInformation($"{serverPlayer.User.Name} was whitelisted");
         return SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
     }
 
@@ -239,38 +305,55 @@ public class SchedulerService : ISchedulerService
         var whitelistedPlayers = GetWhitelistedPlayers(instance.serverFolder);
         
         playerRepository?.UnWhitelistPlayer(player.Id);
-        if (whitelistedPlayers.Contains(player.Player.Uid))
+        if (whitelistedPlayers.Contains(player.User.Uid))
         {
-            whitelistedPlayers.Remove(player.Player.Uid);
+            whitelistedPlayers.Remove(player.User.Uid);
         }
 
-        _logger.LogInformation($"{player.Player.Name} was unwhitelisted");
+        _logger.LogInformation($"{player.User.Name} was unwhitelisted");
         return SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
     }
 
     public void SendCommand(string command)
     {
-        RconClient?.SendCommand(command);
+        _rconRepository.SendCommand(command);
     }
 
     public void Shutdown()
     {
-        RconClient?.Shutdown();
+        _rconRepository.Shutdown();
     }
 
-    public void LoadBans()
+    private Dictionary<string, string> GetAdminLog(Instance instance)
     {
-        if (IsConnected())
+        var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
+        
+        var returnString = serverRepository?.GetAdminLog(instance.serverFolder, instance.profileName);
+
+        if (_adminLog == returnString || returnString == null) return [];
+        
+        var pattern = @"Player ""(?'name'[^\n]+)"" \(id=(?'id'\S*)=\)";
+        var regex = new Regex(pattern);
+        var matches = regex.Matches(returnString);
+
+        Dictionary<string, string> playerUids = new Dictionary<string, string>();
+        
+        foreach (Match match in matches)
         {
-            try
-            {
-                RconClient?.ReloadBans();
-                RconClient?.GetBans();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error when getting bans");
-            }
+            var name = match.Groups["name"].Value;
+            var uid = match.Groups["id"].Value;
+
+            playerUids.TryAdd(name, uid);
         }
+        
+        _adminLog = returnString;
+        return playerUids;
+    }
+
+    private Dictionary<string, PlayerPermissions> ReadOutRolesAndPlayers(string id)
+    {
+        var playerService = _serverScope.ServiceProvider.GetService<IPlayerService>();
+        playerService?.ReadOutRoles(id);
+        return playerService?.ReadOutServerPlayerRoles(id) ?? new Dictionary<string, PlayerPermissions>();
     }
 }

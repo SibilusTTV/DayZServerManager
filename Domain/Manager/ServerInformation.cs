@@ -1,3 +1,4 @@
+using BytexDigital.BattlEye.Rcon.Domain;
 using Domain.Scheduler;
 
 namespace Domain.Manager;
@@ -26,7 +27,7 @@ public class ServerInformation
         managerStatus = _managerStatus;
         dayzServerStatus = _dayzServerStatus;
         playersCount = _playersCount;
-        players = new List<ConnectedPlayer>();
+        players = [];
         chatLog = _chatLog;
         adminLog = _adminLog;
     }

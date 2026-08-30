@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using BytexDigital.BattlEye.Rcon.Domain;
 
 namespace Domain.Scheduler;
 
@@ -15,6 +16,17 @@ public class ConnectedPlayer
     public ConnectedPlayer()
     {
         
+    }
+
+    public ConnectedPlayer(Player player)
+    {
+        Name = player.Name.Trim();
+        Guid = player.Guid;
+        Id = player.Id;
+        Ping = player.Ping;
+        IsVerified = player.IsVerified;
+        IsInLobby = player.IsInLobby;
+        Ip = player.RemoteEndpoint.ToString();
     }
 
     [JsonConstructor]

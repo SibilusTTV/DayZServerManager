@@ -4,6 +4,8 @@
     <option name="locations">
       <list>
         <option value="$PROJECT_DIR$/Backend/bin/Release/net10.0/linux-x64/publish" />
+        <option value="$PROJECT_DIR$/build/windows" />
+        <option value="$PROJECT_DIR$/build/linux" />
       </list>
     </option>
   </component>

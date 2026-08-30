@@ -7,6 +7,7 @@ using Application.IService;
 using Domain.Constants;
 using Domain.Manager;
 using Domain.Profile;
+using Domain.Scheduler;
 using Domain.ServerConfig;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -114,7 +115,7 @@ public class ServerInstance : IServerInstance
 
         _serverInformation.dayzServerStatus = Statuses.Started;
 
-        _serverLoopTimer = new Timer(ServerLoop, null , TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+        _serverLoopTimer = new Timer(ServerLoop, null , TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
         _serverUpdateTimer = new Timer(UpdateLoop, null , TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
     
@@ -132,9 +133,9 @@ public class ServerInstance : IServerInstance
     public ServerInformation GetServerInformation()
     {
         var schedulerInformation = _scheduler?.GetSchedulerInformation();
-        _serverInformation.players = schedulerInformation?.players ?? [];
-        _serverInformation.playersCount = schedulerInformation?.playersCount ?? 0;
-        _serverInformation.chatLog = schedulerInformation?.chatLog ?? "";
+        _serverInformation.players = schedulerInformation?.Players ?? [];
+        _serverInformation.playersCount = schedulerInformation?.PlayersCount ?? 0;
+        _serverInformation.chatLog = schedulerInformation?.ChatLog ?? "";
         return _serverInformation;
     }
 
@@ -166,10 +167,8 @@ public class ServerInstance : IServerInstance
         }
         else
         {
-            ReadOutRolesAndPlayers(instanceConfig.id);
-            GetAdminLog(instanceConfig);
-            _scheduler?.GetPlayers();
-            _logger.LogInformation($"The Server is still running with {_scheduler?.RconClient?.PlayersCount} players playing on it");
+            var playerCount = _scheduler?.UpdatePlayers(instanceConfig.id);
+            _logger.LogInformation($"The Server is still running with {playerCount} players playing on it");
         }
 
         if (!CheckScheduler())
@@ -239,7 +238,7 @@ public class ServerInstance : IServerInstance
             
             connectTask = new Task(() => { _scheduler?.Connect(); });
             connectTask.Start();
-            ReadOutRolesAndPlayers(instance.id);
+            _scheduler?.UpdatePlayers(instance.id);
         }
         catch (Exception ex)
         {
@@ -531,49 +530,10 @@ public class ServerInstance : IServerInstance
         return false;
     }
 
-    private void GetAdminLog(Instance instance)
-    {
-        var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
-        var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
-        
-        var returnString = serverRepository?.GetAdminLog(instance.serverFolder, instance.profileName);
-
-        if (_serverInformation.adminLog == returnString || returnString == null) return;
-        
-        var pattern = @"Player \""(?'name'[^\n]+)\""\(id=(?'id'\S*)\)";
-        var regex = new Regex(pattern);
-        var matches = regex.Matches(returnString);
-
-        foreach (Match match in matches)
-        {
-            var name = match.Groups["name"].Value;
-            var uid = match.Groups["id"].Value;
-
-            var players = playerRepository?.GetPlayersByName(name) ?? [];
-
-            var player = players.FirstOrDefault();
-            
-            if (player != null && uid != "Unknown" && (string.IsNullOrEmpty(player.Uid) || player.Uid == "Unknown"))
-            {
-                player.Uid = uid;
-                playerRepository?.CreateEditPlayer(player);
-            }
-        }
-        
-        _serverInformation.adminLog = returnString;
-    }
-
     private void UpdateServerConfig(Instance instance)
     {
         var serverConfigService = _serverScope.ServiceProvider.GetService<IServerConfigService>();
         serverConfigService?.UpdateServerConfig(ServerConfig, instance.missionName, instance.hostName, instance.instanceId, instance.steamPort, instance.steamQueryPort);
         serverConfigService?.Save(ServerConfig, Path.Combine(instance.serverFolder, instance.serverConfigName));
-    }
-
-    private void ReadOutRolesAndPlayers(string id)
-    {
-        var playerService = _serverScope.ServiceProvider.GetService<IPlayerService>();
-        playerService?.ReadOutRoles(id);
-        playerService?.ReadOutServerPlayerRoles(id);
     }
 }

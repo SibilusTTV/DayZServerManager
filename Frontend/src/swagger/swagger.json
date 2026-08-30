@@ -562,7 +562,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Player"
+                    "$ref": "#/components/schemas/User"
                   }
                 }
               },
@@ -570,7 +570,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Player"
+                    "$ref": "#/components/schemas/User"
                   }
                 }
               },
@@ -578,7 +578,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Player"
+                    "$ref": "#/components/schemas/User"
                   }
                 }
               }
@@ -607,17 +607,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Player"
+                  "$ref": "#/components/schemas/User"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Player"
+                  "$ref": "#/components/schemas/User"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Player"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             }
@@ -1426,31 +1426,6 @@
         },
         "additionalProperties": false
       },
-      "Player": {
-        "type": "object",
-        "properties": {
-          "guid": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "uid": {
-            "type": "string",
-            "nullable": true
-          },
-          "isVerified": {
-            "type": "boolean"
-          },
-          "ip": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "PropertyValue": {
         "type": "object",
         "properties": {
@@ -1602,6 +1577,31 @@
             "nullable": true
           },
           "steamUpdateLoop": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "guid": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "uid": {
+            "type": "string",
+            "nullable": true
+          },
+          "isVerified": {
+            "type": "boolean"
+          },
+          "ip": {
             "type": "string",
             "nullable": true
           }

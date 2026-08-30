@@ -2,17 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Player } from '../models/Player';
 import type { ServerPlayerInformation } from '../models/ServerPlayerInformation';
+import type { User } from '../models/User';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class PlayerService {
     /**
-     * @returns Player OK
+     * @returns User OK
      * @throws ApiError
      */
-    public static getApiPlayerGetPlayers(): CancelablePromise<Array<Player>> {
+    public static getApiPlayerGetPlayers(): CancelablePromise<Array<User>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Player/GetPlayers',
@@ -20,12 +20,12 @@ export class PlayerService {
     }
     /**
      * @param id
-     * @returns Player OK
+     * @returns User OK
      * @throws ApiError
      */
     public static getApiPlayerGetPlayer(
         id?: string,
-    ): CancelablePromise<Player> {
+    ): CancelablePromise<User> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Player/GetPlayer',

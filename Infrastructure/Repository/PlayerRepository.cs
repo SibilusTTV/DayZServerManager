@@ -23,7 +23,7 @@ public class PlayerRepository : IPlayerRepository
         _jsonSerializer = jsonSerializer;
     }
 
-    public List<Player> GetAllPlayers()
+    public List<User> GetAllPlayers()
     {
         lock (_configDbContext)
         {
@@ -41,16 +41,17 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public Player? GetPlayer(string id)
+    public User? GetPlayer(string id)
     {
         lock (_configDbContext)
         {
             try
             {
-                return _configDbContext.PLAYERS
+                var players = _configDbContext.PLAYERS
                     .AsNoTracking()
-                    .ToArray()
-                    .FirstOrDefault(x => x.Guid == id);
+                    .ToList();
+                
+                return players.FirstOrDefault(x => x.Guid == id);
             }
             catch (Exception ex)
             {
@@ -60,7 +61,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<Player> GetPlayersByName(string name)
+    public List<User> GetPlayersByName(string name)
     {
         lock (_configDbContext)
         {
@@ -69,7 +70,7 @@ public class PlayerRepository : IPlayerRepository
                 return _configDbContext.PLAYERS
                     .AsNoTracking()
                     .Where(x => x.Name == name)
-                    .ToList<Player>();
+                    .ToList<User>();
             }
             catch (Exception ex)
             {
@@ -86,9 +87,9 @@ public class PlayerRepository : IPlayerRepository
             try
             {
                 return _configDbContext.SERVER_PLAYERS
-                    .Include(x => x.Player)
+                    .Include(x => x.User)
                     .Where(x => x.InstanceId == instanceId && x.IsWhitelisted)
-                    .Select(x => x.Player.Uid)
+                    .Select(x => x.User.Uid)
                     .ToList();
             }
             catch (Exception ex)
@@ -137,20 +138,20 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public void CreateEditPlayer(Player player)
+    public void CreateEditPlayer(User user)
     {
         lock (_configDbContext)
         {
             try
             {
-                var playerDB = _configDbContext.PLAYERS.FirstOrDefault(x => x.Guid == player.Guid);
+                var playerDB = _configDbContext.PLAYERS.FirstOrDefault(x => x.Guid == user.Guid);
                 if (playerDB == null)
                 {
-                    _configDbContext.PLAYERS.Add(player);
+                    _configDbContext.PLAYERS.Add(user);
                 }
                 else
                 {
-                    _configDbContext.Entry(playerDB).CurrentValues.SetValues(player);
+                    _configDbContext.Entry(playerDB).CurrentValues.SetValues(user);
                 }
                 
                 _configDbContext.SaveChanges();
@@ -171,8 +172,8 @@ public class PlayerRepository : IPlayerRepository
                 return _configDbContext.SERVER_PLAYERS
                     .AsNoTracking()
                     .Where(x => x.InstanceId == instanceId)
-                    .Include(x => x.Player)
-                    .Include(x => x.Ban)
+                    .Include(x => x.User)
+                    .Include(x => x.Role)
                     .ToList();
             }
             catch (Exception ex)
@@ -190,8 +191,7 @@ public class PlayerRepository : IPlayerRepository
             try
             {
                 return _configDbContext.SERVER_PLAYERS
-                    .Include(x => x.Player)
-                    .Include(x => x.Ban)
+                    .Include(x => x.User)
                     .Include(x => x.Role)
                     .AsNoTracking()
                     .FirstOrDefault(x => x.Id == serverPlayerId);
@@ -211,11 +211,10 @@ public class PlayerRepository : IPlayerRepository
             try
             {
                 return _configDbContext.SERVER_PLAYERS
-                    .Include(x => x.Player)
-                    .Include(x => x.Ban)
+                    .Include(x => x.User)
                     .Include(x => x.Role)
                     .AsNoTracking()
-                    .FirstOrDefault(x => x.InstanceId == instanceId && x.Player.Guid == playerGuid);
+                    .FirstOrDefault(x => x.InstanceId == instanceId && x.User.Guid == playerGuid);
             }
             catch (Exception ex)
             {
@@ -267,8 +266,7 @@ public class PlayerRepository : IPlayerRepository
             try
             {
                 var playerDB = _configDbContext.SERVER_PLAYERS
-                    .Include(x => x.Player)
-                    .Include(x => x.Ban)
+                    .Include(x => x.User)
                     .Include(x => x.Role)
                     .FirstOrDefault(x => x.Id == player.Id);
                 
@@ -282,13 +280,6 @@ public class PlayerRepository : IPlayerRepository
                 {
                     _configDbContext.Entry(playerDB).CurrentValues.SetValues(player);
                     _configDbContext.SaveChanges();
-                    if (player.Ban == null && playerDB.Ban != null)
-                    {
-                        var ban = _configDbContext.BANS.FirstOrDefault(x => x.Id == playerDB.Ban.Id);
-                        if (ban == null) return HttpStatusCode.NotFound;
-                        _configDbContext.BANS.Remove(ban);
-                        _configDbContext.SaveChanges();
-                    }
 
                     return HttpStatusCode.OK;
                 }
@@ -302,102 +293,22 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public void ClearBans()
-    {
-        lock (_configDbContext)
-        {
-            try
-            {
-                foreach (var ban in _configDbContext.BANS)
-                {
-                    _configDbContext.BANS.Remove(ban);
-                }
-                _configDbContext.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error saving bans");
-            }
-        }
-    }
-
-    public ServerPlayer? GetBannedServerPlayer(int banId, string guid, string reason)
+    public List<ServerPlayer> GetBannedServerPlayers(string instanceId)
     {
         lock (_configDbContext)
         {
             try
             {
                 return _configDbContext.SERVER_PLAYERS
-                    .AsNoTracking()
-                    .Include(x => x.Player)
-                    .Include(x => x.Ban)
-                    .FirstOrDefault(x => x.Player.Guid == guid && x.Ban != null && x.Ban.BanId == banId && x.Ban.Reason == reason);
+                    .Include(x => x.User)
+                    .Include(x => x.Role)
+                    .Where(x => x.IsBanned && x.InstanceId == instanceId)
+                    .ToList();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting player");
-                return null;
-            }
-        }
-    }
-
-    public void CreateNewBan(int banId, string guid, int remainingTime, string reason)
-    {
-        lock (_configDbContext)
-        {
-            try
-            {
-                var player =  _configDbContext.SERVER_PLAYERS
-                    .Include(x => x.Player)
-                    .Include(x => x.Ban)
-                    .FirstOrDefault(x => x.Player.Guid == guid);
-
-                if (player == null) return;
-
-                player.Ban = new Ban(banId, remainingTime, reason);
-                _configDbContext.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating new ban");
-            }
-        }
-    }
-
-    public HttpStatusCode RemoveBan(string id)
-    {
-        lock (_configDbContext)
-        {
-            try
-            {
-                var ban = _configDbContext.BANS.FirstOrDefault(x => x.Id == id);
-                if (ban == null) return HttpStatusCode.NotFound;
-                _configDbContext.BANS.Remove(ban);
-                _configDbContext.SaveChanges();
-                return HttpStatusCode.OK;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error removing ban");
-                return HttpStatusCode.InternalServerError;
-            }
-        }
-    }
-    
-    public void UpdateRemainingTime(string id, int remainingTime)
-    {
-        lock (_configDbContext)
-        {
-            try
-            {
-                var ban = _configDbContext.BANS.FirstOrDefault(x => x.Id == id);
-                if (ban == null) return;
-                ban.RemainingTime = remainingTime;
-                _configDbContext.SaveChanges();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating remaining time");
+                _logger.LogError(ex, "Error getting banned players");
+                return [];
             }
         }
     }
@@ -517,7 +428,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public void ReadOutServerPlayerRoles(string profileFolder, string instanceId)
+    public Dictionary<string, PlayerPermissions> ReadOutServerPlayerRoles(string profileFolder, string instanceId)
     {
         try
         {
@@ -534,41 +445,24 @@ public class PlayerRepository : IPlayerRepository
 
             var players = Directory.GetFiles(Path.Combine(profileFolder, Folders.PermissionFolderName,
                 Folders.PlayersFolderName));
+
+            var playerPermissionsList = new Dictionary<string, PlayerPermissions>();
             
             foreach (var playerFile in players)
             {
-                var playerGuid = Path.GetFileNameWithoutExtension(playerFile);
-                var serverPlayer = GetServerPlayerByGuid(playerGuid, instanceId);
-                
+                var playerUid = Path.GetFileNameWithoutExtension(playerFile);
                 var playerPermissionsFile = _jsonSerializer.DeserializeJSONFile<PlayerPermissions>(playerFile);
-                if (playerPermissionsFile == null || playerPermissionsFile.Roles.Count <= 0) return;
-                    
-                var roleName = playerPermissionsFile.Roles.FirstOrDefault();
-                if (roleName == null) return;
+                if (playerPermissionsFile == null || playerPermissionsFile.Roles.Count <= 0) continue;
                 
-                var role = GetRole(roleName, instanceId);
-                if (role == null) return;
-
-                if (serverPlayer == null)
-                {
-                    var player = GetPlayer(playerGuid);
-                    if (player == null) return;
-
-                    serverPlayer = new ServerPlayer(instanceId, player.Guid, false, false, role.Id);
-                }
-                else
-                {
-                    if (serverPlayer.RoleId == role.Id) continue;
-                    
-                    serverPlayer.Role = role;
-                }
-                
-                CreateEditServerPlayer(serverPlayer);
+                playerPermissionsList.Add(playerUid, playerPermissionsFile);
             }
+
+            return playerPermissionsList;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error reading player roles");
+            return new Dictionary<string, PlayerPermissions>();
         }
     }
 
@@ -594,7 +488,7 @@ public class PlayerRepository : IPlayerRepository
 
             _jsonSerializer.SerializeJSONFile(
                 Path.Combine(profileFolder, Folders.PermissionFolderName, Folders.PlayersFolderName,
-                    serverPlayer.PlayerId + ".json"), playerJsonFile);
+                    serverPlayer.User.Uid + ".json"), playerJsonFile);
 
             return CreateEditServerPlayer(serverPlayer);
         }

@@ -1,7 +1,7 @@
 import {Component, signal, WritableSignal} from '@angular/core';
 import {AgGridAngular} from 'ag-grid-angular';
 import {type AutoSizeStrategy, ColDef} from 'ag-grid-community';
-import {Player, PlayerService} from '../../api';
+import {PlayerService, User} from '../../api';
 
 
 @Component({
@@ -12,7 +12,7 @@ import {Player, PlayerService} from '../../api';
   templateUrl: 'players-db.html'
 })
 export default class PlayersDb {
-  public players: WritableSignal<Player[]> = signal([]);
+  public players: WritableSignal<User[]> = signal([]);
 
   public colDefs: ColDef[] = [
     {

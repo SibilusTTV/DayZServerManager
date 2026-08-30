@@ -92,12 +92,12 @@ public class ServerRepository : IServerRepository
 
             if (!File.Exists(adminLogPath))
             {
-                using (var fs = File.Create(adminLogPath))
-                {
+                adminLogPath = Directory.GetFiles(Path.Combine(serverFolderName, profileName)).Order()
+                    .LastOrDefault(x => Path.GetExtension(x) == ".ADM");
 
-                }
+                if (adminLogPath == null || !File.Exists(adminLogPath)) return "";
             }
-
+            
             using (var fs = new FileStream(adminLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 using (var sr = new StreamReader(fs, Encoding.Default))
@@ -105,6 +105,7 @@ public class ServerRepository : IServerRepository
                     return sr.ReadToEnd();
                 }
             }
+
         }
         catch (Exception ex)
         {

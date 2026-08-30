@@ -13,8 +13,7 @@ public class ConfigDbContext : DbContext
     public DbSet<SteamCredentials> STEAM_CREDENTIALS { get; set; }
     public DbSet<Mod> MODS { get; set; }
     public DbSet<CustomMessage> MESSAGES { get; set; }
-    public DbSet<Player> PLAYERS { get; set; }
-    public DbSet<Ban> BANS { get; set; }
+    public DbSet<User> PLAYERS { get; set; }
     public DbSet<ServerPlayer> SERVER_PLAYERS { get; set; }
     public DbSet<SchedulerConfig> SCHEDULER_CONFIGS { get; set; }
     public DbSet<InstanceClientMod> INSTANCE_CLIENT_MODS { get; set; }
@@ -50,13 +49,9 @@ public class ConfigDbContext : DbContext
         
         modelBuilder.Entity<InstanceClientMod>()
             .HasKey(r => new { r.InstanceId, r.ModId });
-
-        modelBuilder.Entity<ServerPlayer>()
-            .HasOne(x => x.Ban)
-            .WithOne();
         
         modelBuilder.Entity<ServerPlayer>()
-            .HasOne(player => player.Player)
+            .HasOne(player => player.User)
             .WithMany();
         
         modelBuilder.Entity<ServerPlayer>()

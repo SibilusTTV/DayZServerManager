@@ -1,6 +1,7 @@
 using System.Net;
 using Application.IRepository;
 using Application.IService;
+using Domain.Profile;
 using Domain.Scheduler;
 using Microsoft.Extensions.Logging;
 
@@ -19,12 +20,12 @@ public class PlayerService : IPlayerService
         _instanceRepository = instanceRepository;
     }
 
-    public List<Player> GetPlayers()
+    public List<User> GetPlayers()
     {
         return _playerRepository.GetAllPlayers();
     }
 
-    public Player? GetPlayer(string id)
+    public User? GetPlayer(string id)
     {
         return _playerRepository.GetPlayer(id);
     }
@@ -84,13 +85,13 @@ public class PlayerService : IPlayerService
         _playerRepository.ReadOutRoles(Path.Combine(instance.serverFolder, instance.profileName), instanceId);
     }
 
-    public void ReadOutServerPlayerRoles(string instanceId)
+    public Dictionary<string, PlayerPermissions> ReadOutServerPlayerRoles(string instanceId)
     {
         var instance = _instanceRepository.GetInstance(instanceId);
 
-        if (instance == null) return;
+        if (instance == null) return new Dictionary<string, PlayerPermissions>();
         
-        _playerRepository.ReadOutServerPlayerRoles(Path.Combine(instance.serverFolder, instance.profileName), instanceId);
+        return _playerRepository.ReadOutServerPlayerRoles(Path.Combine(instance.serverFolder, instance.profileName), instanceId);
     }
 
     public HttpStatusCode SaveServerPlayerRole(string serverPlayerId, string playerGuid, string instanceId, string roleName)
