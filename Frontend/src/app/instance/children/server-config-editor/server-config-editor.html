@@ -12,5 +12,7 @@
     [defaultColDef]="DefaultColDef"
     class="full-width-grid"
     [autoSizeStrategy]="autoSizeStrategy"
+    [rowDragManaged]="true"
+    (rowDragEnd)="onPropertiesRowDragEnd($event)"
   />
 </div>

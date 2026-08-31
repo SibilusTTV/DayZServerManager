@@ -65,13 +65,14 @@ public class ServerInstance : IServerInstance
         
         var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
         serverRepository?.CreateFoldersAndFiles(instanceConfig.serverFolder, instanceConfig.profileName, _battlEyeFolderPath);
-        serverRepository?.UpdateBeConfigs(_battlEyeFolderPath, instanceConfig.RConPassword, instanceConfig.RConPort);
 
         var serverConfigService = _serverScope.ServiceProvider.GetService<IServerConfigService>();
 
         ServerConfig = 
             serverConfigService?.Get(Path.Combine(instanceConfig.serverFolder, instanceConfig.serverConfigName)) ??
             new ServerConfig();
+        
+        UpdateServerConfig(instanceConfig);
         
         _serverProcess = null;
         _updatedModIds = [];
@@ -93,7 +94,7 @@ public class ServerInstance : IServerInstance
             _serverInformation.managerStatus = Statuses.Credentials;
             return;
         }
-
+        
         UpdateServerConfig(instanceConfig);
 
         _steamCmdService.WaitForSteamCmd();
@@ -532,6 +533,8 @@ public class ServerInstance : IServerInstance
 
     private void UpdateServerConfig(Instance instance)
     {
+        var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
+        serverRepository?.UpdateBeConfigs(_battlEyeFolderPath, instance.RConPassword, instance.RConPort);
         var serverConfigService = _serverScope.ServiceProvider.GetService<IServerConfigService>();
         serverConfigService?.UpdateServerConfig(ServerConfig, instance.missionName, instance.hostName, instance.instanceId, instance.steamPort, instance.steamQueryPort);
         serverConfigService?.Save(ServerConfig, Path.Combine(instance.serverFolder, instance.serverConfigName));

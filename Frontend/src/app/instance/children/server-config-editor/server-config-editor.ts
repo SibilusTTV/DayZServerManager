@@ -1,6 +1,6 @@
 import {Component, signal, WritableSignal} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {PropertyValue, ServerConfigService} from '../../../../api';
+import {Mod, PropertyValue, ServerConfigService} from '../../../../api';
 import {AgGridAngular} from 'ag-grid-angular';
 import {type AutoSizeStrategy, ColDef, EditableCallbackParams} from 'ag-grid-community';
 import {MatIcon} from '@angular/material/icon';
@@ -26,7 +26,8 @@ export default class ServerConfigEditor {
       field: "propertyName",
       maxWidth: 320,
       editable: params => this.isEditable(params),
-      filter: true
+      filter: true,
+      rowDrag: true
     },
     {
       field: "value",
@@ -96,5 +97,14 @@ export default class ServerConfigEditor {
 
   public onDeleteClick(propertyName: string, value: string, comment: string){
     this.properties.set(this.properties().filter(x => !(x.value == value && x.propertyName == propertyName && x.comment == comment)));
+  }
+
+  public onPropertiesRowDragEnd(params: any) {
+    const newData: PropertyValue[] = [];
+    params.api.forEachNode((node: any) => {
+      newData.push(node.data);
+    });
+
+    this.properties.set([...newData]);
   }
 }

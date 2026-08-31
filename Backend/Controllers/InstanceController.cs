@@ -1,9 +1,6 @@
-using System.Net;
 using Application.IService;
-using Application.Service;
 using Domain.Constants;
 using Domain.Manager;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers;

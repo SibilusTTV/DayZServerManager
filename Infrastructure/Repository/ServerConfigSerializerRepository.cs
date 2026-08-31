@@ -10,9 +10,12 @@ public class ServerConfigSerializerRepository : IServerConfigSerializerRepositor
 {
     public ServerConfig Deserialize(string config)
     {
-        var cfg = new ServerConfig();
+        var cfg = new ServerConfig
+        {
+            Properties = []
+        };
 
-        const string pattern = @"[^\n\w\""]*(?'propertyName'[a-zA-Z0-9\[\]]+)\s*=\s*(?'value'((\""[^\""\n]*\"")|([0-9]+\.[0-9]+)|([0-9]+)|([Ff]alse|[Tt]rue)|(\{(\""[^\n\""]*\""(,\""[^\n\""]*\""))?\})));(\s*\/\/\s*(?'comment'[^\n]*))?";
+        const string pattern = @"[^\n\w""]*(?'propertyName'[a-zA-Z0-9\[\]]+)\s*=\s*(?'value'(([^;\n]*)|([0-9]+\.[0-9]+)|([0-9]+)|([Ff]alse|[Tt]rue)|(\{(""[^\n""]*""(,""[^\n""]*""))?\})));(\s*\/\/\s*(?'comment'[^\n]*))?";
         var reg = new Regex(pattern);
         var matches = reg.Matches(config);
 
@@ -27,7 +30,8 @@ public class ServerConfigSerializerRepository : IServerConfigSerializerRepositor
 
             if (match.Groups["value"].Success)
             {
-                cfg.Properties.Add(new PropertyValue(propertyName, match.Groups["stringValue"].Value, comment));
+                var value = match.Groups["value"].Value.TrimEnd('"').TrimStart('"');
+                cfg.Properties.Add(new PropertyValue(propertyName, value, comment));
             }
         }
 
