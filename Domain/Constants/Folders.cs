@@ -2,6 +2,7 @@ namespace Domain.Constants;
 
 public static class Folders
 {
+    public const string ConfigFolderName = "config";
     public const string LogsFolderName = "logs";
     public const string DeployFolderName = "deploy";
     public const string SteamCmdFolderName = "steamcmd";

@@ -1,6 +1,7 @@
 using Application.IRepository;
 using Application.IService;
 using Application.Service;
+using Domain.Constants;
 using Domain.Manager;
 using Infrastructure.Context;
 using Infrastructure.Repository;
@@ -9,6 +10,18 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 var port = builder.Configuration.GetValue<int>("Port", 5041);
+
+try
+{
+    if (!Directory.Exists(Folders.ConfigFolderName))
+    {
+        Directory.CreateDirectory(Folders.ConfigFolderName);
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}
 
 builder.Services.AddCors(options =>
 {
@@ -24,7 +37,7 @@ Environment.SetEnvironmentVariable("AppendManifestToken_SQLiteProviderManifest",
 
 builder.Services.AddDbContext<ConfigDbContext>(options =>
     options.UseSqlite(
-        "Data Source=config.db;", 
+        "Data Source=" + Path.Combine(Folders.ConfigFolderName, Files.ManagerConfigFileName) + ";", 
         x => x.MigrationsAssembly("Migrations"))
     );
 

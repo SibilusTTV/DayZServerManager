@@ -7,6 +7,7 @@
         <SpaRoot>..\Frontend</SpaRoot>
         <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
         <SpaProxyServerUrl>http://0.0.0.0:4200</SpaProxyServerUrl>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -32,21 +33,28 @@
 
     <ItemGroup>
       <Compile Remove="Debug\**" />
+      <Compile Remove="Build\**" />
     </ItemGroup>
 
 
     <ItemGroup>
       <EmbeddedResource Remove="Debug\**" />
+      <EmbeddedResource Remove="Build\**" />
     </ItemGroup>
 
 
     <ItemGroup>
       <Content Remove="Debug\**" />
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+      <Content Remove="Build\**" />
     </ItemGroup>
 
 
     <ItemGroup>
       <None Remove="Debug\**" />
+      <None Remove="Build\**" />
     </ItemGroup>
 
 
@@ -83,6 +91,22 @@
       <_ContentIncludedByDefault Remove="Debug\server1\Profiles\CommunityOnlineTools\Teleports_ChernarusPlus.json" />
       <_ContentIncludedByDefault Remove="Debug\server1\Profiles\CommunityOnlineTools\Weather.json" />
       <_ContentIncludedByDefault Remove="Debug\server1\Profiles\CommunityOnlineTools\Webhooks.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\web.config" />
+      <_ContentIncludedByDefault Remove="Build\linux\appsettings.Development.json" />
+      <_ContentIncludedByDefault Remove="Build\linux\appsettings.json" />
+      <_ContentIncludedByDefault Remove="Build\linux\Backend.staticwebassets.endpoints.json" />
+      <_ContentIncludedByDefault Remove="Build\linux\Build\windows\appsettings.Development.json" />
+      <_ContentIncludedByDefault Remove="Build\linux\Build\windows\appsettings.json" />
+      <_ContentIncludedByDefault Remove="Build\linux\Build\windows\Backend.staticwebassets.endpoints.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\appsettings.Development.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\appsettings.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\Backend.staticwebassets.endpoints.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\Build\linux\appsettings.Development.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\Build\linux\appsettings.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\Build\linux\Backend.staticwebassets.endpoints.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\Build\linux\Build\windows\appsettings.Development.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\Build\linux\Build\windows\appsettings.json" />
+      <_ContentIncludedByDefault Remove="Build\windows\Build\linux\Build\windows\Backend.staticwebassets.endpoints.json" />
     </ItemGroup>
 
 </Project>

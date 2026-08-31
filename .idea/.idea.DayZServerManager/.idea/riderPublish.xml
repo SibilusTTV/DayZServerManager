@@ -6,6 +6,8 @@
         <option value="$PROJECT_DIR$/Backend/bin/Release/net10.0/linux-x64/publish" />
         <option value="$PROJECT_DIR$/build/windows" />
         <option value="$PROJECT_DIR$/build/linux" />
+        <option value="$PROJECT_DIR$/Backend/Build/linux" />
+        <option value="$PROJECT_DIR$/Backend/Build/windows" />
       </list>
     </option>
   </component>

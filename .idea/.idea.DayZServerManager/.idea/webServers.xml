@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="3692d699-ac49-4f80-9b81-ead10792c0e1" name="Remote Server">
+        <fileTransfer rootFolder="/home/dayz/ssh" accessType="SFTP" host="192.168.178.105" port="22" sshConfigId="eeecc974-b28b-41cf-bbfa-624063f9a92c" sshConfig="root@192.168.178.105:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -2,7 +2,7 @@ namespace Domain.Constants;
 
 public static class Files
 {
-    public const string ManagerConfigFileName = "config.json";
+    public const string ManagerConfigFileName = "config.db";
     public const string SteamCmdTarFileName = "steamcmd.tar";
     public const string BattlEyeBansFileName = "bans.txt";
     public const string SchedulerConfigFileName = "config.json";
