@@ -16,5 +16,10 @@ public class ManagerRepository : IManagerRepository
         {
             Directory.CreateDirectory(Folders.DeployFolderName);
         }
+
+        if (!Directory.Exists(Folders.ServersFolderName))
+        {
+            Directory.CreateDirectory(Folders.ServersFolderName);
+        }
     }
 }

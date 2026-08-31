@@ -69,7 +69,7 @@ public class Instance
         autoStartServer = false;
         makeBackups = true;
         deleteBackups = true;
-        backupPath = "Backup";
+        backupPath = "server1";
         maxKeepTime = 7;
         clientMods = new List<Mod>();
         serverMods = new List<Mod>();
@@ -110,7 +110,7 @@ public class Instance
         autoStartServer = false;
         makeBackups = true;
         deleteBackups = true;
-        backupPath = "Backup";
+        backupPath = "server1";
         maxKeepTime = 7;
         this.clientMods = clientMods;
         serverMods = [];

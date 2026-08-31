@@ -278,7 +278,7 @@ public class SchedulerService : ISchedulerService
         var instance = instanceRepository?.GetInstance(instanceId);
         if (instance == null) return HttpStatusCode.NotFound;
         
-        var whitelistedPlayers = GetWhitelistedPlayers(instance.serverFolder);
+        var whitelistedPlayers = GetWhitelistedPlayers(Path.Combine(Folders.ServersFolderName, instance.serverFolder));
 
         playerRepository?.WhitelistPlayer(serverPlayer.Id);
         if (!whitelistedPlayers.Contains(playerGuid))
@@ -287,7 +287,7 @@ public class SchedulerService : ISchedulerService
         }
 
         _logger.LogInformation($"{serverPlayer.User.Name} was whitelisted");
-        return SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
+        return SaveWhitelistedPlayers(Path.Combine(Folders.ServersFolderName, instance.serverFolder), whitelistedPlayers);
     }
 
     public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId)
@@ -302,7 +302,7 @@ public class SchedulerService : ISchedulerService
         
         if (instance == null) return HttpStatusCode.NotFound;
         
-        var whitelistedPlayers = GetWhitelistedPlayers(instance.serverFolder);
+        var whitelistedPlayers = GetWhitelistedPlayers(Path.Combine(Folders.ServersFolderName, instance.serverFolder));
         
         playerRepository?.UnWhitelistPlayer(player.Id);
         if (whitelistedPlayers.Contains(player.User.Uid))
@@ -311,7 +311,7 @@ public class SchedulerService : ISchedulerService
         }
 
         _logger.LogInformation($"{player.User.Name} was unwhitelisted");
-        return SaveWhitelistedPlayers(instance.serverFolder, whitelistedPlayers);
+        return SaveWhitelistedPlayers(Path.Combine(Folders.ServersFolderName, instance.serverFolder), whitelistedPlayers);
     }
 
     public void SendCommand(string command)
@@ -328,7 +328,7 @@ public class SchedulerService : ISchedulerService
     {
         var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
         
-        var returnString = serverRepository?.GetAdminLog(instance.serverFolder, instance.profileName);
+        var returnString = serverRepository?.GetAdminLog(Path.Combine(Folders.ServersFolderName, instance.serverFolder), instance.profileName);
 
         if (_adminLog == returnString || returnString == null) return [];
         

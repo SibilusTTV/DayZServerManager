@@ -9,5 +9,5 @@ public interface IRarityService
     public bool UpdateRaritiesAndTypes(string id, string name, RarityFile rarityFile);
 
     public bool UpdateRaritiesAndTypes(string name, RarityFile rarityFile, string missionTemplateName,
-        string serverFolderName);
+        string serverFolderPath);
 }

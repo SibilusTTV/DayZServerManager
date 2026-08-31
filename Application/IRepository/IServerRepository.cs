@@ -16,6 +16,6 @@ public interface IServerRepository
     public List<long> CheckForUpdates(List<Mod> mods, string serverFolderName, out bool updatedMods,
         out bool missionNeedsUpdating, out bool updatedServer);
 
-    public string GetAdminLog(string serverFolderName, string profileName);
-    public void CreateFoldersAndFiles(string serverFolderName, string profileName, string battlEyeFolderPath);
+    public string GetAdminLog(string serverFolderPath, string profileName);
+    public void CreateFoldersAndFiles(string serverFolderPath, string profileName, string battlEyeFolderPath);
 }

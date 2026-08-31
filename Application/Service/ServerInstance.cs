@@ -1,13 +1,10 @@
 using System.Diagnostics;
 using System.Net;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text.RegularExpressions;
 using Application.IRepository;
 using Application.IService;
 using Domain.Constants;
 using Domain.Manager;
 using Domain.Profile;
-using Domain.Scheduler;
 using Domain.ServerConfig;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,6 +16,7 @@ public class ServerInstance : IServerInstance
     public bool IsRunning { get; private set; }
     
     private readonly ILogger<ServerInstance> _logger;
+    private readonly string _id;
     
     // Other Variables
     private bool _updatedMods;
@@ -27,7 +25,6 @@ public class ServerInstance : IServerInstance
     private List<long> _updatedModIds;
     private string _battlEyeFolderPath;
     private string _profilePath;
-    private string _id;
 
     private Timer? _serverLoopTimer;
     private Timer? _serverUpdateTimer;
@@ -56,8 +53,8 @@ public class ServerInstance : IServerInstance
         var instanceConfig = GetInstanceConfig();
         _serverInformation = new ServerInformation();
         _steamCmdService = steamCmdService;
-        _profilePath = Path.Combine(instanceConfig.serverFolder, instanceConfig.profileName);
-        _battlEyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(_profilePath, Folders.BattleyeFolderName) : Path.Combine(instanceConfig.serverFolder, Folders.BattleyeFolderName);
+        _profilePath = Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder, instanceConfig.profileName);
+        _battlEyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(_profilePath, Folders.BattleyeFolderName) : Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder, Folders.BattleyeFolderName);
         _scheduler = _serverScope.ServiceProvider.GetService<ISchedulerService>();
         
         _serverInformation.managerStatus = Statuses.Listening;
@@ -69,7 +66,7 @@ public class ServerInstance : IServerInstance
         var serverConfigService = _serverScope.ServiceProvider.GetService<IServerConfigService>();
 
         ServerConfig = 
-            serverConfigService?.Get(Path.Combine(instanceConfig.serverFolder, instanceConfig.serverConfigName)) ??
+            serverConfigService?.Get(Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder, instanceConfig.serverConfigName)) ??
             new ServerConfig();
         
         UpdateServerConfig(instanceConfig);
@@ -106,7 +103,7 @@ public class ServerInstance : IServerInstance
         
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         var whitelistedPlayerUids = playerRepository?.GetWhitelistedPlayerNames(instanceConfig.id);
-        if (whitelistedPlayerUids != null) _scheduler?.SaveWhitelistedPlayers(instanceConfig.serverFolder, whitelistedPlayerUids);
+        if (whitelistedPlayerUids != null) _scheduler?.SaveWhitelistedPlayers(Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder), whitelistedPlayerUids);
         
         StartServer(instanceConfig);
 
@@ -128,7 +125,7 @@ public class ServerInstance : IServerInstance
     
     public void Dispose()
     {
-        _serverScope?.Dispose();
+        _serverScope.Dispose();
     }
 
     public ServerInformation GetServerInformation()
@@ -152,15 +149,15 @@ public class ServerInstance : IServerInstance
         
         if (!CheckServer())
         {
-            _profilePath = Path.Combine(instanceConfig.serverFolder, instanceConfig.profileName);
-            _battlEyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(_profilePath, Folders.BattleyeFolderName) : Path.Combine(instanceConfig.serverFolder, Folders.BattleyeFolderName);
+            _profilePath = Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder, instanceConfig.profileName);
+            _battlEyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(_profilePath, Folders.BattleyeFolderName) : Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder, Folders.BattleyeFolderName);
 
             MoveAndBackupServer(instanceConfig);
 
             var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
 
             var whitelistedPlayerUids = playerRepository?.GetWhitelistedPlayerNames(instanceConfig.id);
-            if (whitelistedPlayerUids != null) _scheduler?.SaveWhitelistedPlayers(instanceConfig.serverFolder, whitelistedPlayerUids);
+            if (whitelistedPlayerUids != null) _scheduler?.SaveWhitelistedPlayers(Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder), whitelistedPlayerUids);
 
             UpdateServerConfig(instanceConfig);
 
@@ -201,7 +198,7 @@ public class ServerInstance : IServerInstance
         
         var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
         var missionNeedsUpdating = false;
-        _updatedModIds = serverRepository?.CheckForUpdates(mods, instance.serverFolder, out _updatedMods, out missionNeedsUpdating, out _updatedServer) ?? [];
+        _updatedModIds = serverRepository?.CheckForUpdates(mods, Path.Combine(Folders.ServersFolderName, instance.serverFolder), out _updatedMods, out missionNeedsUpdating, out _updatedServer) ?? [];
         MissionNeedsUpdating = missionNeedsUpdating;
     }
     
@@ -235,7 +232,7 @@ public class ServerInstance : IServerInstance
         {
             var onlyRestarts = instance.clientMods.FindAll(mod => mod.name.Contains(SteamCmd.ExpansionModSearch, StringComparison.CurrentCultureIgnoreCase)).Count > 0;
             
-            _scheduler?.InitializeScheduler(Urls.Localhost, instance.RConPort, instance.RConPassword, instance.restartInterval, onlyRestarts, instance.customMessages, instance.serverFolder);
+            _scheduler?.InitializeScheduler(Urls.Localhost, instance.RConPort, instance.RConPassword, instance.restartInterval, onlyRestarts, instance.customMessages, Path.Combine(Folders.ServersFolderName, instance.serverFolder));
             
             connectTask = new Task(() => { _scheduler?.Connect(); });
             connectTask.Start();
@@ -280,14 +277,14 @@ public class ServerInstance : IServerInstance
             _serverProcess = new Process();
             var procInf = new ProcessStartInfo();
             var startParameters = GetServerStartParameters(clientModsToLoad, serverModsToLoad, instance);
-            procInf.WorkingDirectory = instance.serverFolder;
+            procInf.WorkingDirectory = Path.Combine(Folders.ServersFolderName, instance.serverFolder);
             procInf.Arguments = startParameters;
-            procInf.FileName = Path.Combine(instance.serverFolder, Files.ServerExecutableFileName);
+            procInf.FileName = Path.Combine(Folders.ServersFolderName, instance.serverFolder, Files.ServerExecutableFileName);
             _serverProcess.StartInfo = procInf;
             _logger.LogInformation(Statuses.StartingServer);
             _serverProcess.Start();
             _serverInformation.dayzServerStatus = Statuses.Running;
-            _logger.LogInformation($"Server starting at {Path.Combine(instance.serverFolder, Files.ServerExecutableFileName)} with the parameters {startParameters}");
+            _logger.LogInformation($"Server starting at {Path.Combine(Folders.ServersFolderName, instance.serverFolder, Files.ServerExecutableFileName)} with the parameters {startParameters}");
         }
         catch (Exception ex)
         {
@@ -395,7 +392,10 @@ public class ServerInstance : IServerInstance
         {
             _serverInformation.managerStatus = Statuses.BackingUpServer;
             _logger.LogInformation(Statuses.BackingUpServer);
-            serverRepository?.BackupServerData(instance.deleteBackups, instance.backupPath, instance.profileName, instance.missionName, instance.maxKeepTime, instance.serverFolder);
+            serverRepository?.BackupServerData(instance.deleteBackups,
+                Path.Combine(Folders.BackupsFolderName, instance.backupPath), instance.profileName,
+                instance.missionName, instance.maxKeepTime,
+                Path.Combine(Folders.ServersFolderName, instance.serverFolder));
             _logger.LogInformation(Statuses.ServerBackedUp);
             _serverInformation.managerStatus = Statuses.ServerBackedUp;
         }
@@ -405,7 +405,7 @@ public class ServerInstance : IServerInstance
             _serverInformation.managerStatus = Statuses.MovingServer;
             _logger.LogInformation(Statuses.MovingServer);
             
-            serverRepository?.MoveServer(instance.serverFolder, instance.profileName, instance.serverConfigName);
+            serverRepository?.MoveServer(Path.Combine(Folders.ServersFolderName, instance.serverFolder), instance.profileName, instance.serverConfigName);
 
             _serverInformation.managerStatus = Statuses.ServerMoved;
             _logger.LogInformation(Statuses.ServerMoved);
@@ -416,7 +416,7 @@ public class ServerInstance : IServerInstance
             _serverInformation.managerStatus = Statuses.MovingMods;
             _logger.LogInformation(Statuses.MovingMods);
             
-            serverRepository?.MoveMods(mods, _updatedModIds, instance.serverFolder);
+            serverRepository?.MoveMods(mods, _updatedModIds, Path.Combine(Folders.ServersFolderName, instance.serverFolder));
 
             _serverInformation.managerStatus = Statuses.ModsMoved;
             _logger.LogInformation(Statuses.ModsMoved);
@@ -432,7 +432,10 @@ public class ServerInstance : IServerInstance
             _serverInformation.managerStatus = Statuses.UpdatingMission;
 
             var missionService = _serverScope.ServiceProvider.GetService<IMissionService>();
-            missionService?.UpdateMission(instance.serverFolder, instance.missionName, instance.missionTemplateName, instance.vanillaMissionName, instance.backupPath, instance.mapName, hasExpansion);
+            missionService?.UpdateMission(Path.Combine(Folders.ServersFolderName, instance.serverFolder),
+                instance.missionName, instance.missionTemplateName, instance.vanillaMissionName,
+                Path.Combine(Folders.BackupsFolderName, instance.backupPath),
+                instance.mapName, hasExpansion);
             
             _logger.LogInformation(Statuses.MissionUpdated);
             _serverInformation.managerStatus = Statuses.MissionUpdated;
@@ -441,7 +444,10 @@ public class ServerInstance : IServerInstance
 
         if (hasExpansion)
         {
-            var notFile = serverRepository?.UpdateExpansionNotificationFile(instance.serverFolder, instance.profileName) ?? new NotificationSchedulerFile(1, 1, 0, 0, new List<NotificationItem>());
+            var notFile =
+                serverRepository?.UpdateExpansionNotificationFile(
+                    Path.Combine(Folders.ServersFolderName, instance.serverFolder), instance.profileName) ??
+                new NotificationSchedulerFile(1, 1, 0, 0, new List<NotificationItem>());
             
             var restartUpdater = _serverScope.ServiceProvider.GetService<IRestartUpdaterService>();
             restartUpdater?.UpdateExpansionScheduler(instance, notFile);
@@ -482,8 +488,8 @@ public class ServerInstance : IServerInstance
                 
                 _serverInformation.dayzServerStatus = Statuses.NotRunning;
 
-                _profilePath = Path.Combine(instanceConfig.serverFolder, instanceConfig.profileName);
-                _battlEyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(_profilePath, Folders.BattleyeFolderName) : Path.Combine(instanceConfig.serverFolder, Folders.BattleyeFolderName);
+                _profilePath = Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder, instanceConfig.profileName);
+                _battlEyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(_profilePath, Folders.BattleyeFolderName) : Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder, Folders.BattleyeFolderName);
                 
                 UpdateServerConfig(instanceConfig);
             }
@@ -537,6 +543,6 @@ public class ServerInstance : IServerInstance
         serverRepository?.UpdateBeConfigs(_battlEyeFolderPath, instance.RConPassword, instance.RConPort);
         var serverConfigService = _serverScope.ServiceProvider.GetService<IServerConfigService>();
         serverConfigService?.UpdateServerConfig(ServerConfig, instance.missionName, instance.hostName, instance.instanceId, instance.steamPort, instance.steamQueryPort);
-        serverConfigService?.Save(ServerConfig, Path.Combine(instance.serverFolder, instance.serverConfigName));
+        serverConfigService?.Save(ServerConfig, Path.Combine(Folders.ServersFolderName, instance.serverFolder, instance.serverConfigName));
     }
 }

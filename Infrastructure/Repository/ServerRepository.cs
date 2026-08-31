@@ -30,21 +30,21 @@ public class ServerRepository : IServerRepository
         _serverScope = scopeFactory.CreateScope();
     }
 
-    public void CreateFoldersAndFiles(string serverFolderName, string profileName, string battlEyeFolderPath)
+    public void CreateFoldersAndFiles(string serverFolderPath, string profileName, string battlEyeFolderPath)
     {
-        if (!Directory.Exists(serverFolderName))
+        if (!Directory.Exists(serverFolderPath))
         {
-            Directory.CreateDirectory(serverFolderName);
+            Directory.CreateDirectory(serverFolderPath);
         }
 
-        if (!File.Exists(Path.Combine(serverFolderName, Files.BanFileName)))
+        if (!File.Exists(Path.Combine(serverFolderPath, Files.BanFileName)))
         {
-            File.Create(Path.Combine(serverFolderName, Files.BanFileName));
+            File.Create(Path.Combine(serverFolderPath, Files.BanFileName));
         }
 
-        if (!Directory.Exists(Path.Combine(serverFolderName, profileName)))
+        if (!Directory.Exists(Path.Combine(serverFolderPath, profileName)))
         {
-            Directory.CreateDirectory(Path.Combine(serverFolderName, profileName));
+            Directory.CreateDirectory(Path.Combine(serverFolderPath, profileName));
         }
 
         if (!Directory.Exists(battlEyeFolderPath))
@@ -82,17 +82,17 @@ public class ServerRepository : IServerRepository
         }
     }
     
-    public string GetAdminLog(string serverFolderName, string profileName)
+    public string GetAdminLog(string serverFolderPath, string profileName)
     {
         try
         {
             var adminLogPath = OperatingSystem.IsWindows() ? 
-                Path.Combine(serverFolderName, profileName, Files.AdminLogX64Name) : 
-                Path.Combine(serverFolderName, profileName, Files.AdminLogName);
+                Path.Combine(serverFolderPath, profileName, Files.AdminLogX64Name) : 
+                Path.Combine(serverFolderPath, profileName, Files.AdminLogName);
 
             if (!File.Exists(adminLogPath))
             {
-                adminLogPath = Directory.GetFiles(Path.Combine(serverFolderName, profileName)).Order()
+                adminLogPath = Directory.GetFiles(Path.Combine(serverFolderPath, profileName)).Order()
                     .LastOrDefault(x => Path.GetExtension(x) == ".ADM");
 
                 if (adminLogPath == null || !File.Exists(adminLogPath)) return "";
@@ -289,12 +289,12 @@ public class ServerRepository : IServerRepository
         }
     }
     
-    private bool CheckForUpdatedServer(string  serverFolderName)
+    private bool CheckForUpdatedServer(string serverFolderPath)
     {
         try
         {
-            var dateBeforeUpdate = File.Exists(Path.Combine(serverFolderName, Files.ServerExecutableFileName)) ? 
-                File.GetLastWriteTimeUtc(Path.Combine(serverFolderName, Files.ServerExecutableFileName)) : 
+            var dateBeforeUpdate = File.Exists(Path.Combine(serverFolderPath, Files.ServerExecutableFileName)) ? 
+                File.GetLastWriteTimeUtc(Path.Combine(serverFolderPath, Files.ServerExecutableFileName)) : 
                 DateTime.MinValue;
 
             var dateAfterUpdate = File.Exists(Path.Combine(Folders.DeployFolderName, Files.ServerExecutableFileName)) ? 
@@ -319,7 +319,7 @@ public class ServerRepository : IServerRepository
         }
     }
 
-    private List<long> CheckForUpdatedMods(List<Mod> mods, string serverFolderName, out bool updatedMods, out bool missionNeedsUpdating)
+    private List<long> CheckForUpdatedMods(List<Mod> mods, string serverFolderPath, out bool updatedMods, out bool missionNeedsUpdating)
     {
         List<long> updatedModsIDs = [];
         updatedMods  = false;
@@ -329,7 +329,7 @@ public class ServerRepository : IServerRepository
         {
             if (!Directory.Exists(Path.Combine(Folders.ModsFolderName, Folders.WorkshopFolderPath, mod.workshopID.ToString())) || !CompareForChanges(
                     Path.Combine(Folders.ModsFolderName, Folders.WorkshopFolderPath, mod.workshopID.ToString()),
-                    Path.Combine(serverFolderName, mod.name))) continue;
+                    Path.Combine(serverFolderPath, mod.name))) continue;
             
             if (updatedModsIDs.Contains(mod.workshopID))
             {

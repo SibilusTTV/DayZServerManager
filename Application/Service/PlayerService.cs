@@ -1,9 +1,10 @@
 using System.Net;
 using Application.IRepository;
 using Application.IService;
+using Domain.Constants;
 using Domain.Profile;
-using Domain.Scheduler;
 using Microsoft.Extensions.Logging;
+using Domain.Scheduler;
 
 namespace Application.Service;
 
@@ -82,7 +83,7 @@ public class PlayerService : IPlayerService
 
         if (instance == null) return;
         
-        _playerRepository.ReadOutRoles(Path.Combine(instance.serverFolder, instance.profileName), instanceId);
+        _playerRepository.ReadOutRoles(Path.Combine(Folders.ServersFolderName, instance.serverFolder, instance.profileName), instanceId);
     }
 
     public Dictionary<string, PlayerPermissions> ReadOutServerPlayerRoles(string instanceId)
@@ -91,7 +92,7 @@ public class PlayerService : IPlayerService
 
         if (instance == null) return new Dictionary<string, PlayerPermissions>();
         
-        return _playerRepository.ReadOutServerPlayerRoles(Path.Combine(instance.serverFolder, instance.profileName), instanceId);
+        return _playerRepository.ReadOutServerPlayerRoles(Path.Combine(Folders.ServersFolderName, instance.serverFolder, instance.profileName), instanceId);
     }
 
     public HttpStatusCode SaveServerPlayerRole(string serverPlayerId, string playerGuid, string instanceId, string roleName)
@@ -116,7 +117,7 @@ public class PlayerService : IPlayerService
             serverPlayer.RoleId = role.Id;
         }
 
-        return _playerRepository.SaveServerPlayerRole(Path.Combine(instance.serverFolder, instance.profileName),
+        return _playerRepository.SaveServerPlayerRole(Path.Combine(Folders.ServersFolderName, instance.serverFolder, instance.profileName),
             serverPlayer, roleName);
     }
 }

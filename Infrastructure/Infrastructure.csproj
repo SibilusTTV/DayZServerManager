@@ -11,6 +11,9 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Reference Include="BytexDigital.BattlEye.Rcon">
+        <HintPath>..\..\..\.nuget\packages\bytexdigital.battleye.rcon\1.0.3-preview.1718920183\lib\netstandard2.0\BytexDigital.BattlEye.Rcon.dll</HintPath>
+      </Reference>
       <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
         <HintPath>..\..\..\.dotnet\shared\Microsoft.AspNetCore.App\10.0.10\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
       </Reference>

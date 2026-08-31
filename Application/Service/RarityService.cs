@@ -27,7 +27,7 @@ public class RarityService : IRarityService
     public RarityFile? Get(string id, string name)
     {
         var instanceConfig = _instanceService.GetInstance(id);
-        return instanceConfig == null ? null : Get(name, instanceConfig.missionTemplateName, instanceConfig.serverFolder);
+        return instanceConfig == null ? null : Get(name, instanceConfig.missionTemplateName, Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder));
     }
 
     public RarityFile? Get(string name, string missionTemplateName, string serverFolderName)
@@ -38,15 +38,15 @@ public class RarityService : IRarityService
     public bool UpdateRaritiesAndTypes(string id, string name, RarityFile rarityFile)
     {
         var instanceConfig = _instanceService.GetInstance(id);
-        return instanceConfig != null && UpdateRaritiesAndTypes(name, rarityFile, instanceConfig.missionTemplateName, instanceConfig.serverFolder);
+        return instanceConfig != null && UpdateRaritiesAndTypes(name, rarityFile, instanceConfig.missionTemplateName, Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder));
     }
     
-    public bool UpdateRaritiesAndTypes(string name, RarityFile rarityFile, string missionTemplateName, string serverFolderName)
+    public bool UpdateRaritiesAndTypes(string name, RarityFile rarityFile, string missionTemplateName, string serverFolderPath)
     {
         _logger.LogInformation("Updating Rarity and Types");
 
-        _rarityRepository.UpdateRarityFile(Path.Combine(serverFolderName, Folders.MpmissionsFolderName, missionTemplateName), name, rarityFile);
-        UpdateTypesFiles(Path.Combine(serverFolderName, Folders.MpmissionsFolderName), name, rarityFile, missionTemplateName);
+        _rarityRepository.UpdateRarityFile(Path.Combine(serverFolderPath, Folders.MpmissionsFolderName, missionTemplateName), name, rarityFile);
+        UpdateTypesFiles(Path.Combine(serverFolderPath, Folders.MpmissionsFolderName), name, rarityFile, missionTemplateName);
 
         _logger.LogInformation("Rarity and Types updated");
 

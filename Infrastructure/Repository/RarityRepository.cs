@@ -23,11 +23,11 @@ public class RarityRepository : IRarityRepository
     }
 
     #region GetFunctions
-    public RarityFile? GetRarityFile(string name, string missionTemplateName, string serverFolder)
+    public RarityFile? GetRarityFile(string name, string missionTemplateName, string serverFolderPath)
     {
-        if (!File.Exists(Path.Combine(serverFolder, Folders.MpmissionsFolderName, missionTemplateName, name))) return null;
+        if (!File.Exists(Path.Combine(serverFolderPath, Folders.MpmissionsFolderName, missionTemplateName, name))) return null;
         
-        return _jsonSerializerRepository.DeserializeJSONFile<RarityFile>(Path.Combine(serverFolder, Folders.MpmissionsFolderName, missionTemplateName, name));
+        return _jsonSerializerRepository.DeserializeJSONFile<RarityFile>(Path.Combine(serverFolderPath, Folders.MpmissionsFolderName, missionTemplateName, name));
     }
     #endregion GetFunctions
 

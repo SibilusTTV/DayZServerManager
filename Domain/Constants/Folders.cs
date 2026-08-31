@@ -3,10 +3,12 @@ namespace Domain.Constants;
 public static class Folders
 {
     public const string ConfigFolderName = "config";
+    public const string ServersFolderName = "servers";
     public const string LogsFolderName = "logs";
     public const string DeployFolderName = "deploy";
     public const string SteamCmdFolderName = "steamcmd";
     public const string ModsFolderName = "mods";
+    public const string BackupsFolderName = "backups";
     public const string SchedulerFolderName = "scheduler";
     public const string ManagerLogsFolderName = "logs";
     public const string PersistenceFolderName = "storage_1";
