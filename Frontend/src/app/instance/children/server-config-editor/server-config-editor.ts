@@ -18,7 +18,7 @@ import ServerConfigActionsCell from './server-config-actions-cell/server-config-
   ]
 })
 export default class ServerConfigEditor {
-  private id: string = "";
+  private id: number = 0;
   public properties: WritableSignal<PropertyValue[]> = signal([]);
 
   public ColDefs: ColDef[] = [
@@ -60,7 +60,7 @@ export default class ServerConfigEditor {
   }
 
   constructor(private route: ActivatedRoute) {
-    this.id = "";
+    this.id = 0;
     this.route.params.subscribe(params => {
       this.id = params['id'];
       this.LoadServerConfig();

@@ -39,18 +39,26 @@ public class SchedulerService : ISchedulerService
         _adminLog = "";
     }
 
-    public void InitializeScheduler(string ip, int port, string password, int interval, bool onlyRestarts, List<CustomMessage> customMessages, string serverFolderName)
+    public void InitializeScheduler(int instanceId, string ip, int port, string password, int interval,
+        bool onlyRestarts, List<CustomMessage> customMessages, string serverFolderName)
     {
-        _onlyRestarts = onlyRestarts;
+        var schedulerRepository = _serverScope.ServiceProvider.GetService<ISchedulerRepository>();
+        var config = schedulerRepository?.Get(instanceId);
 
-        if (interval < 1 && interval > 24)
+        if (config == null)
+        {
+            config = new SchedulerConfig(instanceId, false, "", [], 60);
+            schedulerRepository?.CreateEdit(config);
+        }
+        
+        if (interval is < 1 or > 24)
         {
             throw new Exception("The interval needs to be between 1 and 24");
         }
-        else
-        {
-            _interval = interval;
-        }
+        
+        _onlyRestarts = onlyRestarts;
+        _interval = interval;
+        _config = config;
 
         GetWhitelistedPlayers(serverFolderName);
 
@@ -58,7 +66,7 @@ public class SchedulerService : ISchedulerService
         _automaticMessages = restartUpdaterService?.CreateSchedule(false, _onlyRestarts, _interval, SendCommand, IsConnected) ?? [];
         _customMessages = restartUpdaterService?.CreateCustomJobTimers(_onlyRestarts, _interval, SendCommand, IsConnected, customMessages) ?? [];
 
-        _rconRepository.InitializeRconRepository(ip, port, password, _config);
+        _rconRepository.InitializeRconRepository(ip, port, password);
     }
     
     public bool Connect()
@@ -149,7 +157,7 @@ public class SchedulerService : ISchedulerService
         return _rconRepository.IsConnected();
     }
 
-    public int UpdatePlayers(string instanceId)
+    public int UpdatePlayers(int instanceId)
     {
         if (!IsConnected()) return 0;
         
@@ -160,13 +168,17 @@ public class SchedulerService : ISchedulerService
         
         var playerUids = GetAdminLog(instance);
         var playerPermissions = ReadOutRolesAndPlayers(instanceId);
-        var newPlayers = _rconRepository.GetPlayers(instanceId);
+        var newPlayers = _rconRepository.GetPlayers();
 
         foreach (var player in newPlayers)
         {
-            if (!playerUids.TryGetValue(player.Name, out var uid)) continue;
-            if (!playerPermissions.TryGetValue(uid, out var playerPermission)) continue;
-            
+            if (!playerUids.TryGetValue(player.Name, out var uid) ||
+                !playerPermissions.TryGetValue(uid, out var playerPermission))
+            {
+                _rconRepository.ConnectedPlayers.RemoveAll(x => x.Guid == player.Guid);
+                continue;
+            }
+
             var newPlayer = new User(player.Guid, player.Name, uid, player.IsVerified, player.Ip);
             playerRepository?.CreateEditPlayer(newPlayer);
             
@@ -215,7 +227,7 @@ public class SchedulerService : ISchedulerService
         return _rconRepository.ConnectedPlayers.Count;
     }
 
-    public void KickPlayer(string guid, string instanceId, string reason)
+    public void KickPlayer(string guid, int instanceId, string reason)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         var player = playerRepository?.GetServerPlayerByGuid(guid, instanceId);
@@ -229,7 +241,7 @@ public class SchedulerService : ISchedulerService
         }
     }
 
-    public HttpStatusCode BanPlayer(string playerGuid, string instanceId, string reason, int duration)
+    public HttpStatusCode BanPlayer(string playerGuid, int instanceId, string reason, int duration)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         var serverPlayer = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
@@ -240,7 +252,7 @@ public class SchedulerService : ISchedulerService
         return playerRepository?.CreateEditServerPlayer(serverPlayer) ?? code;
     }
 
-    public HttpStatusCode UnbanPlayer(string playerGuid, string instanceId)
+    public HttpStatusCode UnbanPlayer(string playerGuid, int instanceId)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         var serverPlayer = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
@@ -255,7 +267,7 @@ public class SchedulerService : ISchedulerService
         return playerRepository?.CreateEditServerPlayer(serverPlayer) ?? code;
     }
 
-    public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId)
+    public HttpStatusCode WhitelistPlayer(string playerGuid, int instanceId)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         var serverPlayer = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
@@ -267,7 +279,7 @@ public class SchedulerService : ISchedulerService
             var role = playerRepository?.GetRole("everyone", instanceId);
             if (role == null)
             {
-                role = playerRepository?.GetRoles(playerGuid).FirstOrDefault();
+                role = playerRepository?.GetRoles(instanceId).FirstOrDefault();
                 if (role == null) return HttpStatusCode.NotFound;
             }
             
@@ -290,7 +302,7 @@ public class SchedulerService : ISchedulerService
         return SaveWhitelistedPlayers(Path.Combine(Folders.ServersFolderName, instance.serverFolder), whitelistedPlayers);
     }
 
-    public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId)
+    public HttpStatusCode UnwhitelistPlayer(string playerGuid, int instanceId)
     {
         var playerRepository = _serverScope.ServiceProvider.GetService<IPlayerRepository>();
         var player = playerRepository?.GetServerPlayerByGuid(playerGuid, instanceId);
@@ -350,7 +362,7 @@ public class SchedulerService : ISchedulerService
         return playerUids;
     }
 
-    private Dictionary<string, PlayerPermissions> ReadOutRolesAndPlayers(string id)
+    private Dictionary<string, PlayerPermissions> ReadOutRolesAndPlayers(int id)
     {
         var playerService = _serverScope.ServiceProvider.GetService<IPlayerService>();
         playerService?.ReadOutRoles(id);

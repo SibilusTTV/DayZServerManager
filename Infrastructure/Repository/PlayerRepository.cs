@@ -80,7 +80,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<string> GetWhitelistedPlayerNames(string instanceId)
+    public List<string> GetWhitelistedPlayerNames(int instanceId)
     {
         lock (_configDbContext)
         {
@@ -163,7 +163,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<ServerPlayer> GetServerPlayersForInstance(string instanceId)
+    public List<ServerPlayer> GetServerPlayersForInstance(int instanceId)
     {
         lock (_configDbContext)
         {
@@ -204,7 +204,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public ServerPlayer? GetServerPlayerByGuid(string playerGuid, string instanceId)
+    public ServerPlayer? GetServerPlayerByGuid(string playerGuid, int instanceId)
     {
         lock (_configDbContext)
         {
@@ -224,7 +224,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<ServerPlayerInformation> GetServerPlayerInformationForInstance(string instanceId)
+    public List<ServerPlayerInformation> GetServerPlayerInformationForInstance(int instanceId)
     {
         lock (_configDbContext)
         {
@@ -293,7 +293,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<ServerPlayer> GetBannedServerPlayers(string instanceId)
+    public List<ServerPlayer> GetBannedServerPlayers(int instanceId)
     {
         lock (_configDbContext)
         {
@@ -313,7 +313,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<Role> GetRoles(string instanceId)
+    public List<Role> GetRoles(int instanceId)
     {
         lock (_configDbContext)
         {
@@ -332,7 +332,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public List<string> GetRoleNames(string instanceId)
+    public List<string> GetRoleNames(int instanceId)
     {
         lock (_configDbContext)
         {
@@ -352,7 +352,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public Role? GetRole(string name, string instanceId)
+    public Role? GetRole(string name, int instanceId)
     {
         lock (_configDbContext)
         {
@@ -371,7 +371,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public HttpStatusCode AddRole(string name, string instanceId)
+    public HttpStatusCode AddRole(string name, int instanceId)
     {
         lock (_configDbContext)
         {
@@ -394,7 +394,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public void ReadOutRoles(string profileFolder, string instanceId)
+    public void ReadOutRoles(string profileFolder, int instanceId)
     {
         try
         {
@@ -428,7 +428,7 @@ public class PlayerRepository : IPlayerRepository
         }
     }
 
-    public Dictionary<string, PlayerPermissions> ReadOutServerPlayerRoles(string profileFolder, string instanceId)
+    public Dictionary<string, PlayerPermissions> ReadOutServerPlayerRoles(string profileFolder, int instanceId)
     {
         try
         {

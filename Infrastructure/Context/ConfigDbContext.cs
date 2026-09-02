@@ -31,19 +31,25 @@ public class ConfigDbContext : DbContext
 
         modelBuilder.Entity<Instance>()
             .HasMany(config => config.clientMods)
-            .WithMany()
-            .UsingEntity<InstanceClientMod>(j => j.ToTable("INSTANCE_CLIENT_MODS"));
-        
+            .WithOne();
+
         modelBuilder.Entity<Instance>()
             .HasMany(config => config.serverMods)
-            .WithMany()
-            .UsingEntity<InstanceServerMod>(j => j.ToTable("INSTANCE_SERVER_MODS"));
+            .WithOne();
         
         modelBuilder.Entity<Instance>()
             .HasMany(config => config.customMessages)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
-        
+
+        modelBuilder.Entity<InstanceServerMod>()
+            .HasOne(ism => ism.Mod)
+            .WithMany();
+
+        modelBuilder.Entity<InstanceClientMod>()
+            .HasOne(icm => icm.Mod)
+            .WithMany();
+
         modelBuilder.Entity<InstanceServerMod>()
             .HasKey(r => new { r.InstanceId, r.ModId });
         

@@ -24,7 +24,7 @@ public class ServerFactory : IServerFactory
         _loggerFactory = loggerFactory;
     }
     
-    public IServerInstance CreateServerAsync(string id)
+    public IServerInstance CreateServerAsync(int id)
     {
         var server = new ServerInstance(_loggerFactory.CreateLogger<ServerInstance>(), id, _scopeFactory, _steamCmdService);
         

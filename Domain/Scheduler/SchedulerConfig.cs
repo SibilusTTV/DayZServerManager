@@ -8,7 +8,7 @@ public class SchedulerConfig
     public string Id { get; set; }
     
     [ForeignKey(nameof(Instance))]
-    public string InstanceId { get; set; }
+    public int InstanceId { get; set; }
     
     public bool UseNickFilter { get; set; }
     public string FilteredNickMsg { get; set; }
@@ -17,10 +17,16 @@ public class SchedulerConfig
 
     public SchedulerConfig()
     {
+        
+    }
+
+    public SchedulerConfig(int instanceId, bool useNickFilter, string filteredNickMsg, List<string> badNames, int timeout)
+    {
         Id = Guid.NewGuid().ToString().ToLower();
-        UseNickFilter = true;
-        FilteredNickMsg = "You are using forbidden words in your user name";
-        BadNames = new List<string>();
-        Timeout = 60;
+        InstanceId = instanceId;
+        UseNickFilter = useNickFilter;
+        FilteredNickMsg = filteredNickMsg;
+        BadNames = badNames;
+        Timeout = timeout;
     }
 }

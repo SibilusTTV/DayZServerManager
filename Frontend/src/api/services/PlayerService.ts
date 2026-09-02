@@ -40,7 +40,7 @@ export class PlayerService {
      * @throws ApiError
      */
     public static getApiPlayerGetServerPlayerInformation(
-        id?: string,
+        id?: number,
     ): CancelablePromise<Array<ServerPlayerInformation>> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -61,7 +61,7 @@ export class PlayerService {
      */
     public static postApiPlayerCreateServerPlayer(
         playerId?: string,
-        instanceId?: string,
+        instanceId?: number,
         isWhitelisted?: boolean,
         isBanned?: boolean,
         roleName?: string,
@@ -84,7 +84,7 @@ export class PlayerService {
      * @throws ApiError
      */
     public static getApiPlayerGetRoleNames(
-        instanceId?: string,
+        instanceId?: number,
     ): CancelablePromise<Array<string>> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -105,7 +105,7 @@ export class PlayerService {
     public static postApiPlayerSetRole(
         serverPlayerId?: string,
         playerGuid?: string,
-        instanceId?: string,
+        instanceId?: number,
         roleName?: string,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {

@@ -24,7 +24,7 @@ public class RarityService : IRarityService
         _instanceService = instanceService;
     }
 
-    public RarityFile? Get(string id, string name)
+    public RarityFile? Get(int id, string name)
     {
         var instanceConfig = _instanceService.GetInstance(id);
         return instanceConfig == null ? null : Get(name, instanceConfig.missionTemplateName, Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder));
@@ -35,7 +35,7 @@ public class RarityService : IRarityService
         return _rarityRepository.GetRarityFile(name, missionTemplateName, serverFolderName);    
     }
 
-    public bool UpdateRaritiesAndTypes(string id, string name, RarityFile rarityFile)
+    public bool UpdateRaritiesAndTypes(int id, string name, RarityFile rarityFile)
     {
         var instanceConfig = _instanceService.GetInstance(id);
         return instanceConfig != null && UpdateRaritiesAndTypes(name, rarityFile, instanceConfig.missionTemplateName, Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder));

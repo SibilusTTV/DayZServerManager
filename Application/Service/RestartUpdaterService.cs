@@ -243,56 +243,8 @@ public class RestartUpdaterService : IRestartUpdaterService
 
         var restartNotice = "";
 
-        List<CustomMessage> repeatMessages = [];
         List<CustomMessage> afterRestartMessages = [];
-        List<CustomMessage> afterRestartRepeatMessages = [];
         var now = DateTime.Now;
-        // foreach (var item in config.customMessages)
-        // {
-        //     if (item.Interval.Hours == 0 && item.Interval.Minutes == 0 && item.Interval.Seconds == 0)
-        //     {
-        //         if (item.IsTimeOfDay)
-        //         {
-        //             expansionScheduler.Notifications.Add(new NotificationItem(Convert.ToInt32(item.WaitTime.Hours), Convert.ToInt32(item.WaitTime.Minutes), Convert.ToInt32(item.WaitTime.Seconds), item.Title, item.Message, item.Icon, item.Color));
-        //         }
-        //         else
-        //         {
-        //             afterRestartMessages.Add(item);
-        //         }
-        //     }
-        //     else
-        //     {
-        //         var nextRestart = interval;
-        //         var nextMessageTime = item.WaitTime;
-        //         if (item.IsTimeOfDay)
-        //         {
-        //             for (nextRestart = 0; nextMessageTime.Hours > nextRestart; nextRestart += interval) ;
-        //         }
-        //         while (nextMessageTime.Hours < 24)
-        //         {
-        //             while (nextMessageTime.Hours < nextRestart)
-        //             {
-        //                 expansionScheduler.Notifications.Add(new NotificationItem(Convert.ToInt32(nextMessageTime.Hours), Convert.ToInt32(nextMessageTime.Minutes), Convert.ToInt32(nextMessageTime.Seconds), item.Title, item.Message, item.Icon, item.Color));
-        //                 nextMessageTime.Seconds += item.Interval.Seconds;
-        //                 if (nextMessageTime.Seconds >= 60)
-        //                 {
-        //                     nextMessageTime.Seconds -= 60;
-        //                     nextMessageTime.Minutes += 1;
-        //                 }
-        //                 nextMessageTime.Minutes += item.Interval.Minutes;
-        //                 if (nextMessageTime.Minutes >= 60)
-        //                 {
-        //                     nextMessageTime.Minutes -= 60;
-        //                     nextMessageTime.Hours += 1;
-        //                 }
-        //                 nextMessageTime.Hours += item.Interval.Hours;
-        //             }
-        //             nextMessageTime = item.WaitTime;
-        //             nextMessageTime.Hours = nextRestart;
-        //             nextRestart += interval;
-        //         }
-        //     }
-        // }
 
         foreach (var message in config.customMessages)
         {

@@ -16,7 +16,7 @@ public class ServerInstance : IServerInstance
     public bool IsRunning { get; private set; }
     
     private readonly ILogger<ServerInstance> _logger;
-    private readonly string _id;
+    private readonly int _id;
     
     // Other Variables
     private bool _updatedMods;
@@ -45,7 +45,7 @@ public class ServerInstance : IServerInstance
     
     public bool MissionNeedsUpdating { get; set; }
     
-    public ServerInstance(ILogger<ServerInstance> logger, string id, IServiceScopeFactory scopeFactory, ISteamCmdService steamCmdService)
+    public ServerInstance(ILogger<ServerInstance> logger, int id, IServiceScopeFactory scopeFactory, ISteamCmdService steamCmdService)
     {
         _logger = logger;
         _id = id;
@@ -61,7 +61,7 @@ public class ServerInstance : IServerInstance
         _serverInformation.dayzServerStatus = Statuses.NotRunning;
         
         var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
-        serverRepository?.CreateFoldersAndFiles(instanceConfig.serverFolder, instanceConfig.profileName, _battlEyeFolderPath);
+        serverRepository?.CreateFoldersAndFiles(Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder), instanceConfig.profileName, _battlEyeFolderPath);
 
         var serverConfigService = _serverScope.ServiceProvider.GetService<IServerConfigService>();
 
@@ -192,8 +192,8 @@ public class ServerInstance : IServerInstance
     {
         List<Mod> mods =
         [
-            .. instance.clientMods,
-            .. instance.serverMods
+            .. instance.clientMods.Select(x => x.Mod),
+            .. instance.serverMods.Select(x => x.Mod)
         ];
         
         var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
@@ -230,9 +230,11 @@ public class ServerInstance : IServerInstance
     {
         try
         {
-            var onlyRestarts = instance.clientMods.FindAll(mod => mod.name.Contains(SteamCmd.ExpansionModSearch, StringComparison.CurrentCultureIgnoreCase)).Count > 0;
-            
-            _scheduler?.InitializeScheduler(Urls.Localhost, instance.RConPort, instance.RConPassword, instance.restartInterval, onlyRestarts, instance.customMessages, Path.Combine(Folders.ServersFolderName, instance.serverFolder));
+            var onlyRestarts = instance.clientMods.FindAll(mod => mod.Mod.name.Contains(SteamCmd.ExpansionModSearch, StringComparison.CurrentCultureIgnoreCase)).Count > 0;
+
+            _scheduler?.InitializeScheduler(instance.id, Urls.Localhost, instance.RConPort, instance.RConPassword,
+                instance.restartInterval, onlyRestarts, instance.customMessages,
+                Path.Combine(Folders.ServersFolderName, instance.serverFolder));
             
             connectTask = new Task(() => { _scheduler?.Connect(); });
             connectTask.Start();
@@ -255,7 +257,7 @@ public class ServerInstance : IServerInstance
         var clientModsToLoad = string.Empty;
         foreach (var clientMod in instance.clientMods)
         {
-            clientModsToLoad += clientMod.name + ";";
+            clientModsToLoad += clientMod.Mod.name + ";";
         }
         if (!string.IsNullOrEmpty(clientModsToLoad))
         {
@@ -265,7 +267,7 @@ public class ServerInstance : IServerInstance
         var serverModsToLoad = string.Empty;
         foreach (var serverMod in instance.serverMods)
         {
-            serverModsToLoad += serverMod.name + ";";
+            serverModsToLoad += serverMod.Mod.name + ";";
         }
         if (!string.IsNullOrEmpty(serverModsToLoad))
         {
@@ -350,27 +352,27 @@ public class ServerInstance : IServerInstance
         }
     }
 
-    public HttpStatusCode BanPlayer(string playerGuid, string instanceId, string reason, int duration)
+    public HttpStatusCode BanPlayer(string playerGuid, int instanceId, string reason, int duration)
     {
         return _scheduler?.BanPlayer(playerGuid, instanceId, reason, duration) ?? HttpStatusCode.InternalServerError;
     }
 
-    public HttpStatusCode UnbanPlayer(string playerGuid, string instanceId)
+    public HttpStatusCode UnbanPlayer(string playerGuid, int instanceId)
     {
         return _scheduler?.UnbanPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
     }
 
-    public void KickPlayer(string playerGuid, string instanceId, string reason)
+    public void KickPlayer(string playerGuid, int instanceId, string reason)
     {
         _scheduler?.KickPlayer(playerGuid, instanceId, reason);
     }
 
-    public HttpStatusCode WhitelistPlayer(string playerGuid, string instanceId)
+    public HttpStatusCode WhitelistPlayer(string playerGuid, int instanceId)
     {
         return _scheduler?.WhitelistPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
     }
 
-    public HttpStatusCode UnwhitelistPlayer(string playerGuid, string instanceId)
+    public HttpStatusCode UnwhitelistPlayer(string playerGuid, int instanceId)
     {
         return _scheduler?.UnwhitelistPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
     }
@@ -379,14 +381,14 @@ public class ServerInstance : IServerInstance
     {
         List<Mod> mods =
         [
-            .. instance.clientMods,
-            .. instance.serverMods
+            .. instance.clientMods.Select(x => x.Mod),
+            .. instance.serverMods.Select(x => x.Mod)
         ];
 
         var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
 
         var hasExpansion = instance.clientMods
-            .FindAll(p => p.name.ToLower().Contains(SteamCmd.ExpansionModSearch)).Count > 0;
+            .FindAll(p => p.Mod.name.ToLower().Contains(SteamCmd.ExpansionModSearch)).Count > 0;
 
         if (instance.makeBackups)
         {
@@ -542,7 +544,7 @@ public class ServerInstance : IServerInstance
         var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
         serverRepository?.UpdateBeConfigs(_battlEyeFolderPath, instance.RConPassword, instance.RConPort);
         var serverConfigService = _serverScope.ServiceProvider.GetService<IServerConfigService>();
-        serverConfigService?.UpdateServerConfig(ServerConfig, instance.missionName, instance.hostName, instance.instanceId, instance.steamPort, instance.steamQueryPort);
+        serverConfigService?.UpdateServerConfig(ServerConfig, instance.missionName, instance.hostName, instance.id, instance.steamPort, instance.steamQueryPort);
         serverConfigService?.Save(ServerConfig, Path.Combine(Folders.ServersFolderName, instance.serverFolder, instance.serverConfigName));
     }
 }

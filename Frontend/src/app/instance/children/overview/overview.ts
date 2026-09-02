@@ -26,7 +26,7 @@ import OverviewActionsCell from './overview-actions-cell/overview-actions-cell';
 })
 export default class Overview implements OnInit, OnDestroy {
   private router = inject(Router);
-  public instanceId: string = "";
+  public instanceId: number = 0;
   public serverInformation: WritableSignal<ServerInformation> = signal({});
 
   private timer: number = 5;
@@ -107,7 +107,7 @@ export default class Overview implements OnInit, OnDestroy {
 
   public onRemoveClicked(){
     if (confirm("Are you sure you want to remove this server?")) {
-      InstanceService.deleteApiInstanceRemoveServer(this.instanceId).then(() => {
+      InstanceService.deleteApiInstanceRemoveServer(this.instanceId).finally(() => {
         this.router.navigate(['/']);
       });
     }

@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CustomMessage } from './CustomMessage';
-import type { Mod } from './Mod';
+import type { InstanceClientMod } from './InstanceClientMod';
+import type { InstanceServerMod } from './InstanceServerMod';
 export type Instance = {
-    id?: string | null;
-    instanceId?: number;
+    id?: number;
     serverFolder?: string | null;
     hostName?: string | null;
     missionName?: string | null;
@@ -34,8 +34,8 @@ export type Instance = {
     deleteBackups?: boolean;
     backupPath?: string | null;
     maxKeepTime?: number;
-    clientMods?: Array<Mod> | null;
-    serverMods?: Array<Mod> | null;
+    clientMods?: Array<InstanceClientMod> | null;
+    serverMods?: Array<InstanceServerMod> | null;
     customMessages?: Array<CustomMessage> | null;
 };
 

@@ -23,8 +23,7 @@ export class InstanceConfigEditor {
   public serverMods: WritableSignal<Mod[]> = signal([]);
   public customMessages: WritableSignal<CustomMessage[]> = signal([]);
 
-  public id: WritableSignal<string> = signal("");
-  public instanceId: WritableSignal<number> = signal(0);
+  public id: WritableSignal<number> = signal(0);
   public serverFolder: WritableSignal<string> = signal("");
   public hostName: WritableSignal<string> = signal("");
   public missionName: WritableSignal<string> = signal("");
@@ -64,11 +63,10 @@ export class InstanceConfigEditor {
   public LoadInstanceConfig() {
     InstanceService.getApiInstanceGetInstance(this.id()).then(instanceConfig => {
 
-      this.clientMods.set(instanceConfig.clientMods ?? []);
-      this.serverMods.set(instanceConfig.serverMods ?? []);
+      this.clientMods.set(instanceConfig.clientMods?.map(x => x.mod ?? {}) ?? []);
+      this.serverMods.set(instanceConfig.serverMods?.map(x => x.mod ?? {}) ?? []);
       this.customMessages.set(instanceConfig.customMessages ?? []);
 
-      this.instanceId.set(instanceConfig.instanceId ?? 0);
       this.serverFolder.set(instanceConfig.serverFolder ?? "");
       this.hostName.set(instanceConfig.hostName ?? "");
       this.missionName.set(instanceConfig.missionName ?? "");
@@ -102,7 +100,6 @@ export class InstanceConfigEditor {
   onSaveClick(): void {
     const instanceConfig: Instance = {
       id: this.id(),
-      instanceId: this.instanceId(),
       serverFolder: this.serverFolder(),
       hostName: this.hostName(),
       missionName: this.missionName(),
@@ -130,8 +127,12 @@ export class InstanceConfigEditor {
       deleteBackups: this.deleteBackups(),
       backupPath: this.backupPath(),
       maxKeepTime: this.maxKeepTime(),
-      clientMods: this.clientMods(),
-      serverMods: this.serverMods(),
+      clientMods: this.clientMods().map((x, id) => {
+        return {instanceId: this.id(), modId: x.id, mod: x, position: id}
+      }),
+      serverMods: this.serverMods().map((x, id) => {
+        return {instanceId: this.id(), modId: x.id, mod: x, position: id}
+      }),
       customMessages: this.customMessages()
     }
 

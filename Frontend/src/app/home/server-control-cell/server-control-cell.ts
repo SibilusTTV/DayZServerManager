@@ -15,7 +15,7 @@ import {InstanceService} from '../../../api';
   ]
 })
 export default class ServerControlCell implements ICellRendererAngularComp{
-  public id: string = "";
+  public id: number = 0;
   private params: any;
 
   agInit(params: ICellRendererParams) {

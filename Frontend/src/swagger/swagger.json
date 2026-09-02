@@ -15,7 +15,8 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -36,7 +37,8 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -57,7 +59,8 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -78,7 +81,8 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -116,7 +120,8 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -290,7 +295,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -333,7 +339,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -361,7 +368,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -396,7 +404,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -424,7 +433,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -635,7 +645,8 @@
             "name": "id",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -689,7 +700,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -731,7 +743,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -792,7 +805,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -820,7 +834,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -865,7 +880,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -912,7 +928,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -959,7 +976,8 @@
             "name": "instanceId",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -1278,10 +1296,6 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "nullable": true
-          },
-          "instanceId": {
             "type": "integer",
             "format": "int32"
           },
@@ -1387,14 +1401,14 @@
           "clientMods": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Mod"
+              "$ref": "#/components/schemas/InstanceClientMod"
             },
             "nullable": true
           },
           "serverMods": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Mod"
+              "$ref": "#/components/schemas/InstanceServerMod"
             },
             "nullable": true
           },
@@ -1404,6 +1418,48 @@
               "$ref": "#/components/schemas/CustomMessage"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InstanceClientMod": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "modId": {
+            "type": "string",
+            "nullable": true
+          },
+          "mod": {
+            "$ref": "#/components/schemas/Mod"
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InstanceServerMod": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "modId": {
+            "type": "string",
+            "nullable": true
+          },
+          "mod": {
+            "$ref": "#/components/schemas/Mod"
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -1520,7 +1576,8 @@
             "nullable": true
           },
           "instanceId": {
-            "type": "string",
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           },
           "name": {

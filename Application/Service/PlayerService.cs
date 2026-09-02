@@ -31,12 +31,12 @@ public class PlayerService : IPlayerService
         return _playerRepository.GetPlayer(id);
     }
 
-    public List<ServerPlayerInformation> GetServerPlayerInformation(string id)
+    public List<ServerPlayerInformation> GetServerPlayerInformation(int id)
     {
         return _playerRepository.GetServerPlayerInformationForInstance(id);
     }
 
-    public HttpStatusCode CreateServerPlayer(string playerId, string instanceId, bool isWhitelisted, bool isBanned, string roleName)
+    public HttpStatusCode CreateServerPlayer(string playerId, int instanceId, bool isWhitelisted, bool isBanned, string roleName)
     {
         var role = GetRole(roleName, instanceId);
         
@@ -57,27 +57,27 @@ public class PlayerService : IPlayerService
         return _playerRepository.CreateEditServerPlayer(serverPlayer);
     }
 
-    public List<Role> GetRoles(string instanceId)
+    public List<Role> GetRoles(int instanceId)
     {
         return _playerRepository.GetRoles(instanceId);
     }
 
-    public List<string> GetRoleNames(string instanceId)
+    public List<string> GetRoleNames(int instanceId)
     {
         return _playerRepository.GetRoleNames(instanceId);
     }
 
-    public Role? GetRole(string name, string instanceId)
+    public Role? GetRole(string name, int instanceId)
     {
         return _playerRepository.GetRole(name, instanceId);
     }
 
-    public HttpStatusCode AddRole(string name, string instanceId)
+    public HttpStatusCode AddRole(string name, int instanceId)
     {
         return _playerRepository.AddRole(name, instanceId);
     }
 
-    public void ReadOutRoles(string instanceId)
+    public void ReadOutRoles(int instanceId)
     {
         var instance = _instanceRepository.GetInstance(instanceId);
 
@@ -86,16 +86,17 @@ public class PlayerService : IPlayerService
         _playerRepository.ReadOutRoles(Path.Combine(Folders.ServersFolderName, instance.serverFolder, instance.profileName), instanceId);
     }
 
-    public Dictionary<string, PlayerPermissions> ReadOutServerPlayerRoles(string instanceId)
+    public Dictionary<string, PlayerPermissions> ReadOutServerPlayerRoles(int instanceId)
     {
         var instance = _instanceRepository.GetInstance(instanceId);
 
         if (instance == null) return new Dictionary<string, PlayerPermissions>();
-        
-        return _playerRepository.ReadOutServerPlayerRoles(Path.Combine(Folders.ServersFolderName, instance.serverFolder, instance.profileName), instanceId);
+
+        return _playerRepository.ReadOutServerPlayerRoles(
+            Path.Combine(Folders.ServersFolderName, instance.serverFolder, instance.profileName), instanceId);
     }
 
-    public HttpStatusCode SaveServerPlayerRole(string serverPlayerId, string playerGuid, string instanceId, string roleName)
+    public HttpStatusCode SaveServerPlayerRole(string serverPlayerId, string playerGuid, int instanceId, string roleName)
     {
         var instance = _instanceRepository.GetInstance(instanceId);
         if (instance == null) return HttpStatusCode.NotFound;

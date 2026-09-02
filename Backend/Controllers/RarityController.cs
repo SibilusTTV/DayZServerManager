@@ -21,13 +21,13 @@ public class RarityController : ControllerBase
     }
 
     [HttpGet]
-    public RarityFile? Get(string instanceId, string name)
+    public RarityFile? Get(int instanceId, string name)
     {
         return _rarityService.Get(instanceId, name);
     }
 
     [HttpPut]
-    public void Update(string instanceId, string name, RarityFile rarityFile)
+    public void Update(int instanceId, string name, RarityFile rarityFile)
     {
         _rarityService.UpdateRaritiesAndTypes(instanceId, name, rarityFile);
         _instanceService.SetMissionNeedsUpdatingForServer(instanceId);

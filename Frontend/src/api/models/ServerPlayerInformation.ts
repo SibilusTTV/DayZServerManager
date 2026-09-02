@@ -5,7 +5,7 @@
 export type ServerPlayerInformation = {
     id?: string | null;
     serverPlayerId?: string | null;
-    instanceId?: string | null;
+    instanceId?: number | null;
     name?: string | null;
     uid?: string | null;
     isVerified?: boolean;

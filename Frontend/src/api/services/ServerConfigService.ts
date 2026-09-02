@@ -14,7 +14,7 @@ export class ServerConfigService {
      * @throws ApiError
      */
     public static getApiServerConfigGet(
-        instanceId?: string,
+        instanceId?: number,
     ): CancelablePromise<Array<PropertyValue>> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -31,7 +31,7 @@ export class ServerConfigService {
      * @throws ApiError
      */
     public static postApiServerConfigPost(
-        instanceId?: string,
+        instanceId?: number,
         requestBody?: Array<PropertyValue>,
     ): CancelablePromise<HttpStatusCode> {
         return __request(OpenAPI, {

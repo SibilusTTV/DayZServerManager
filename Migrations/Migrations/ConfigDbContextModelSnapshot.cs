@@ -30,8 +30,8 @@ namespace Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Instanceid")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("Instanceid")
+                        .HasColumnType("INTEGER");
 
                     b.Property<TimeSpan>("Interval")
                         .HasColumnType("TEXT");
@@ -54,13 +54,14 @@ namespace Migrations.Migrations
 
                     b.HasIndex("Instanceid");
 
-                    b.ToTable("MESSAGES");
+                    b.ToTable("MESSAGES", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Manager.Instance", b =>
                 {
-                    b.Property<string>("id")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("RConPassword")
                         .IsRequired()
@@ -94,9 +95,6 @@ namespace Migrations.Migrations
                     b.Property<string>("hostName")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("instanceId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("limitFPS")
                         .HasColumnType("INTEGER");
@@ -158,16 +156,19 @@ namespace Migrations.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("INSTANCES");
+                    b.ToTable("INSTANCES", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Manager.InstanceClientMod", b =>
                 {
-                    b.Property<string>("InstanceId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("InstanceId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ModId")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("InstanceId", "ModId");
 
@@ -178,11 +179,14 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.InstanceServerMod", b =>
                 {
-                    b.Property<string>("InstanceId")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("InstanceId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ModId")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("InstanceId", "ModId");
 
@@ -205,7 +209,7 @@ namespace Migrations.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("MODS");
+                    b.ToTable("MODS", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Manager.SteamCredentials", b =>
@@ -223,7 +227,7 @@ namespace Migrations.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("STEAM_CREDENTIALS");
+                    b.ToTable("STEAM_CREDENTIALS", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Scheduler.Role", b =>
@@ -231,9 +235,8 @@ namespace Migrations.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("InstanceId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("InstanceId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -241,7 +244,7 @@ namespace Migrations.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ROLES");
+                    b.ToTable("ROLES", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Scheduler.SchedulerConfig", b =>
@@ -257,9 +260,8 @@ namespace Migrations.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("InstanceId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("InstanceId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Timeout")
                         .HasColumnType("INTEGER");
@@ -269,7 +271,7 @@ namespace Migrations.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SCHEDULER_CONFIGS");
+                    b.ToTable("SCHEDULER_CONFIGS", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Scheduler.ServerPlayer", b =>
@@ -277,9 +279,8 @@ namespace Migrations.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("InstanceId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("InstanceId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsBanned")
                         .HasColumnType("INTEGER");
@@ -303,7 +304,7 @@ namespace Migrations.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("SERVER_PLAYERS");
+                    b.ToTable("SERVER_PLAYERS", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Scheduler.User", b =>
@@ -328,7 +329,7 @@ namespace Migrations.Migrations
 
                     b.HasKey("Guid");
 
-                    b.ToTable("PLAYERS");
+                    b.ToTable("PLAYERS", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Manager.CustomMessage", b =>
@@ -341,8 +342,8 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.InstanceClientMod", b =>
                 {
-                    b.HasOne("Domain.Manager.Instance", "Instance")
-                        .WithMany()
+                    b.HasOne("Domain.Manager.Instance", null)
+                        .WithMany("clientMods")
                         .HasForeignKey("InstanceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -352,16 +353,14 @@ namespace Migrations.Migrations
                         .HasForeignKey("ModId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Instance");
 
                     b.Navigation("Mod");
                 });
 
             modelBuilder.Entity("Domain.Manager.InstanceServerMod", b =>
                 {
-                    b.HasOne("Domain.Manager.Instance", "Instance")
-                        .WithMany()
+                    b.HasOne("Domain.Manager.Instance", null)
+                        .WithMany("serverMods")
                         .HasForeignKey("InstanceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -371,8 +370,6 @@ namespace Migrations.Migrations
                         .HasForeignKey("ModId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Instance");
 
                     b.Navigation("Mod");
                 });
@@ -406,7 +403,11 @@ namespace Migrations.Migrations
 
             modelBuilder.Entity("Domain.Manager.Instance", b =>
                 {
+                    b.Navigation("clientMods");
+
                     b.Navigation("customMessages");
+
+                    b.Navigation("serverMods");
                 });
 #pragma warning restore 612, 618
         }

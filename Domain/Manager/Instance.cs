@@ -2,8 +2,7 @@ namespace Domain.Manager;
 
 public class Instance
 {
-    public string id { get; set; }
-    public int instanceId { get; set; }
+    public int id { get; set; }
     public string serverFolder { get; set; }
     public string hostName { get; set; }
     public string missionName { get; set; }
@@ -31,8 +30,8 @@ public class Instance
     public bool deleteBackups { get; set; }
     public string backupPath { get; set; }
     public int maxKeepTime { get; set; }
-    public List<Mod> clientMods { get; set; }
-    public List<Mod> serverMods { get; set; }
+    public List<InstanceClientMod> clientMods { get; set; }
+    public List<InstanceServerMod> serverMods { get; set; }
     public List<CustomMessage> customMessages { get; set; }
 
     public Instance()
@@ -40,10 +39,9 @@ public class Instance
         
     }
     
-    public Instance(Guid guid)
+    public Instance(int instanceId)
     {
-        id = guid.ToString().ToLower();
-        instanceId = 1;
+        id = instanceId;
         serverFolder = "server";
         hostName = "Testserver";
         missionName = "Expansion.ChernarusPlus";
@@ -71,20 +69,19 @@ public class Instance
         deleteBackups = true;
         backupPath = "server1";
         maxKeepTime = 7;
-        clientMods = new List<Mod>();
-        serverMods = new List<Mod>();
+        clientMods = new List<InstanceClientMod>();
+        serverMods = new List<InstanceServerMod>();
         Mod mod1 = new Mod("@CF", 1559212036);
-        clientMods.Add(mod1);
+        clientMods.Add(new InstanceClientMod(instanceId, mod1, 0));
         Mod mod2 = new Mod("@Community-Online-Tools", 1564026768);
-        clientMods.Add(mod2);
+        clientMods.Add(new InstanceClientMod(instanceId, mod2, 1));
         customMessages = new List<CustomMessage>();
         customMessages.Add(new CustomMessage(false, new TimeSpan( 0, 5, 0 ), new TimeSpan( 0, 15, 0 ), "Need Help?", "Make sure to join our Discord", "ExclamationMark", ""));
     }
     
-    public Instance(int instanceId, string serverFolder, int steamPort, int serverPort, int steamQueryPort, int rConPort, List<Mod> clientMods)
+    public Instance(int instanceId, string serverFolder, int steamPort, int serverPort, int steamQueryPort, int rConPort, List<InstanceClientMod> clientMods)
     {
-        this.id = Guid.NewGuid().ToString().ToLower();
-        this.instanceId = instanceId;
+        this.id = instanceId;
         this.serverFolder = serverFolder;
         this.hostName = "Testserver " + instanceId;
         missionName = "Expansion.ChernarusPlus";

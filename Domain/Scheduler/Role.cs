@@ -9,7 +9,7 @@ public class Role
     public string Name { get; set; }
     
     [ForeignKey(nameof(Instance))]
-    public string InstanceId { get; set; }
+    public int InstanceId { get; set; }
     
     // TODO: Add fields for role rights
 
@@ -18,7 +18,7 @@ public class Role
         
     }
 
-    public Role(string name, string instanceId)
+    public Role(string name, int instanceId)
     {
         Id = Guid.NewGuid().ToString();
         Name = name;

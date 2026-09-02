@@ -34,8 +34,7 @@ export default class InstanceConfig {
   @Input() serverMods: WritableSignal<Mod[]> = signal([]);
   @Input() customMessages: WritableSignal<CustomMessage[]> = signal([]);
 
-  @Input() id: WritableSignal<string> = signal("");
-  @Input() instanceId: WritableSignal<number> = signal(0);
+  @Input() id: WritableSignal<number> = signal(0);
   @Input() serverFolder: WritableSignal<string> = signal("");
   @Input() hostName: WritableSignal<string> = signal("");
   @Input() missionName: WritableSignal<string> = signal("");

@@ -39,7 +39,7 @@ export default class Home {
 
   public colDefs: ColDef[] = [
     {
-      field: "instanceId",
+      field: "id",
       filter: true
     },
     {
@@ -85,7 +85,7 @@ export default class Home {
   }
 
   public onRowDoubleClick(event: RowDoubleClickedEvent<Instance>){
-    if (event.data?.instanceId != null){
+    if (event.data?.id != null){
       this.router.navigate(["/instance", event.data?.id, "overview"])
     }
   }

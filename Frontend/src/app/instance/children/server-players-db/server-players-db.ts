@@ -19,7 +19,7 @@ import {v4} from 'uuid';
 })
 export default class ServerPlayersDb {
   public serverPlayerInformations: WritableSignal<ServerPlayerInformation[]> = signal([]);
-  public id: string = "";
+  public id: number = 0;
   public roles: string[] = [];
 
   public colDefs: ColDef[] = [

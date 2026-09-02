@@ -18,7 +18,7 @@ public class InstanceRepository : IInstanceRepository
         _configDbContext = configDbContext;
     }
 
-    public Instance? GetInstance(string id)
+    public Instance? GetInstance(int id)
     {
         lock (_configDbContext)
         {
@@ -26,8 +26,12 @@ public class InstanceRepository : IInstanceRepository
             {
                 return _configDbContext.INSTANCES
                     .AsNoTracking()
-                    .Include(instance => instance.clientMods)
-                    .Include(instance => instance.serverMods)
+                    .Include(instance => instance.clientMods
+                        .OrderBy(clientMod => clientMod.Position))
+                    .ThenInclude(icm => icm.Mod)
+                    .Include(instance => instance.serverMods
+                        .OrderBy(serverMod => serverMod.Position))
+                    .ThenInclude(ism => ism.Mod)
                     .Include(instance => instance.customMessages)
                     .FirstOrDefault(x => x.id == id);
             }
@@ -47,9 +51,6 @@ public class InstanceRepository : IInstanceRepository
             {
                 return _configDbContext.INSTANCES
                     .AsNoTracking()
-                    .Include(instance => instance.clientMods)
-                    .Include(instance => instance.serverMods)
-                    .Include(instance => instance.customMessages)
                     .ToList();
             }
             catch (Exception ex)
@@ -67,16 +68,13 @@ public class InstanceRepository : IInstanceRepository
             try
             {
                 var instanceDb = _configDbContext.INSTANCES
-                    .Include(i => i.clientMods)
-                    .Include(i => i.serverMods)
-                    .Include(i => i.customMessages)
                     .FirstOrDefault(x => x.id == instance.id);
                 
                 if (instanceDb != null) return HttpStatusCode.BadRequest;
-                
-                var clientMods = instance.clientMods;
-                var serverMods = instance.serverMods;
 
+                List<InstanceClientMod> clientMods = [.. instance.clientMods];
+                List<InstanceServerMod> serverMods = [..instance.serverMods];
+                
                 instance.clientMods = [];
                 instance.serverMods = [];
                 
@@ -84,57 +82,40 @@ public class InstanceRepository : IInstanceRepository
                 _configDbContext.SaveChanges();
                 
                 instanceDb = _configDbContext.INSTANCES
-                    .Include(i => i.clientMods)
-                    .Include(i => i.serverMods)
-                    .Include(i => i.customMessages)
                     .FirstOrDefault(x => x.id == instance.id);
                 
                 if (instanceDb == null) return HttpStatusCode.InternalServerError;
-
+                
                 foreach (var clientMod in clientMods)
                 {
-                    var modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == clientMod.workshopID);
-                
+                    var modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == clientMod.Mod.workshopID);
                     if (modDb != null)
                     {
-                        instanceDb.clientMods.Add(modDb);
+                        modDb.name = clientMod.Mod.name;
+                        instanceDb.clientMods.Add(new InstanceClientMod(instance.id, modDb, clientMod.Position));
                     }
                     else
                     {
-                        _configDbContext.MODS.Add(clientMod);
-                        
-                        _configDbContext.SaveChanges();
-                        
-                        modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == clientMod.workshopID);
-                        
-                        if (modDb == null) continue;
-                        
-                        instanceDb.clientMods.Add(modDb);
+                        instanceDb.clientMods.Add(clientMod);
                     }
                 }
+                
+                _configDbContext.SaveChanges();
                 
                 foreach (var serverMod in serverMods)
                 {
-                    var modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == serverMod.workshopID);
-                
+                    var modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == serverMod.Mod.workshopID);
                     if (modDb != null)
                     {
-                        instanceDb.serverMods.Add(modDb);
+                        modDb.name = serverMod.Mod.name;
+                        instanceDb.serverMods.Add(new InstanceServerMod(instance.id, modDb, serverMod.Position));
                     }
                     else
                     {
-                        _configDbContext.MODS.Add(serverMod);
-                        
-                        _configDbContext.SaveChanges();
-                        
-                        modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == serverMod.workshopID);
-                        
-                        if (modDb == null) continue;
-                        
-                        instanceDb.serverMods.Add(modDb);
+                        instanceDb.serverMods.Add(serverMod);
                     }
                 }
-                        
+                
                 _configDbContext.SaveChanges();
                 
                 return HttpStatusCode.Created;
@@ -155,95 +136,80 @@ public class InstanceRepository : IInstanceRepository
             {
                 var instanceDb = _configDbContext.INSTANCES
                     .Include(i => i.clientMods)
+                    .ThenInclude(icm => icm.Mod)
                     .Include(i => i.serverMods)
+                    .ThenInclude(ism => ism.Mod)
                     .Include(i => i.customMessages)
+                    .AsTracking()
                     .FirstOrDefault(x => x.id == instance.id);
                 
                 if (instanceDb == null) return HttpStatusCode.NotFound;
                 
                 _configDbContext.Entry(instanceDb).CurrentValues.SetValues(instance);
+                _configDbContext.SaveChanges();
                 
-                #region ClientMods
-                foreach (var instanceMod in instance.clientMods)
+                var currentClientMods = instanceDb.clientMods.Select(x => x.Mod.workshopID).ToHashSet();
+                var targetClientMods  = instance.clientMods.Select(x => x.Mod.workshopID).ToHashSet();
+                
+                instanceDb.clientMods.RemoveAll(m => !targetClientMods.Contains(m.Mod.workshopID));
+                
+                foreach (var clientMod in instance.clientMods)
                 {
-                    var instanceModDb = instanceDb.clientMods.FirstOrDefault(x => x.id == instanceMod.id);
-                    if (instanceModDb == null)
+                    if (!currentClientMods.Contains(clientMod.Mod.workshopID))
                     {
-                        var modDb = _configDbContext.MODS.FirstOrDefault(x => x.id == instanceMod.id);
+                        var modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == clientMod.Mod.workshopID);
                         if (modDb != null)
                         {
-                            instanceDb.clientMods.Add(modDb);
+                            modDb.name = clientMod.Mod.name;
+                            instanceDb.clientMods.Add(new InstanceClientMod(instance.id, modDb, clientMod.Position));
                         }
                         else
                         {
-                            _configDbContext.MODS.Add(instanceMod);
-                        
-                            _configDbContext.SaveChanges();
-                        
-                            modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == instanceMod.workshopID);
-                        
-                            if (modDb == null) continue;
-                        
-                            instanceDb.serverMods.Add(modDb);
+                            instanceDb.clientMods.Add(clientMod);
                         }
                     }
                     else
                     {
-                        _configDbContext.Entry(instanceModDb).CurrentValues.SetValues(instanceMod);
+                        var modDb = instanceDb.clientMods.FirstOrDefault(x => x.ModId == clientMod.ModId);
+                        modDb?.Mod.name = clientMod.Mod.name;
+                        modDb?.Position = clientMod.Position;
                     }
                 }
                 
-                var clientModsDbCopy = new List<Mod>(instanceDb.clientMods);
-                foreach (var modDbCopy in clientModsDbCopy)
-                {
-                    if (instance.clientMods.All(x => x.id != modDbCopy.id))
-                    {
-                        var modDb = instanceDb.clientMods.FirstOrDefault(x => x.id == modDbCopy.id);
-                        if (modDb != null) instanceDb.clientMods.Remove(modDb);
-                    }
-                }
-                #endregion ClientMods
+                _configDbContext.SaveChanges();
                 
-                #region ServerMods
-                foreach (var instanceMod in instance.serverMods)
+                var currentServerMods = instanceDb.serverMods.Select(x => x.Mod.workshopID).ToHashSet();
+                var targetServerMods  = instance.serverMods.Select(x => x.Mod.workshopID).ToHashSet();
+                
+                instanceDb.serverMods.RemoveAll(m => !targetServerMods.Contains(m.Mod.workshopID));
+                
+                foreach (var serverMod in instance.serverMods)
                 {
-                    var instanceModDb = instanceDb.serverMods.FirstOrDefault(x => x.id == instanceMod.id);
-                    if (instanceModDb == null)
+                    if (!currentServerMods.Contains(serverMod.Mod.workshopID))
                     {
-                        var modDb = _configDbContext.MODS.FirstOrDefault(x => x.id == instanceMod.id);
+                        var modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == serverMod.Mod.workshopID);
                         if (modDb != null)
                         {
-                            instanceDb.clientMods.Add(modDb);
+                            modDb.name = serverMod.Mod.name;
+                            instanceDb.serverMods.Add(new InstanceServerMod(instance.id, modDb, serverMod.Position));
                         }
                         else
                         {
-                            _configDbContext.MODS.Add(instanceMod);
-                        
-                            _configDbContext.SaveChanges();
-                        
-                            modDb = _configDbContext.MODS.FirstOrDefault(x => x.workshopID == instanceMod.workshopID);
-                        
-                            if (modDb == null) continue;
-                        
-                            instanceDb.serverMods.Add(modDb);
+                            instanceDb.serverMods.Add(serverMod);
                         }
                     }
                     else
                     {
-                        _configDbContext.Entry(instanceModDb).CurrentValues.SetValues(instanceMod);
+                        var modDb = instanceDb.serverMods.FirstOrDefault(x => x.ModId == serverMod.ModId);
+                        modDb?.Mod.name = serverMod.Mod.name;
+                        modDb?.Position = serverMod.Position;
                     }
                 }
                 
-                var serverModsDb = new List<Mod>(instanceDb.serverMods);
-                foreach (var mod in serverModsDb)
-                {
-                    if (instance.serverMods.All(x => x.id != mod.id))
-                    {
-                        var modDb = instanceDb.serverMods.FirstOrDefault(x => x.id == mod.id);
-                        if (modDb != null) instanceDb.serverMods.Remove(modDb);
-                    }
-                }
-                #endregion ServerMods
+                _configDbContext.SaveChanges();
+                
+                var targetCustomMessages  = instance.customMessages.Select(x => x.Id).ToHashSet();
+                instanceDb.customMessages.RemoveAll(m => !targetCustomMessages.Contains(m.Id));
                 
                 #region CustomMessages
                 foreach (var customMessage in instance.customMessages)
@@ -256,16 +222,6 @@ public class InstanceRepository : IInstanceRepository
                     else
                     {
                         _configDbContext.Entry(customMessageDb).CurrentValues.SetValues(customMessage);
-                    }
-                }
-                
-                var customMessagesCopy = new List<CustomMessage>(instanceDb.customMessages);
-                foreach (var customMessageCopy in customMessagesCopy)
-                {
-                    if (instance.customMessages.All(x => x.Id != customMessageCopy.Id))
-                    {
-                        var customMessageDb = instanceDb.customMessages.FirstOrDefault(x => x.Id == customMessageCopy.Id);
-                        if (customMessageDb != null) instanceDb.customMessages.Remove(customMessageDb);
                     }
                 }
                 #endregion CustomMessages
@@ -282,16 +238,13 @@ public class InstanceRepository : IInstanceRepository
         }
     }
 
-    public HttpStatusCode DeleteInstance(string id)
+    public HttpStatusCode DeleteInstance(int id)
     {
         lock (_configDbContext)
         {
             try
             {
                 var instanceDb = _configDbContext.INSTANCES
-                    .Include(x => x.clientMods)
-                    .Include(x => x.serverMods)
-                    .Include(x => x.customMessages)
                     .FirstOrDefault(inst => inst.id == id);
                 if (instanceDb == null) return HttpStatusCode.NotFound;
                 

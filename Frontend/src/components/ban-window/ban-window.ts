@@ -12,7 +12,7 @@ import {FormsModule} from '@angular/forms';
 import {MatButton} from '@angular/material/button';
 
 export interface BanWindowProps {
-  instanceId: string;
+  instanceId: number;
   guid: string;
 }
 
@@ -35,7 +35,7 @@ export class BanWindow {
   private readonly dialogRef = inject(MatDialogRef<BanWindow>);
   private readonly data = inject<BanWindowProps>(MAT_DIALOG_DATA);
   public guid: string = this.data.guid;
-  public instanceId: string = this.data.instanceId;
+  public instanceId: number = this.data.instanceId;
 
   public banReason: WritableSignal<string> = signal("");
   public banDuration: WritableSignal<number> = signal(0);

@@ -21,7 +21,7 @@ public class InstanceController : ControllerBase
     }
 
     [HttpGet]
-    public void StartServer(string id)
+    public void StartServer(int id)
     {
         var steamCmdStatus = _steamCmdService.GetSteamInformation().steamCmdStatus;
         
@@ -29,25 +29,25 @@ public class InstanceController : ControllerBase
     }
 
     [HttpGet]
-    public void StopServer(string id)
+    public void StopServer(int id)
     {
         _instanceService.StopServer(id);
     }
 
     [HttpDelete]
-    public void RemoveServer(string id)
+    public void RemoveServer(int id)
     {
         _instanceService.RemoveServer(id);
     }
     
     [HttpGet]
-    public ServerInformation? GetServerInformation(string id)
+    public ServerInformation? GetServerInformation(int id)
     {
         return _instanceService.GetServerInformation(id);
     }
 
     [HttpGet]
-    public Instance? GetInstance(string id)
+    public Instance? GetInstance(int id)
     {
         return _instanceService.GetInstance(id);
     }
@@ -68,7 +68,7 @@ public class InstanceController : ControllerBase
     public void CreateServer([FromBody] Instance instance)
     {
         _instanceService.CreateInstance(instance);
-        _instanceService.CreateServer(instance);
+        _instanceService.CreateServer(instance.id);
     }
 
     [HttpPut]
@@ -78,31 +78,31 @@ public class InstanceController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult BanPlayer(string playerGuid, string instanceId, string reason, int duration)
+    public IActionResult BanPlayer(string playerGuid, int instanceId, string reason, int duration)
     {
         return StatusCode((int)_instanceService.BanPlayer(playerGuid, instanceId, reason, duration));
     }
 
     [HttpGet]
-    public IActionResult UnbanPlayer(string playerGuid, string instanceId)
+    public IActionResult UnbanPlayer(string playerGuid, int instanceId)
     {
         return StatusCode((int)_instanceService.UnbanPlayer(playerGuid, instanceId));
     }
 
     [HttpGet]
-    public void KickPlayer(string playerGuid, string instanceId, string reason)
+    public void KickPlayer(string playerGuid, int instanceId, string reason)
     {
         _instanceService.KickPlayer(playerGuid, instanceId, reason);
     }
 
     [HttpGet]
-    public void WhitelistPlayer(string playerGuid, string instanceId)
+    public void WhitelistPlayer(string playerGuid, int instanceId)
     {
         _instanceService.WhitelistPlayer(playerGuid, instanceId);
     }
 
     [HttpGet]
-    public void UnwhitelistPlayer(string playerGuid, string instanceId)
+    public void UnwhitelistPlayer(string playerGuid, int instanceId)
     {
         _instanceService.UnwhitelistPlayer(playerGuid, instanceId);
     }

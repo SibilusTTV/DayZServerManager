@@ -12,7 +12,7 @@ import {MatButton} from '@angular/material/button';
 import {MatFormField, MatInput, MatLabel} from '@angular/material/input';
 
 export interface KickWindowProps {
-  instanceId: string;
+  instanceId: number;
   guid: string;
 }
 
@@ -34,7 +34,7 @@ export class KickWindow {
   private readonly dialogRef = inject(MatDialogRef<KickWindow>);
   private readonly data = inject<KickWindowProps>(MAT_DIALOG_DATA);
   public guid: string = this.data.guid;
-  public instanceId: string = this.data.instanceId;
+  public instanceId: number = this.data.instanceId;
 
   public kickReason: WritableSignal<string> = signal("");
 

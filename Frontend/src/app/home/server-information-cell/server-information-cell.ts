@@ -8,7 +8,7 @@ import {InstanceService, ServerInformation} from '../../../api';
   templateUrl: './server-information-cell.html',
 })
 export class ServerInformationCell implements ICellRendererAngularComp, OnInit, OnDestroy {
-  public id: string = "";
+  public id: number = 0;
   public serverInformation: WritableSignal<ServerInformation> = signal({});
   public timer = 0;
 

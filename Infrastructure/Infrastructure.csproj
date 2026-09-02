@@ -23,6 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="BytexDigital.BattlEye.Rcon" Version="1.0.3-preview.1718920183" />
       <PackageReference Include="LibGit2Sharp" Version="0.32.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
         <PrivateAssets>all</PrivateAssets>

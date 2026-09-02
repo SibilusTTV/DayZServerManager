@@ -18,7 +18,7 @@ import {RarityActionsCell} from './rarity-actions-cell/rarity-actions-cell';
   ]
 })
 export class RarityEditor {
-  private id: string = "";
+  private id: number = 0;
   private fileName: string = "";
   public rarities: WritableSignal<RarityItem[]> = signal([]);
   private selectedRowIds: number[] = [];

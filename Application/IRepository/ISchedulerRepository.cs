@@ -5,7 +5,7 @@ namespace Application.IRepository;
 
 public interface ISchedulerRepository
 {
-    public SchedulerConfig? Get(string id);
+    public SchedulerConfig? Get(int id);
     public void CreateEdit(SchedulerConfig config);
     public List<string> LoadWhitelistedPlayers(string serverFolderName);
     public HttpStatusCode SaveWhitelistedPlayers(string serverFolderName, List<string> whitelistedPlayers);

@@ -5,9 +5,9 @@ namespace Application.IRepository;
 
 public interface IInstanceRepository
 {
-    public Instance? GetInstance(string id);
+    public Instance? GetInstance(int id);
     public List<Instance> GetInstances();
     public HttpStatusCode CreateInstance(Instance instance);
     public HttpStatusCode UpdateInstance(Instance instance);
-    public HttpStatusCode DeleteInstance(string id);
+    public HttpStatusCode DeleteInstance(int id);
 }

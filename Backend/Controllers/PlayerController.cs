@@ -30,25 +30,25 @@ public class PlayerController : ControllerBase
     }
 
     [HttpGet]
-    public List<ServerPlayerInformation> GetServerPlayerInformation(string id)
+    public List<ServerPlayerInformation> GetServerPlayerInformation(int id)
     {
         return _playersService.GetServerPlayerInformation(id);
     }
 
     [HttpPost]
-    public IActionResult CreateServerPlayer(string playerId, string instanceId, bool isWhitelisted, bool isBanned, string roleName)
+    public IActionResult CreateServerPlayer(string playerId, int instanceId, bool isWhitelisted, bool isBanned, string roleName)
     {
         return StatusCode((int)_playersService.CreateServerPlayer(playerId, instanceId, isWhitelisted, isBanned, roleName));
     }
 
     [HttpGet]
-    public List<string> GetRoleNames(string instanceId)
+    public List<string> GetRoleNames(int instanceId)
     {
         return _playersService.GetRoleNames(instanceId);
     }
 
     [HttpPost]
-    public IActionResult SetRole(string serverPlayerId, string playerGuid, string instanceId, string roleName)
+    public IActionResult SetRole(string serverPlayerId, string playerGuid, int instanceId, string roleName)
     {
         return StatusCode((int)_playersService.SaveServerPlayerRole(serverPlayerId, playerGuid, instanceId, roleName));
     }

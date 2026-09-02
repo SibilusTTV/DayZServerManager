@@ -10,7 +10,7 @@ public class ServerPlayer
     public string Id { get; set; }
     
     [ForeignKey(nameof(Instance))]
-    public string InstanceId { get; set; }
+    public int InstanceId { get; set; }
     public Instance Instance { get; set; }
     
     [ForeignKey(nameof(User))]
@@ -29,7 +29,7 @@ public class ServerPlayer
         
     }
     
-    public ServerPlayer(string instanceId, string playerId, bool isWhitelisted, bool isBanned, string roleId)
+    public ServerPlayer(int instanceId, string playerId, bool isWhitelisted, bool isBanned, string roleId)
     {
         this.Id = Guid.NewGuid().ToString().ToLower();
         InstanceId = instanceId;

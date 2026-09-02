@@ -14,7 +14,7 @@ export class RarityService {
      * @throws ApiError
      */
     public static getApiRarityGet(
-        instanceId?: string,
+        instanceId?: number,
         name?: string,
     ): CancelablePromise<RarityFile> {
         return __request(OpenAPI, {
@@ -34,7 +34,7 @@ export class RarityService {
      * @throws ApiError
      */
     public static putApiRarityUpdate(
-        instanceId?: string,
+        instanceId?: number,
         name?: string,
         requestBody?: RarityFile,
     ): CancelablePromise<any> {

@@ -133,8 +133,8 @@ public class MissionService : IMissionService
                 var vanillaRarity = _missionRepository.GetJsonFile<RarityFile>(Path.Combine(missionTemplatePath, Files.MissionVanillaRaritiesFileName));
                 var expansionRarity = _missionRepository.GetJsonFile<RarityFile>(Path.Combine(missionTemplatePath, Files.MissionExpansionRaritiesFileName));
 
-                var vanillaTypes = _missionRepository.GetJsonFile<TypesFile>(Path.Combine(missionPath, Folders.MissionDbFolderName, Files.MissionTypesFileName));
-                var expansionTypes = _missionRepository.GetJsonFile<TypesFile>(Path.Combine(missionPath, Folders.MissionExpansionCeFolderName, Files.MissionExpansionTypesFileName));
+                var vanillaTypes = _missionRepository.GetXmlFile<TypesFile>(Path.Combine(missionPath, Folders.MissionDbFolderName, Files.MissionTypesFileName));
+                var expansionTypes = _missionRepository.GetXmlFile<TypesFile>(Path.Combine(missionPath, Folders.MissionExpansionCeFolderName, Files.MissionExpansionTypesFileName));
 
                 if (hardlineFile != null)
                 {
@@ -174,7 +174,7 @@ public class MissionService : IMissionService
                         UpdateTypesWithTypesChanges(vanillaTypes, changes);
                     }
 
-                    _missionRepository.SaveJsonFile(Path.Combine(missionPath, Folders.MissionDbFolderName, Files.MissionTypesFileName), vanillaTypes);
+                    _missionRepository.SaveXmlFile(Path.Combine(missionPath, Folders.MissionDbFolderName, Files.MissionTypesFileName), vanillaTypes);
                 }
 
                 if (expansionTypes != null)
@@ -191,7 +191,7 @@ public class MissionService : IMissionService
                         UpdateTypesWithTypesChanges(expansionTypes, changes);
                     }
 
-                    _missionRepository.SaveJsonFile(Path.Combine(missionPath, Folders.MissionExpansionCeFolderName, Files.MissionExpansionTypesFileName), expansionTypes);
+                    _missionRepository.SaveXmlFile(Path.Combine(missionPath, Folders.MissionExpansionCeFolderName, Files.MissionExpansionTypesFileName), expansionTypes);
                 }
             }
 

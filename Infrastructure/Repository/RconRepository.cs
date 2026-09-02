@@ -11,23 +11,21 @@ namespace Infrastructure.Repository;
 
 public class RconRepository : IRconRepository
 {
-    private readonly ILogger<IRconRepository> _logger;
+    private readonly ILogger<RconRepository> _logger;
     private RconClient _client;
-    private SchedulerConfig? config;
     
     public string ChatLog { get; private set;}
     public List<ConnectedPlayer> ConnectedPlayers { get; private set; }
     
-    public RconRepository(ILogger<IRconRepository> logger)
+    public RconRepository(ILogger<RconRepository> logger)
     {
         _logger = logger;
         ChatLog = "";
         ConnectedPlayers = [];
     }
 
-    public void InitializeRconRepository(string ip, int port, string password, SchedulerConfig Config)
+    public void InitializeRconRepository(string ip, int port, string password)
     {
-        config = Config;
         _logger.LogInformation($"Creating new RconClient to {ip}:{port} with password {password}");
         _client = new RconClient(ip, port, password);
         _client.ReconnectOnFailure = true;
@@ -58,6 +56,7 @@ public class RconRepository : IRconRepository
 
     public void Disconnect()
     {
+        _logger.LogInformation("Disconnecting the RconClient");
         _client?.Disconnect();
     }
 
@@ -66,13 +65,16 @@ public class RconRepository : IRconRepository
         return _client?.IsConnected ?? false;
     }
 
-    public List<ConnectedPlayer> GetPlayers(string instanceId)
+    public List<ConnectedPlayer> GetPlayers()
     {
         if (IsConnected())
         {
+            _logger.LogInformation("Getting Players");
             List<Player> players = [];
             _client?.Fetch(new GetPlayersRequest(), 5000, out players);
 
+            if (players == null) return [];
+            
             List<ConnectedPlayer> newPlayers = [];
             foreach (var player in players)
             {
@@ -138,6 +140,7 @@ public class RconRepository : IRconRepository
     {
         if (IsConnected())
         {
+            _logger.LogInformation("Reloading Bans");
             _client?.Send(new LoadBansCommand()).WaitUntilAcknowledged();
             _client?.Send(new SaveBansCommand()).WaitUntilAcknowledged();
         }
@@ -147,6 +150,7 @@ public class RconRepository : IRconRepository
     {
         if (IsConnected())
         {
+            _logger.LogInformation("Getting Bans");
             List<PlayerBan> bans = [];
             _client?.Fetch(new GetBansRequest(), 5000, out bans);
             return bans;
@@ -173,16 +177,19 @@ public class RconRepository : IRconRepository
 
     private void PlayerConnected(object? state, PlayerConnectedArgs args)
     {
+        _logger.LogInformation("Player {args.Name} connected", args.Name);
         // CreateEditPlayer(args.Guid, args.Name);
     }
 
     private void PlayerDisconnected(object? state, PlayerDisconnectedArgs args)
     {
+        _logger.LogInformation("Player {args.Name} disconnected", args.Name);
         ConnectedPlayers.RemoveAll(x => x.Id == args.Id && x.Name == args.Name);
     }
 
     private void PlayerRemoved(object? state, PlayerRemovedArgs args)
     {
+        _logger.LogInformation("Player {args.Name} was removed", args.Name);
         ConnectedPlayers.RemoveAll(x => x.Guid == args.Guid);
     }
 }

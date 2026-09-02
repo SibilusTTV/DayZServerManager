@@ -11,6 +11,8 @@ export type { ConnectedPlayer } from './models/ConnectedPlayer';
 export type { CustomMessage } from './models/CustomMessage';
 export type { HttpStatusCode } from './models/HttpStatusCode';
 export type { Instance } from './models/Instance';
+export type { InstanceClientMod } from './models/InstanceClientMod';
+export type { InstanceServerMod } from './models/InstanceServerMod';
 export type { Mod } from './models/Mod';
 export type { PropertyValue } from './models/PropertyValue';
 export type { RarityFile } from './models/RarityFile';

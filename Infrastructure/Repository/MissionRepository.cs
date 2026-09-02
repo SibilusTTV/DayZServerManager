@@ -517,7 +517,8 @@ public class MissionRepository : IMissionRepository
             {
                 Directory.CreateDirectory(Path.Combine(backupPath, Folders.BackupsFullMissionBackupsFolderName));
             }
-            Directory.Move(oldPath, newPath);
+            FileSystem.CopyDirectory(oldPath, newPath);
+            Directory.Delete(oldPath, true);
             _logger.LogInformation("Finished moving old mission");
         }
         catch (Exception ex)

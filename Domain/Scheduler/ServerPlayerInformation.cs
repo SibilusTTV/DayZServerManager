@@ -4,7 +4,7 @@ public class ServerPlayerInformation
 {
     public string Id { get; set; }
     public string? ServerPlayerId { get; set; }
-    public string? InstanceId { get; set; }
+    public int? InstanceId { get; set; }
     public string Name { get; set; }
     public string Uid { get; set; }
     public bool IsVerified { get; set; }
@@ -19,7 +19,7 @@ public class ServerPlayerInformation
     }
 
     public ServerPlayerInformation(string id, string? serverPlayerId, string name, string uid, string ip, bool isVerified, bool isWhitelisted,
-        bool isBanned, string role, string? instanceId)
+        bool isBanned, string role, int? instanceId)
     {
         Id = id;
         ServerPlayerId = serverPlayerId;

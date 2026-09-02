@@ -21,7 +21,7 @@ public class SchedulerRepository : ISchedulerRepository
         _configDbContext = configDbContext;
     }
 
-    public SchedulerConfig? Get(string instanceId)
+    public SchedulerConfig? Get(int instanceId)
     {
         lock (_configDbContext)
         {

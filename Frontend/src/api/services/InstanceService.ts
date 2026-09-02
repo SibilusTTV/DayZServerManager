@@ -14,7 +14,7 @@ export class InstanceService {
      * @throws ApiError
      */
     public static getApiInstanceStartServer(
-        id?: string,
+        id?: number,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -30,7 +30,7 @@ export class InstanceService {
      * @throws ApiError
      */
     public static getApiInstanceStopServer(
-        id?: string,
+        id?: number,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -46,7 +46,7 @@ export class InstanceService {
      * @throws ApiError
      */
     public static deleteApiInstanceRemoveServer(
-        id?: string,
+        id?: number,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'DELETE',
@@ -62,7 +62,7 @@ export class InstanceService {
      * @throws ApiError
      */
     public static getApiInstanceGetServerInformation(
-        id?: string,
+        id?: number,
     ): CancelablePromise<ServerInformation> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -78,7 +78,7 @@ export class InstanceService {
      * @throws ApiError
      */
     public static getApiInstanceGetInstance(
-        id?: string,
+        id?: number,
     ): CancelablePromise<Instance> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -148,7 +148,7 @@ export class InstanceService {
      */
     public static getApiInstanceBanPlayer(
         playerGuid?: string,
-        instanceId?: string,
+        instanceId?: number,
         reason?: string,
         duration?: number,
     ): CancelablePromise<any> {
@@ -171,7 +171,7 @@ export class InstanceService {
      */
     public static getApiInstanceUnbanPlayer(
         playerGuid?: string,
-        instanceId?: string,
+        instanceId?: number,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -191,7 +191,7 @@ export class InstanceService {
      */
     public static getApiInstanceKickPlayer(
         playerGuid?: string,
-        instanceId?: string,
+        instanceId?: number,
         reason?: string,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
@@ -212,7 +212,7 @@ export class InstanceService {
      */
     public static getApiInstanceWhitelistPlayer(
         playerGuid?: string,
-        instanceId?: string,
+        instanceId?: number,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -231,7 +231,7 @@ export class InstanceService {
      */
     public static getApiInstanceUnwhitelistPlayer(
         playerGuid?: string,
-        instanceId?: string,
+        instanceId?: number,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
