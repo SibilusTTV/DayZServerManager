@@ -88,6 +88,30 @@ public class SchedulerRepository : ISchedulerRepository
             }
         }
     }
+
+    public HttpStatusCode Delete(int instanceId)
+    {
+        lock (_configDbContext)
+        {
+            try
+            {
+                var schedulerConfigDb = _configDbContext.SCHEDULER_CONFIGS
+                    .FirstOrDefault(s => s.InstanceId == instanceId);
+                
+                if (schedulerConfigDb == null) return HttpStatusCode.NotFound;
+                
+                _configDbContext.SCHEDULER_CONFIGS.Remove(schedulerConfigDb);
+                _configDbContext.SaveChanges();
+                
+                return HttpStatusCode.OK;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting scheduler config");
+                return HttpStatusCode.InternalServerError;
+            }
+        }
+    }
     
     public List<string> LoadWhitelistedPlayers(string serverFolderName)
     {

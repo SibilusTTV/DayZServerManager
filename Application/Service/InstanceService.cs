@@ -213,8 +213,10 @@ public class InstanceService : IInstanceService, IDisposable
             server.Stop();
             server.Dispose();
             
-            var instanceRepository = _serviceScope.ServiceProvider.GetService<IInstanceRepository>();
+            var schedulerRepository = _serviceScope.ServiceProvider.GetService<ISchedulerRepository>();
+            schedulerRepository?.Delete(id);
             
+            var instanceRepository = _serviceScope.ServiceProvider.GetService<IInstanceRepository>();
             instanceRepository?.DeleteInstance(id);
 
             if (instanceRepository?.GetInstances().Count <= 0)
