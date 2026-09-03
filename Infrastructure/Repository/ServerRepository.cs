@@ -114,12 +114,11 @@ public class ServerRepository : IServerRepository
         }
     }
 
-    public List<long> CheckForUpdates(List<Mod> mods, string  serverFolderName, out bool updatedMods, out bool missionNeedsUpdating, out bool updatedServer)
+    public List<long> CheckForUpdates(List<Mod> mods, string  serverFolderName, out bool missionNeedsUpdating, out bool updatedServer)
     {
-        updatedMods = false;
         missionNeedsUpdating = false;
         updatedServer = CheckForUpdatedServer(serverFolderName);
-        var updatedModsIDs = CheckForUpdatedMods(mods, serverFolderName, out updatedMods, out missionNeedsUpdating);
+        var updatedModsIDs = CheckForUpdatedMods(mods, serverFolderName, out missionNeedsUpdating);
         return updatedModsIDs;
     }
 
@@ -319,10 +318,9 @@ public class ServerRepository : IServerRepository
         }
     }
 
-    private List<long> CheckForUpdatedMods(List<Mod> mods, string serverFolderPath, out bool updatedMods, out bool missionNeedsUpdating)
+    private List<long> CheckForUpdatedMods(List<Mod> mods, string serverFolderPath, out bool missionNeedsUpdating)
     {
         List<long> updatedModsIDs = [];
-        updatedMods  = false;
         missionNeedsUpdating = false;
         
         foreach (var mod in mods)
@@ -331,15 +329,10 @@ public class ServerRepository : IServerRepository
                     Path.Combine(Folders.ModsFolderName, Folders.WorkshopFolderPath, mod.workshopID.ToString()),
                     Path.Combine(serverFolderPath, mod.name))) continue;
             
-            if (updatedModsIDs.Contains(mod.workshopID))
-            {
-                updatedMods = true;
-            }
-            else
+            if (!updatedModsIDs.Contains(mod.workshopID))
             {
                 _logger.LogInformation($"{mod.name} was updated");
                 updatedModsIDs.Add(mod.workshopID);
-                updatedMods = true;
                 if (mod.name.Contains(SteamCmd.ExpansionModSearch, StringComparison.CurrentCultureIgnoreCase))
                 {
                     missionNeedsUpdating = true;

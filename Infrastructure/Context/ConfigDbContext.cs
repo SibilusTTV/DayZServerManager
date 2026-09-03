@@ -1,5 +1,6 @@
 using Domain.Manager;
 using Domain.Scheduler;
+using Domain.ServerConfig;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -37,7 +38,7 @@ public class ConfigDbContext : DbContext
             .HasMany(config => config.serverMods)
             .WithOne();
         
-        modelBuilder.Entity<Instance>()
+        modelBuilder.Entity<SchedulerConfig>()
             .HasMany(config => config.customMessages)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);

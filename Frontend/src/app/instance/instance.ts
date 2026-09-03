@@ -53,4 +53,8 @@ export default class Instance {
   public getExpansionRaritiesRoute(){
     return "instance/" + this.id + "/expansionRarities";
   }
+
+  public getSchedulerConfigEditorRoute(){
+    return "instance/" + this.id + "/scheduler-config-editor";
+  }
 }

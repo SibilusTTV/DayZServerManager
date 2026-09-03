@@ -29,6 +29,8 @@ public class SchedulerRepository : ISchedulerRepository
             {
                 return _configDbContext.SCHEDULER_CONFIGS
                     .AsNoTracking()
+                    .Include(schedulerConfig => schedulerConfig.customMessages
+                        .OrderBy(x => x.Position))
                     .FirstOrDefault(s => s.InstanceId == instanceId);
             }
             catch (Exception ex)
@@ -46,7 +48,9 @@ public class SchedulerRepository : ISchedulerRepository
             try
             {
                 var schedulerConfigDb = _configDbContext.SCHEDULER_CONFIGS
+                    .Include(schedulerConfig => schedulerConfig.customMessages)
                     .FirstOrDefault(s => s.InstanceId == config.InstanceId);
+                
                 if (schedulerConfigDb == null)
                 {
                     _configDbContext.SCHEDULER_CONFIGS.Add(config);
@@ -54,6 +58,26 @@ public class SchedulerRepository : ISchedulerRepository
                 else
                 {
                     _configDbContext.Entry(schedulerConfigDb).CurrentValues.SetValues(config);
+                
+                    var targetCustomMessages  = config.customMessages.Select(x => x.Id).ToHashSet();
+                    schedulerConfigDb.customMessages.RemoveAll(m => !targetCustomMessages.Contains(m.Id));
+                
+                    #region CustomMessages
+                    foreach (var customMessage in config.customMessages)
+                    {
+                        var customMessageDb = schedulerConfigDb.customMessages.FirstOrDefault(x => x.Id == customMessage.Id);
+                        if (customMessageDb == null)
+                        {
+                            schedulerConfigDb.customMessages.Add(customMessage);
+                        }
+                        else
+                        {
+                            _configDbContext.Entry(customMessageDb).CurrentValues.SetValues(customMessage);
+                        }
+                    }
+                    #endregion CustomMessages
+                
+                    _configDbContext.SaveChanges();
                 }
                 
                 _configDbContext.SaveChanges();

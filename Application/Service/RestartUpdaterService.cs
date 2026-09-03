@@ -2,6 +2,7 @@ using Application.Handlers;
 using Application.IService;
 using Domain.Manager;
 using Domain.Profile;
+using Domain.Scheduler;
 
 namespace Application.Service;
 
@@ -225,7 +226,7 @@ public class RestartUpdaterService : IRestartUpdaterService
         return new DateTime();
     }
 
-    public void UpdateExpansionScheduler(Instance config, NotificationSchedulerFile expansionScheduler)
+    public void UpdateExpansionScheduler(SchedulerConfig config, NotificationSchedulerFile expansionScheduler)
     {
         var interval = config.restartInterval;
         expansionScheduler.Notifications = [];

@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Net;
 using Application.IRepository;
 using Application.IService;
 using Domain.Manager;
+using Domain.Scheduler;
 using Domain.ServerConfig;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -80,6 +80,8 @@ public class InstanceService : IInstanceService, IDisposable
 
     public HttpStatusCode CreateInstance(Instance instanceConfig)
     {
+        var schedulerRepository = _serviceScope.ServiceProvider.GetService<ISchedulerRepository>();
+        schedulerRepository?.CreateEdit(new SchedulerConfig(instanceConfig.id));
         var instanceRepository = _serviceScope.ServiceProvider.GetService<IInstanceRepository>();
         return instanceRepository?.CreateInstance(instanceConfig) ?? HttpStatusCode.InternalServerError;
     }
@@ -268,6 +270,18 @@ public class InstanceService : IInstanceService, IDisposable
     {
         var server = GetServer(instanceId);
         return server?.UnwhitelistPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
+    }
+
+    public SchedulerConfig? GetSchedulerConfig(int instanceId)
+    {
+        var server = GetServer(instanceId);
+        return server?.GetSchedulerConfig();
+    }
+
+    public void CreateEditSchedulerConfig(SchedulerConfig schedulerConfig)
+    {
+        var server = GetServer(schedulerConfig.InstanceId);
+        server?.CreateEditSchedulerConfig(schedulerConfig);
     }
 
     private void StartSteamCmdService()

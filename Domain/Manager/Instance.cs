@@ -23,8 +23,6 @@ public class Instance
     public bool netLog { get; set; }
     public int limitFPS { get; set; }
     public string mapName { get; set; }
-    public bool restartOnUpdate { get; set; }
-    public int restartInterval { get; set; }
     public bool autoStartServer { get; set; }
     public bool makeBackups { get; set; }
     public bool deleteBackups { get; set; }
@@ -32,7 +30,6 @@ public class Instance
     public int maxKeepTime { get; set; }
     public List<InstanceClientMod> clientMods { get; set; }
     public List<InstanceServerMod> serverMods { get; set; }
-    public List<CustomMessage> customMessages { get; set; }
 
     public Instance()
     {
@@ -62,8 +59,6 @@ public class Instance
         vanillaMissionName = "dayzOffline.chernarusplus";
         missionTemplateName = "template.chernarus";
         mapName = "Chernarus";
-        restartOnUpdate = true;
-        restartInterval = 4;
         autoStartServer = false;
         makeBackups = true;
         deleteBackups = true;
@@ -75,8 +70,6 @@ public class Instance
         clientMods.Add(new InstanceClientMod(instanceId, mod1, 0));
         Mod mod2 = new Mod("@Community-Online-Tools", 1564026768);
         clientMods.Add(new InstanceClientMod(instanceId, mod2, 1));
-        customMessages = new List<CustomMessage>();
-        customMessages.Add(new CustomMessage(false, new TimeSpan( 0, 5, 0 ), new TimeSpan( 0, 15, 0 ), "Need Help?", "Make sure to join our Discord", "ExclamationMark", ""));
     }
     
     public Instance(int instanceId, string serverFolder, int steamPort, int serverPort, int steamQueryPort, int rConPort, List<InstanceClientMod> clientMods)
@@ -102,8 +95,6 @@ public class Instance
         vanillaMissionName = "dayzOffline.chernarusplus";
         missionTemplateName = "template.chernarus";
         mapName = "Chernarus";
-        restartOnUpdate = true;
-        restartInterval = 4;
         autoStartServer = false;
         makeBackups = true;
         deleteBackups = true;
@@ -111,7 +102,5 @@ public class Instance
         maxKeepTime = 7;
         this.clientMods = clientMods;
         serverMods = [];
-        customMessages = [];
-        customMessages.Add(new CustomMessage(false, new TimeSpan( 0, 5, 0 ), new TimeSpan( 0, 15, 0 ), "Need Help?", "Make sure to join our Discord", "ExclamationMark", ""));
     }
 }

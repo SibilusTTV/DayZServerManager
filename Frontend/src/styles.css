@@ -32,7 +32,8 @@ server-players-db,
 instance-overview,
 rarity-editor,
 instance-config,
-instance-config-editor{
+instance-config-editor,
+scheduler-config-editor{
   display: flex;
   min-height: 100%;
   flex-direction: column;

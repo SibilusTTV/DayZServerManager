@@ -13,8 +13,8 @@ public interface IServerRepository
     public void BackupServerData(bool deleteBackups, string backupPath, string profileName, string missionName,
         int maxKeepTime, string serverFolderName);
 
-    public List<long> CheckForUpdates(List<Mod> mods, string serverFolderName, out bool updatedMods,
-        out bool missionNeedsUpdating, out bool updatedServer);
+    public List<long> CheckForUpdates(List<Mod> mods, string serverFolderName, out bool missionNeedsUpdating,
+        out bool updatedServer);
 
     public string GetAdminLog(string serverFolderPath, string profileName);
     public void CreateFoldersAndFiles(string serverFolderPath, string profileName, string battlEyeFolderPath);

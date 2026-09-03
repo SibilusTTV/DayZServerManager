@@ -110,20 +110,8 @@
     <input matInput type="number" [(ngModel)]="limitFPS"/>
   </mat-form-field>
 </div>
-<h3>Restart and Backup</h3>
+<h3>Autostart and Backup</h3>
 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-  <mat-form-field style="height: 80px; width: 160px;">
-    <mat-label>Restart On Update</mat-label>
-    <mat-select [(ngModel)]="restartOnUpdate">
-      <mat-option [value]="false">False</mat-option>
-      <mat-option [value]="true">True</mat-option>
-    </mat-select>
-  </mat-form-field>
-  <mat-form-field style="height: 80px; width: 160px;">
-    <mat-label>Restart Interval</mat-label>
-    <input matInput type="number" [(ngModel)]="restartInterval"/>
-    <mat-hint>In Hours</mat-hint>
-  </mat-form-field>
   <mat-form-field style="height: 80px; width: 160px;">
     <mat-label>Auto Start Server</mat-label>
     <mat-select [(ngModel)]="autoStartServer">
@@ -168,7 +156,7 @@
       style="height: 400px"
       [stopEditingWhenCellsLoseFocus]="true"
       [rowDragManaged]="true"
-      (rowDragEnd)="onClientRowDragEnd($event)"
+      (dragStopped)="onClientRowDragStopped($event)"
       [autoSizeStrategy]="autoSizeStrategy"
     />
   </div>
@@ -184,23 +172,8 @@
       style="height: 400px"
       [stopEditingWhenCellsLoseFocus]="true"
       [rowDragManaged]="true"
-      (rowDragEnd)="onServerRowDragEnd($event)"
+      (dragStopped)="onServerRowDragStopped($event)"
       [autoSizeStrategy]="autoSizeStrategy"
     />
   </div>
 </div>
-<div style="display: flex; flex-direction: row; gap: 40px; align-items: center;">
-  <h3>Custom Messages</h3>
-  <button mat-icon-button (click)="onAddCustomMessageClick()"><mat-icon>add</mat-icon></button>
-</div>
-<ag-grid-angular
-  [columnDefs]="messageColDefs"
-  [rowData]="customMessages()"
-  [defaultColDef]="defaultColDef"
-  style="height: 400px; align-items: center;"
-  [stopEditingWhenCellsLoseFocus]="true"
-  [rowDragManaged]="true"
-  (rowDragEnd)="onMessageRowDragEnd($event)"
-  [rowHeight]="60"
-  [autoSizeStrategy]="autoSizeStrategy"
-/>

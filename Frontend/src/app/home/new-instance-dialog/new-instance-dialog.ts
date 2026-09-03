@@ -28,7 +28,6 @@ export class NewInstanceDialog {
 
   public clientMods: WritableSignal<Mod[]> = signal([]);
   public serverMods: WritableSignal<Mod[]> = signal([]);
-  public customMessages: WritableSignal<CustomMessage[]> = signal([]);
 
   public id: WritableSignal<number> = signal(0);
   public serverFolder: WritableSignal<string> = signal("");
@@ -52,8 +51,6 @@ export class NewInstanceDialog {
   public netLog: WritableSignal<boolean> = signal(false);
   public limitFPS: WritableSignal<number> = signal(0);
   public mapName: WritableSignal<string> = signal("");
-  public restartOnUpdate: WritableSignal<boolean> = signal(false);
-  public restartInterval: WritableSignal<number> = signal(0);
   public autoStartServer: WritableSignal<boolean> = signal(false);
   public makeBackups: WritableSignal<boolean> = signal(false);
   public deleteBackups: WritableSignal<boolean> = signal(false);
@@ -64,7 +61,6 @@ export class NewInstanceDialog {
     InstanceService.getApiInstanceCreateEmptyInstance().then(instanceConfig => {
       this.clientMods.set(instanceConfig.clientMods?.map(x => x.mod ?? {}) ?? []);
       this.serverMods.set(instanceConfig.serverMods?.map(x => x.mod ?? {}) ?? []);
-      this.customMessages.set(instanceConfig.customMessages ?? []);
 
       this.id.set(instanceConfig.id ?? 0);
       this.serverFolder.set(instanceConfig.serverFolder ?? "");
@@ -87,8 +83,6 @@ export class NewInstanceDialog {
       this.netLog.set(instanceConfig.netLog ?? false);
       this.limitFPS.set(instanceConfig.limitFPS ?? 0);
       this.mapName.set(instanceConfig.mapName ?? "");
-      this.restartOnUpdate.set(instanceConfig.restartOnUpdate ?? false);
-      this.restartInterval.set(instanceConfig.restartInterval ?? 0);
       this.autoStartServer.set(instanceConfig.autoStartServer ?? false);
       this.makeBackups.set(instanceConfig.makeBackups ?? false);
       this.deleteBackups.set(instanceConfig.deleteBackups ?? false);
@@ -124,8 +118,6 @@ export class NewInstanceDialog {
       netLog: this.netLog(),
       limitFPS: this.limitFPS(),
       mapName: this.mapName(),
-      restartOnUpdate: this.restartOnUpdate(),
-      restartInterval: this.restartInterval(),
       autoStartServer: this.autoStartServer(),
       makeBackups: this.makeBackups(),
       deleteBackups: this.deleteBackups(),
@@ -137,7 +129,6 @@ export class NewInstanceDialog {
       serverMods: this.serverMods().map((x, id) => {
         return {instanceId: this.id(), modId: x.id, mod: x, position: id}
       }),
-      customMessages: this.customMessages()
     }
 
     InstanceService.postApiInstanceCreateServer(instanceConfig).then(() => this.dialogRef.close() );

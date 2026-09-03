@@ -4,6 +4,7 @@
 /* eslint-disable */
 export type CustomMessage = {
     id?: string | null;
+    position?: number;
     isTimeOfDay?: boolean;
     waitTime?: string;
     interval?: string;

@@ -5,6 +5,7 @@ using Application.IService;
 using Domain.Constants;
 using Domain.Manager;
 using Domain.Profile;
+using Domain.Scheduler;
 using Domain.ServerConfig;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,6 @@ public class ServerInstance : IServerInstance
     private readonly int _id;
     
     // Other Variables
-    private bool _updatedMods;
     private bool _updatedServer;
     private bool _restartingForUpdates;
     private List<long> _updatedModIds;
@@ -73,7 +73,6 @@ public class ServerInstance : IServerInstance
         
         _serverProcess = null;
         _updatedModIds = [];
-        _updatedMods = false;
         _updatedServer = false;
         _restartingForUpdates = false;
         MissionNeedsUpdating = false;
@@ -185,7 +184,7 @@ public class ServerInstance : IServerInstance
     {
         var instanceConfig = GetInstanceConfig();
         CheckForUpdates(instanceConfig);
-        RestartForUpdates(instanceConfig);
+        _restartingForUpdates = _scheduler?.RestartForUpdates(instanceConfig.id, _restartingForUpdates,  _updatedModIds.Count, _updatedServer) ?? false;
     }
 
     private void CheckForUpdates(Instance instance)
@@ -198,7 +197,7 @@ public class ServerInstance : IServerInstance
         
         var serverRepository = _serverScope.ServiceProvider.GetService<IServerRepository>();
         var missionNeedsUpdating = false;
-        _updatedModIds = serverRepository?.CheckForUpdates(mods, Path.Combine(Folders.ServersFolderName, instance.serverFolder), out _updatedMods, out missionNeedsUpdating, out _updatedServer) ?? [];
+        _updatedModIds = serverRepository?.CheckForUpdates(mods, Path.Combine(Folders.ServersFolderName, instance.serverFolder), out missionNeedsUpdating, out _updatedServer) ?? [];
         MissionNeedsUpdating = missionNeedsUpdating;
     }
     
@@ -233,7 +232,7 @@ public class ServerInstance : IServerInstance
             var onlyRestarts = instance.clientMods.FindAll(mod => mod.Mod.name.Contains(SteamCmd.ExpansionModSearch, StringComparison.CurrentCultureIgnoreCase)).Count > 0;
 
             _scheduler?.InitializeScheduler(instance.id, Urls.Localhost, instance.RConPort, instance.RConPassword,
-                instance.restartInterval, onlyRestarts, instance.customMessages,
+                onlyRestarts,
                 Path.Combine(Folders.ServersFolderName, instance.serverFolder));
             
             connectTask = new Task(() => { _scheduler?.Connect(); });
@@ -251,7 +250,6 @@ public class ServerInstance : IServerInstance
         _serverInformation.chatLog = "";
 
         _updatedModIds = [];
-        _updatedMods = false;
         _restartingForUpdates = false;
         _updatedServer = false;
         var clientModsToLoad = string.Empty;
@@ -376,6 +374,16 @@ public class ServerInstance : IServerInstance
     {
         return _scheduler?.UnwhitelistPlayer(playerGuid, instanceId) ?? HttpStatusCode.InternalServerError;
     }
+
+    public SchedulerConfig? GetSchedulerConfig()
+    {
+        return _scheduler?.Get(_id);
+    }
+
+    public void CreateEditSchedulerConfig(SchedulerConfig schedulerConfig)
+    {
+        _scheduler?.CreateEdit(schedulerConfig);
+    }
     
     private void MoveAndBackupServer(Instance instance)
     {
@@ -413,7 +421,7 @@ public class ServerInstance : IServerInstance
             _logger.LogInformation(Statuses.ServerMoved);
         }
 
-        if (_updatedMods)
+        if (_updatedModIds.Count > 0)
         {
             _serverInformation.managerStatus = Statuses.MovingMods;
             _logger.LogInformation(Statuses.MovingMods);
@@ -426,7 +434,6 @@ public class ServerInstance : IServerInstance
 
         if (_updatedServer || MissionNeedsUpdating)
         {
-            _updatedMods = false;
             _updatedServer = false;
             MissionNeedsUpdating = false;
             
@@ -452,7 +459,9 @@ public class ServerInstance : IServerInstance
                 new NotificationSchedulerFile(1, 1, 0, 0, new List<NotificationItem>());
             
             var restartUpdater = _serverScope.ServiceProvider.GetService<IRestartUpdaterService>();
-            restartUpdater?.UpdateExpansionScheduler(instance, notFile);
+            var schedulerConfig = _scheduler?.Get(_id);
+            if (schedulerConfig == null) return;
+            restartUpdater?.UpdateExpansionScheduler(schedulerConfig, notFile);
         }
     }
 
@@ -504,39 +513,6 @@ public class ServerInstance : IServerInstance
         {
             _logger.LogError(ex, "Error when killing server and ajdusting and saving the server config");
         }
-    }
-
-    private bool RestartForUpdates(Instance instance)
-    {
-        if (instance.restartOnUpdate && !_restartingForUpdates && ((_updatedMods && _updatedModIds.Count > 0) || _updatedServer))
-        {
-            try
-            {
-                var restartUpdaterService = _serverScope.ServiceProvider.GetService<IRestartUpdaterService>();
-                
-                if (restartUpdaterService?.IsTimeToRestart(instance.restartInterval) ?? false)
-                {
-                    _restartingForUpdates = true;
-                    _scheduler?.ChangeToUpdateMode();
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error when changing to update mode");
-                return false;
-            }
-        }
-        else
-        {
-            _updatedMods = false;
-            _updatedServer = false;
-        }
-        return false;
     }
 
     private void UpdateServerConfig(Instance instance)

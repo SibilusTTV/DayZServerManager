@@ -1,5 +1,6 @@
 using System.Net;
 using Domain.Manager;
+using Domain.Scheduler;
 using Domain.ServerConfig;
 
 namespace Application.IService;
@@ -19,4 +20,6 @@ public interface IServerInstance
     public void KickPlayer(string playerGuid, int instanceId, string reason);
     public HttpStatusCode WhitelistPlayer(string playerGuid, int instanceId);
     public HttpStatusCode UnwhitelistPlayer(string playerGuid, int instanceId);
+    public SchedulerConfig? GetSchedulerConfig();
+    public void CreateEditSchedulerConfig(SchedulerConfig schedulerConfig);
 }

@@ -918,6 +918,76 @@
         }
       }
     },
+    "/api/Scheduler/GetSchedulerConfig": {
+      "get": {
+        "tags": [
+          "Scheduler"
+        ],
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulerConfig"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulerConfig"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulerConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Scheduler/CreateEditSchedulerConfig": {
+      "post": {
+        "tags": [
+          "Scheduler"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchedulerConfig"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchedulerConfig"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchedulerConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/ServerConfig/Get": {
       "get": {
         "tags": [
@@ -1195,6 +1265,10 @@
             "type": "string",
             "nullable": true
           },
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          },
           "isTimeOfDay": {
             "type": "boolean"
           },
@@ -1374,13 +1448,6 @@
             "type": "string",
             "nullable": true
           },
-          "restartOnUpdate": {
-            "type": "boolean"
-          },
-          "restartInterval": {
-            "type": "integer",
-            "format": "int32"
-          },
           "autoStartServer": {
             "type": "boolean"
           },
@@ -1409,13 +1476,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/InstanceServerMod"
-            },
-            "nullable": true
-          },
-          "customMessages": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CustomMessage"
             },
             "nullable": true
           }
@@ -1527,6 +1587,52 @@
           "rarity": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SchedulerConfig": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "instanceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "useNickFilter": {
+            "type": "boolean"
+          },
+          "filteredNickMsg": {
+            "type": "string",
+            "nullable": true
+          },
+          "badNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "timeout": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "restartOnUpdate": {
+            "type": "boolean"
+          },
+          "restartInterval": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "customMessages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomMessage"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1679,6 +1785,9 @@
     },
     {
       "name": "Rarity"
+    },
+    {
+      "name": "Scheduler"
     },
     {
       "name": "ServerConfig"

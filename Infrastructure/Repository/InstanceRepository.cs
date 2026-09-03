@@ -32,7 +32,6 @@ public class InstanceRepository : IInstanceRepository
                     .Include(instance => instance.serverMods
                         .OrderBy(serverMod => serverMod.Position))
                     .ThenInclude(ism => ism.Mod)
-                    .Include(instance => instance.customMessages)
                     .FirstOrDefault(x => x.id == id);
             }
             catch (Exception ex)
@@ -139,7 +138,6 @@ public class InstanceRepository : IInstanceRepository
                     .ThenInclude(icm => icm.Mod)
                     .Include(i => i.serverMods)
                     .ThenInclude(ism => ism.Mod)
-                    .Include(i => i.customMessages)
                     .AsTracking()
                     .FirstOrDefault(x => x.id == instance.id);
                 
@@ -205,26 +203,6 @@ public class InstanceRepository : IInstanceRepository
                         modDb?.Position = serverMod.Position;
                     }
                 }
-                
-                _configDbContext.SaveChanges();
-                
-                var targetCustomMessages  = instance.customMessages.Select(x => x.Id).ToHashSet();
-                instanceDb.customMessages.RemoveAll(m => !targetCustomMessages.Contains(m.Id));
-                
-                #region CustomMessages
-                foreach (var customMessage in instance.customMessages)
-                {
-                    var customMessageDb = instanceDb.customMessages.FirstOrDefault(x => x.Id == customMessage.Id);
-                    if (customMessageDb == null)
-                    {
-                        instanceDb.customMessages.Add(customMessage);
-                    }
-                    else
-                    {
-                        _configDbContext.Entry(customMessageDb).CurrentValues.SetValues(customMessage);
-                    }
-                }
-                #endregion CustomMessages
                 
                 _configDbContext.SaveChanges();
                 

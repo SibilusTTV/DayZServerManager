@@ -8,6 +8,7 @@ import ServerPlayersDb from './instance/children/server-players-db/server-player
 import ModList from './mod-list/mod-list';
 import ServerConfigEditor from './instance/children/server-config-editor/server-config-editor';
 import {RarityEditor} from './instance/children/rarity-editor/rarity-editor';
+import {SchedulerConfigEditor} from './instance/children/scheduler-config-editor/scheduler-config-editor';
 
 export const routes: Routes = [
   {
@@ -41,6 +42,10 @@ export const routes: Routes = [
       {
         path: 'server-config-editor',
         component: ServerConfigEditor
+      },
+      {
+        path: 'scheduler-config-editor',
+        component: SchedulerConfigEditor
       },
       {
         path: 'server-players-db',

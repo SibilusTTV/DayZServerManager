@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CustomMessage } from './CustomMessage';
 import type { InstanceClientMod } from './InstanceClientMod';
 import type { InstanceServerMod } from './InstanceServerMod';
 export type Instance = {
@@ -27,8 +26,6 @@ export type Instance = {
     netLog?: boolean;
     limitFPS?: number;
     mapName?: string | null;
-    restartOnUpdate?: boolean;
-    restartInterval?: number;
     autoStartServer?: boolean;
     makeBackups?: boolean;
     deleteBackups?: boolean;
@@ -36,6 +33,5 @@ export type Instance = {
     maxKeepTime?: number;
     clientMods?: Array<InstanceClientMod> | null;
     serverMods?: Array<InstanceServerMod> | null;
-    customMessages?: Array<CustomMessage> | null;
 };
 

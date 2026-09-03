@@ -7,8 +7,8 @@ namespace Application.IService;
 
 public interface ISchedulerService
 {
-    public void InitializeScheduler(int instanceId, string ip, int port, string password, int interval,
-        bool onlyRestarts, List<CustomMessage> customMessages, string serverFolderName);
+    public void InitializeScheduler(int instanceId, string ip, int port, string password, bool onlyRestarts,
+        string serverFolderName);
     public bool Connect();
     public SchedulerInformation GetSchedulerInformation();
     public List<string> GetWhitelistedPlayers(string serverFolderName);
@@ -27,4 +27,7 @@ public interface ISchedulerService
     public HttpStatusCode UnwhitelistPlayer(string playerGuid, int instanceId);
     public void SendCommand(string command);
     public void Shutdown();
+    public SchedulerConfig? Get(int instanceId);
+    public void CreateEdit(SchedulerConfig schedulerConfig);
+    public bool RestartForUpdates(int instanceId, bool restartingForUpdates, int updatedModsCount, bool updatedServer);
 }

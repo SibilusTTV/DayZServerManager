@@ -7,9 +7,8 @@ import {MatFormField, MatHint, MatInput, MatLabel} from '@angular/material/input
 import {MatOption, MatSelect} from '@angular/material/select';
 import {FormsModule} from '@angular/forms';
 import {MatIconButton} from '@angular/material/button';
-import GridRemoveButton from './grid-remove-button/grid-remove-button';
-import TimespanCellRenderer from './timespan-cell-renderer/timespan-cell-renderer';
 import {MatIcon} from '@angular/material/icon';
+import GridRemoveButton from '../grid-remove-button/grid-remove-button';
 
 @Component({
   selector: 'instance-config',
@@ -32,7 +31,6 @@ export default class InstanceConfig {
 
   @Input() clientMods: WritableSignal<Mod[]> = signal([]);
   @Input() serverMods: WritableSignal<Mod[]> = signal([]);
-  @Input() customMessages: WritableSignal<CustomMessage[]> = signal([]);
 
   @Input() id: WritableSignal<number> = signal(0);
   @Input() serverFolder: WritableSignal<string> = signal("");
@@ -55,8 +53,6 @@ export default class InstanceConfig {
   @Input() netLog: WritableSignal<boolean> = signal(false);
   @Input() limitFPS: WritableSignal<number> = signal(0);
   @Input() mapName: WritableSignal<string> = signal("");
-  @Input() restartOnUpdate: WritableSignal<boolean> = signal(false);
-  @Input() restartInterval: WritableSignal<number> = signal(0);
   @Input() autoStartServer: WritableSignal<boolean> = signal(false);
   @Input() makeBackups: WritableSignal<boolean> = signal(false);
   @Input() deleteBackups: WritableSignal<boolean> = signal(false);
@@ -109,63 +105,6 @@ export default class InstanceConfig {
     }
   ];
 
-  public messageColDefs: ColDef[] = [
-    {
-      field: "isTimeOfDay",
-      cellEditor: "agCheckboxCellEditor",
-      resizable: false,
-      maxWidth: 140,
-      rowDrag: true
-    },
-    {
-      field: "waitTime",
-      headerName: "Wait Time / Time Of Day",
-      editable: false,
-      cellRenderer: TimespanCellRenderer,
-      cellRendererParams: (params: any) => ({
-        id: params.id,
-        timespan: params.waitTime,
-        change: this.onMessageWaitTimeChange.bind(this)
-      }),
-      resizable: false,
-      maxWidth: 200
-    },
-    {
-      field: "interval",
-      editable: false,
-      cellRenderer: TimespanCellRenderer,
-      cellRendererParams: (params: any) => ({
-        id: params.id,
-        timespan: params.waitTime,
-        change: this.onMessageIntervalChange.bind(this)
-      }),
-      resizable: false,
-      maxWidth: 140
-    },
-    {
-      field: "title"
-    },
-    {
-      field: "message"
-    },
-    {
-      field: "icon"
-    },
-    {
-      field: "color"
-    },
-    {
-      headerName: "Actions",
-      field: "id",
-      cellRenderer: GridRemoveButton,
-      cellRendererParams: {
-        remove: this.onMessageGridRemove.bind(this)
-      },
-      resizable: false,
-      maxWidth: 100
-    }
-  ]
-
   public defaultColDef: ColDef = {
     editable: true
   }
@@ -200,23 +139,7 @@ export default class InstanceConfig {
     ])
   }
 
-  public onAddCustomMessageClick(){
-    this.customMessages.set([
-      ...this.customMessages(),
-      {
-        id: v4().toLowerCase(),
-        isTimeOfDay: false,
-        waitTime: "00:00:00",
-        interval: "00:00:00",
-        title: "",
-        message: "",
-        icon: "",
-        color: ""
-      }
-    ])
-  }
-
-  onClientRowDragEnd(params: any) {
+  onClientRowDragStopped(params: any) {
     const newData: Mod[] = [];
     params.api.forEachNode((node: any) => {
       newData.push(node.data);
@@ -225,22 +148,13 @@ export default class InstanceConfig {
     this.clientMods.set([...newData]);
   }
 
-  onServerRowDragEnd(params: any) {
+  onServerRowDragStopped(params: any) {
     const newData: Mod[] = [];
     params.api.forEachNode((node: any) => {
       newData.push(node.data);
     });
 
     this.serverMods.set([...newData]);
-  }
-
-  onMessageRowDragEnd(params: any) {
-    const newData: CustomMessage[] = [];
-    params.api.forEachNode((node: any) => {
-      newData.push(node.data);
-    });
-
-    this.customMessages.set([...newData]);
   }
 
   onClientGridRemove(id: string) {
@@ -251,36 +165,5 @@ export default class InstanceConfig {
   onServerGridRemove(id: string) {
     const newData: Mod[] = this.serverMods().filter(mod => mod.id != id);
     this.serverMods.set([...newData]);
-  }
-
-  onMessageGridRemove(id: string) {
-    const newData: CustomMessage[] = this.customMessages().filter(mod => mod.id != id);
-    this.customMessages.set([...newData]);
-  }
-
-  onMessageWaitTimeChange(id: string, waitTime: string) {
-    const newData: CustomMessage[] = this.customMessages().map(message => {
-      if (message.id == id){
-        return {
-          ...message,
-          waitTime: waitTime
-        }
-      }
-      return message;
-    });
-    this.customMessages.set([...newData]);
-  }
-
-  onMessageIntervalChange(id: string, interval: string) {
-    const newData: CustomMessage[] = this.customMessages().map(message => {
-      if (message.id == id){
-        return {
-          ...message,
-          interval: interval
-        }
-      }
-      return message;
-    });
-    this.customMessages.set([...newData]);
   }
 }

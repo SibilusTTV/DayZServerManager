@@ -18,14 +18,13 @@ public class SchedulerService : ISchedulerService
     private readonly IServiceScope _serverScope;
     private readonly IRconRepository _rconRepository;
     
-    private SchedulerConfig? _config;
     private Timer? _autoLoadBansTimer;
     private List<JobTimer> _automaticMessages;
     private List<JobTimer> _customMessages;
-    private bool _onlyRestarts;
-    private int _interval;
     
     private string _adminLog;
+    private bool _onlyRestarts;
+    private int _instanceId;
 
     public SchedulerService(ILogger<SchedulerService> logger, IRconRepository rconRepository, IServiceScopeFactory scopeFactory)
     {
@@ -34,45 +33,42 @@ public class SchedulerService : ISchedulerService
         _serverScope = scopeFactory.CreateScope();
         _automaticMessages = [];
         _customMessages = [];
-        _onlyRestarts = false;
-        _interval = 1;
         _adminLog = "";
+        _onlyRestarts = false;
+        _instanceId = 0;
     }
 
-    public void InitializeScheduler(int instanceId, string ip, int port, string password, int interval,
-        bool onlyRestarts, List<CustomMessage> customMessages, string serverFolderName)
+    public void InitializeScheduler(int instanceId, string ip, int port, string password,
+        bool onlyRestarts, string serverFolderName)
     {
-        var schedulerRepository = _serverScope.ServiceProvider.GetService<ISchedulerRepository>();
-        var config = schedulerRepository?.Get(instanceId);
+        _instanceId = instanceId;
+        var config = Get(instanceId);
 
         if (config == null)
         {
-            config = new SchedulerConfig(instanceId, false, "", [], 60);
-            schedulerRepository?.CreateEdit(config);
+            config = new SchedulerConfig(instanceId);
+            CreateEdit(config);
         }
         
-        if (interval is < 1 or > 24)
+        if (config.restartInterval is < 1 or > 24)
         {
             throw new Exception("The interval needs to be between 1 and 24");
         }
-        
-        _onlyRestarts = onlyRestarts;
-        _interval = interval;
-        _config = config;
 
         GetWhitelistedPlayers(serverFolderName);
 
         var restartUpdaterService = _serverScope.ServiceProvider.GetService<IRestartUpdaterService>();
-        _automaticMessages = restartUpdaterService?.CreateSchedule(false, _onlyRestarts, _interval, SendCommand, IsConnected) ?? [];
-        _customMessages = restartUpdaterService?.CreateCustomJobTimers(_onlyRestarts, _interval, SendCommand, IsConnected, customMessages) ?? [];
+        _automaticMessages = restartUpdaterService?.CreateSchedule(false, _onlyRestarts, config.restartInterval, SendCommand, IsConnected) ?? [];
+        _customMessages = restartUpdaterService?.CreateCustomJobTimers(_onlyRestarts, config.restartInterval, SendCommand, IsConnected, config.customMessages) ?? [];
 
         _rconRepository.InitializeRconRepository(ip, port, password);
     }
     
     public bool Connect()
     {
-        _logger.LogInformation($"Waiting for {_config?.Timeout} seconds until TimeOut is over");
-        Thread.Sleep(_config?.Timeout * 1000 ?? 10000);
+        var config = Get(_instanceId);
+        _logger.LogInformation($"Waiting for {config?.Timeout} seconds until TimeOut is over");
+        Thread.Sleep(config?.Timeout * 1000 ?? 10000);
         _logger.LogInformation("Connecting to the Server");
         
         if (!(_rconRepository?.Connect() ?? false))
@@ -123,15 +119,19 @@ public class SchedulerService : ISchedulerService
     public void ChangeToNormalMode()
     {
         KillAutomaticTasks();
+        var config = Get(_instanceId);
+        if (config == null) return;
         var restartUpdaterService = _serverScope.ServiceProvider.GetService<IRestartUpdaterService>();
-        _automaticMessages = restartUpdaterService?.CreateSchedule(false, _onlyRestarts, _interval, SendCommand, IsConnected) ?? [];
+        _automaticMessages = restartUpdaterService?.CreateSchedule(false, _onlyRestarts, config.restartInterval, SendCommand, IsConnected) ?? [];
     }
 
     public void ChangeToUpdateMode()
     {
         KillAutomaticTasks();
+        var config = Get(_instanceId);
+        if (config == null) return;
         var restartUpdaterService = _serverScope.ServiceProvider.GetService<IRestartUpdaterService>();
-        _automaticMessages = restartUpdaterService?.CreateSchedule(true, _onlyRestarts, _interval, SendCommand, IsConnected) ?? [];
+        _automaticMessages = restartUpdaterService?.CreateSchedule(true, _onlyRestarts, config.restartInterval, SendCommand, IsConnected) ?? [];
     }
 
     public void KillAutomaticTasks()
@@ -334,6 +334,48 @@ public class SchedulerService : ISchedulerService
     public void Shutdown()
     {
         _rconRepository.Shutdown();
+    }
+
+    public SchedulerConfig? Get(int instanceId)
+    {
+        var schedulerRepository = _serverScope.ServiceProvider.GetService<ISchedulerRepository>();
+        return schedulerRepository?.Get(instanceId);
+    }
+
+    public void CreateEdit(SchedulerConfig schedulerConfig)
+    {
+        var schedulerRepository = _serverScope.ServiceProvider.GetService<ISchedulerRepository>();
+        schedulerRepository?.CreateEdit(schedulerConfig);
+    }
+
+    public bool RestartForUpdates(int instanceId, bool restartingForUpdates, int updatedModsCount, bool updatedServer)
+    {
+        var config = Get(instanceId);
+        if (config == null) return false;
+        
+        if (config.restartOnUpdate && !restartingForUpdates && (updatedModsCount > 0 || updatedServer))
+        {
+            try
+            {
+                var restartUpdaterService = _serverScope.ServiceProvider.GetService<IRestartUpdaterService>();
+                
+                if (restartUpdaterService?.IsTimeToRestart(config.restartInterval) ?? false)
+                {
+                    ChangeToUpdateMode();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error when changing to update mode");
+                return false;
+            }
+        }
+        return false;
     }
 
     private Dictionary<string, string> GetAdminLog(Instance instance)

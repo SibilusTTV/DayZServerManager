@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Domain.Manager;
+namespace Domain.Scheduler;
 
 public class CustomMessage
 {
     public string Id { get; set; }
+    public int Position { get; set; }
     public bool IsTimeOfDay { get; set; }
     public TimeSpan WaitTime { get; set; }
     public TimeSpan Interval { get; set; }
@@ -18,9 +19,10 @@ public class CustomMessage
         
     }
 
-    public CustomMessage(bool isTimeOfDay, TimeSpan waitTime, TimeSpan interval, string title, string message, string icon, string color)
+    public CustomMessage(bool isTimeOfDay, int position, TimeSpan waitTime, TimeSpan interval, string title, string message, string icon, string color)
     {
         Id = Guid.NewGuid().ToString().ToLower();
+        Position = position;
         IsTimeOfDay = isTimeOfDay;
         WaitTime = waitTime;
         Interval = interval;

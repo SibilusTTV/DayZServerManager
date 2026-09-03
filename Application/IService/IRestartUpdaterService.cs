@@ -1,6 +1,7 @@
 using Application.Handlers;
 using Domain.Manager;
 using Domain.Profile;
+using Domain.Scheduler;
 
 namespace Application.IService;
 
@@ -12,6 +13,6 @@ public interface IRestartUpdaterService
         Func<bool> isConnected, List<CustomMessage> customMessages);
     public DateTime GetNextRestartTime(int interval, DateTime now);
     public DateTime GetNextRestartTimeUpdate(DateTime now);
-    public void UpdateExpansionScheduler(Instance config, NotificationSchedulerFile expansionScheduler);
+    public void UpdateExpansionScheduler(SchedulerConfig config, NotificationSchedulerFile expansionScheduler);
     public bool IsTimeToRestart(int interval);
 }
