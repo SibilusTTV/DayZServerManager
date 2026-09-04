@@ -1,11 +1,7 @@
 using Application.IRepository;
 using Domain.Constants;
 using Domain.Mission.EconomyCore;
-using Domain.Mission.Environment;
-using Domain.Mission.EventSpawn;
-using Domain.Mission.Globals;
 using Domain.Mission.Hardline;
-using Domain.Mission.RarityFile;
 using Domain.Mission.Types;
 using Domain.Mission.TypesChanges;
 using LibGit2Sharp;
@@ -89,7 +85,7 @@ public class MissionRepository : IMissionRepository
                 _xmlSerializerRepository.SerializeXMLFile(Path.Combine(customFilesDirectories[0], Files.MissionExampleTypesFileName), exampleTypesFile);
             }
 
-            // Creating Exmple cfgeconomycore
+            // Creating Example cfgeconomycore
             if (!File.Exists(Path.Combine(missionTemplatePath, Files.MissionEconomyCoreFileName)))
             {
                 EconomyCoreFile exampleEconomyCore = new EconomyCoreFile()
@@ -137,51 +133,7 @@ public class MissionRepository : IMissionRepository
             }
             #endregion Create example CustomFiles
 
-            #region Creating example rarities and types changes files
-            //Creating customFilesRarities.json file
-            if (!File.Exists(Path.Combine(missionTemplatePath, Files.MissionCustomFilesRaritiesFileName)))
-            {
-                RarityFile customFilesRarities = new RarityFile();
-                customFilesRarities.ItemRarity = new List<RarityItem>()
-                {
-                    new RarityItem()
-                    {
-                        id = 0,
-                        name = "example1",
-                        rarity = 3
-                    },
-                    new RarityItem()
-                    {
-                        id = 1,
-                        name = "example2",
-                        rarity = 5
-                    }
-                };
-                _jsonSerializerRepository.SerializeJSONFile(Path.Combine(missionTemplatePath, Files.MissionCustomFilesRaritiesFileName), customFilesRarities);
-            }
-
-            //Creating vanillaRarities.json
-            if (!File.Exists(Path.Combine(missionTemplatePath, Files.MissionVanillaRaritiesFileName)))
-            {
-                RarityFile vanillaRarities = new RarityFile();
-                vanillaRarities.ItemRarity = new List<RarityItem>()
-                {
-                    new RarityItem()
-                    {
-                        id = 0,
-                        name = "example1",
-                        rarity = 3
-                    },
-                    new RarityItem()
-                    {
-                        id = 1,
-                        name = "example2",
-                        rarity = 5
-                    }
-                };
-                _jsonSerializerRepository.SerializeJSONFile(Path.Combine(missionTemplatePath, Files.MissionVanillaRaritiesFileName), vanillaRarities);
-            }
-
+            #region Creating example types changes files
             //Creating vanillaTypesChanges.json
             if (!File.Exists(Path.Combine(missionTemplatePath, Files.MissionVanillaTypesChangesFileName)))
             {
@@ -217,28 +169,6 @@ public class MissionRepository : IMissionRepository
             //Creating expansionRarities.json and expansionTypesChanges.json, if Expansion is part of the mods
             if (hasExpansion)
             {
-                //Creating expansionRarities.json
-                if (!File.Exists(Path.Combine(missionTemplatePath, Files.MissionExpansionRaritiesFileName)))
-                {
-                    var expansionRarityFile = new RarityFile();
-                    expansionRarityFile.ItemRarity = new List<RarityItem>()
-                    {
-                        new RarityItem()
-                        {
-                            id = 0,
-                            name = "example1",
-                            rarity = 3
-                        },
-                        new RarityItem()
-                        {
-                            id = 1,
-                            name = "example2",
-                            rarity = 5
-                        }
-                    };
-                    _jsonSerializerRepository.SerializeJSONFile(Path.Combine(missionTemplatePath, Files.MissionExpansionRaritiesFileName), expansionRarityFile);
-                }
-
                 //Creating expansionTypesChanges.json
                 if (!File.Exists(Path.Combine(missionTemplatePath, Files.MissionExpansionTypesChangesFileName)))
                 {
@@ -338,15 +268,9 @@ public class MissionRepository : IMissionRepository
         return _initFileSerializerRepository.DeserializeInitFile(filePath);
     }
     
-    public List<string> GetAllCustomTypesFiles(string folderPath)
+    public List<string> GetAllCustomTypesFiles(EconomyCoreFile economyCoreFile, string folderPath)
     {
         var typesFiles = new List<string>();
-        
-        if (!File.Exists(Path.Combine(folderPath, Files.MissionEconomyCoreFileName))) return typesFiles;
-        
-        var economyCoreFilePath = Path.Combine(folderPath, Files.MissionEconomyCoreFileName);
-        var economyCoreFile = _xmlSerializerRepository.DeserializeXMLFile<EconomyCoreFile>(economyCoreFilePath);
-        if (economyCoreFile == null) return typesFiles;
         
         foreach (var ceItem in economyCoreFile.ceItems)
         {
@@ -472,15 +396,15 @@ public class MissionRepository : IMissionRepository
             foreach (string file in templateFiles)
             {
                 string fileName = Path.GetFileName(file);
-                if (fileName != Files.MissionEconomyCoreFileName
-                    && fileName != Files.MissionEventSpawnsFileName
-                    && fileName != Files.MissionEnvironmentsFileName
-                    && fileName != Files.MissionCustomFilesRaritiesFileName
-                    && fileName != Files.MissionExpansionRaritiesFileName
-                    && fileName != Files.MissionVanillaRaritiesFileName
-                    && fileName != Files.MissionInitFileName
-                    && fileName != Files.MissionVanillaRaritiesFileName
-                    && fileName != Files.MissionVanillaTypesChangesFileName)
+                if (fileName != Files.MissionEconomyCoreFileName &&
+                    fileName != Files.MissionEventSpawnsFileName &&
+                    fileName != Files.MissionEnvironmentsFileName &&
+                    fileName != Files.MissionCustomFilesRaritiesFileName &&
+                    fileName != Files.MissionExpansionRaritiesFileName &&
+                    fileName != Files.MissionVanillaRaritiesFileName &&
+                    fileName != Files.MissionInitFileName &&
+                    fileName != Files.MissionVanillaTypesChangesFileName &&
+                    fileName != Files.MissionExpansionTypesChangesFileName)
                 {
                     File.Copy(file, Path.Combine(missionPath, Path.GetFileName(file)), true);
                 }

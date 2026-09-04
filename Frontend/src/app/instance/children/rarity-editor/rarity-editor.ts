@@ -69,7 +69,7 @@ export class RarityEditor {
       this.id = params["id"];
       this.fileName = params["rarity"] + ".json";
       RarityService.getApiRarityGet(this.id, this.fileName).then((rarity) => {
-        this.rarities.set(rarity.itemRarity ?? []);
+        this.rarities.set(rarity?.itemRarity ?? []);
       })
     });
   }
@@ -99,7 +99,7 @@ export class RarityEditor {
   }
 
   public onDeleteClick(id: number){
-    var filteredItems = this.rarities().filter(x => x.id != id);
+    const filteredItems = this.rarities().filter(x => x.id != id);
     this.rarities.set(filteredItems);
   }
 

@@ -32,6 +32,20 @@ public class MissionService : IMissionService
             var missionPath = Path.Combine(serverFolderName, Folders.MpmissionsFolderName, missionName);
             var missionTemplatePath = Path.Combine(serverFolderName, Folders.MpmissionsFolderName, missionTemplateName);
             
+            var hardlineFile = _missionRepository.GetJsonFile<HardlineFile>(Path.Combine(missionPath, Folders.MissionExpansionFolderName, Folders.MissionExpansionSettingsFolderName, Files.MissionExpansionHardlineSettingsFileName));
+
+            var vanillaRarity =
+                _missionRepository.GetJsonFile<RarityFile>(Path.Combine(missionTemplatePath,
+                    Files.MissionVanillaRaritiesFileName)) ?? new RarityFile([]);
+                
+            var expansionRarity =
+                _missionRepository.GetJsonFile<RarityFile>(Path.Combine(missionTemplatePath,
+                    Files.MissionExpansionRaritiesFileName)) ?? new RarityFile([]);
+                
+            var customFilesRarityFile =
+                _missionRepository.GetJsonFile<RarityFile>(Path.Combine(missionTemplatePath,
+                    Files.MissionCustomFilesRaritiesFileName)) ?? new RarityFile([]);
+            
             _missionRepository.CreateDirectoriesAndFolders(missionPath, missionTemplatePath, hasExpansion);
 
             // Rename the old mission folder and copy the contents of the vanilla folder
@@ -64,7 +78,7 @@ public class MissionService : IMissionService
                 }
 
                 // Add the other parts of the cfgeconomycore.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
-                EconomyCoreFile? missionEconomyCore = _missionRepository.GetXmlFile<EconomyCoreFile>(Path.Combine(missionPath, Files.MissionEconomyCoreFileName));
+                EconomyCoreFile? missionEconomyCore = GetEconomyCoreFile(missionPath);
 
                 if (missionEconomyCore != null)
                 {
@@ -79,6 +93,15 @@ public class MissionService : IMissionService
                         UpdateEconomyCore(missionEconomyCore, missionTemplateEconomyCore);
                     }
                     _missionRepository.SaveXmlFile(Path.Combine(missionPath, Files.MissionEconomyCoreFileName), missionEconomyCore);
+                    
+                    UpdateCustomFilesRarities(missionEconomyCore, customFilesRarityFile, missionTemplatePath);
+                    _missionRepository.SaveJsonFile(
+                        Path.Combine(missionTemplatePath, Files.MissionCustomFilesRaritiesFileName), customFilesRarityFile);
+
+                    if (hardlineFile != null)
+                    {
+                        UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
+                    }
                 }
 
                 // Add the other parts of the cfgeventspawns.xml from the expansionTemplate and the missionTemplate to the one from the new mission folder
@@ -129,42 +152,18 @@ public class MissionService : IMissionService
                 }
 
                 // Changing the types files to reflect the rarities
-                var hardlineFile = _missionRepository.GetJsonFile<HardlineFile>(Path.Combine(missionPath, Folders.MissionExpansionFolderName, Folders.MissionExpansionSettingsFolderName, Files.MissionExpansionHardlineSettingsFileName));
-                var vanillaRarity = _missionRepository.GetJsonFile<RarityFile>(Path.Combine(missionTemplatePath, Files.MissionVanillaRaritiesFileName));
-                var expansionRarity = _missionRepository.GetJsonFile<RarityFile>(Path.Combine(missionTemplatePath, Files.MissionExpansionRaritiesFileName));
-
                 var vanillaTypes = _missionRepository.GetXmlFile<TypesFile>(Path.Combine(missionPath, Folders.MissionDbFolderName, Files.MissionTypesFileName));
                 var expansionTypes = _missionRepository.GetXmlFile<TypesFile>(Path.Combine(missionPath, Folders.MissionExpansionCeFolderName, Files.MissionExpansionTypesFileName));
 
-                if (hardlineFile != null)
-                {
-                    var customFilesRarityFile = _missionRepository.GetJsonFile<RarityFile>(Path.Combine(missionTemplatePath, Files.MissionCustomFilesRaritiesFileName));
-                    if (vanillaRarity != null)
-                    {
-                        UpdateVanillaRarities(missionPath, vanillaRarity);
-                        _missionRepository.SaveJsonFile(Path.Combine(missionTemplatePath, Files.MissionVanillaRaritiesFileName), vanillaRarity);
-                        UpdateHardlineRarity(hardlineFile, vanillaRarity);
-                    }
-                    if (expansionRarity != null)
-                    {
-                        UpdateExpansionRarities(expansionTemplatePath, expansionRarity);
-                        _missionRepository.SaveJsonFile(Path.Combine(missionTemplatePath, Files.MissionExpansionRaritiesFileName), expansionRarity);
-                        UpdateHardlineRarity(hardlineFile, expansionRarity);
-                    }
-                    if (customFilesRarityFile != null)
-                    {
-                        UpdateCustomFilesRarities(missionTemplatePath, customFilesRarityFile);
-                        _missionRepository.SaveJsonFile(Path.Combine(missionTemplatePath, Files.MissionCustomFilesRaritiesFileName), customFilesRarityFile);
-                        UpdateHardlineRarity(hardlineFile, customFilesRarityFile);
-                    }
-                    _missionRepository.SaveJsonFile(Path.Combine(missionPath, Folders.MissionExpansionFolderName, Folders.MissionExpansionSettingsFolderName, Files.MissionExpansionHardlineSettingsFileName), hardlineFile);
-                }
-
                 if (vanillaTypes != null)
                 {
-                    if (vanillaRarity != null)
+                    UpdateVanillaRarities(vanillaTypes, vanillaRarity);
+                    _missionRepository.SaveJsonFile(Path.Combine(missionTemplatePath, Files.MissionVanillaRaritiesFileName), vanillaRarity);
+                    UpdateTypesWithRarity(vanillaTypes, vanillaRarity);
+
+                    if (hardlineFile != null)
                     {
-                        UpdateTypesWithRarity(vanillaTypes, vanillaRarity);
+                        UpdateHardlineRarity(hardlineFile, vanillaRarity);
                     }
 
                     // Change the Lifetimes of items in the types.xml
@@ -179,9 +178,13 @@ public class MissionService : IMissionService
 
                 if (expansionTypes != null)
                 {
-                    if (expansionRarity != null)
+                    UpdateExpansionRarities(expansionTypes, expansionRarity);
+                    _missionRepository.SaveJsonFile(Path.Combine(missionTemplatePath, Files.MissionExpansionRaritiesFileName), expansionRarity);
+                    UpdateTypesWithRarity(expansionTypes, expansionRarity);
+                    
+                    if (hardlineFile != null)
                     {
-                        UpdateTypesWithRarity(expansionTypes, expansionRarity);
+                        UpdateHardlineRarity(hardlineFile, expansionRarity);
                     }
 
                     // Change the Lifetimes of items in the expansionTypes.xml
@@ -192,6 +195,14 @@ public class MissionService : IMissionService
                     }
 
                     _missionRepository.SaveXmlFile(Path.Combine(missionPath, Folders.MissionExpansionCeFolderName, Files.MissionExpansionTypesFileName), expansionTypes);
+                }
+
+                if (hardlineFile != null)
+                {
+                    _missionRepository.SaveJsonFile(
+                        Path.Combine(missionPath, Folders.MissionExpansionFolderName,
+                            Folders.MissionExpansionSettingsFolderName, Files.MissionExpansionHardlineSettingsFileName),
+                        hardlineFile);
                 }
             }
 
@@ -219,106 +230,66 @@ public class MissionService : IMissionService
     // Searches for the matching CeItem and returns it
     private CeItem? SearchForCeItem(CeItem ceItem, EconomyCoreFile cfg)
     {
-        try
+        foreach (CeItem item in cfg.ceItems)
         {
-            foreach (CeItem item in cfg.ceItems)
+            if (item.folder.ToLower().Trim() == ceItem.folder.ToLower().Trim())
             {
-                if (item.folder.ToLower().Trim() == ceItem.folder.ToLower().Trim())
-                {
-                    return item;
-                }
+                return item;
             }
-            return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when searching for CeItem");
-            return null;
-        }
+        return null;
     }
 
     // Searches for the matching FileItem and returns true, if it finds smth
     private bool SearchForFileItem(FileItem fileItem, CeItem ceItem)
     {
-        try
+        foreach (FileItem item in ceItem.fileItems)
         {
-            foreach (FileItem item in ceItem.fileItems)
+            if (item.name.ToLower().Trim() == fileItem.name.ToLower().Trim())
             {
-                if (item.name.ToLower().Trim() == fileItem.name.ToLower().Trim())
-                {
-                    return true;
-                }
+                return true;
             }
-            return false;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when searching for FileItem");
-            return false;
-        }
+        return false;
     }
 
     // Searches for the matching EventItem and returns it
     private EventItem? SearchForEventItem(EventItem eventItem, EventSpawnsFile cfg)
     {
-        try
+        foreach (EventItem item in cfg.eventItems)
         {
-            foreach (EventItem item in cfg.eventItems)
+            if (item.name.ToLower().Trim() == eventItem.name.ToLower().Trim())
             {
-                if (item.name.ToLower().Trim() == eventItem.name.ToLower().Trim())
-                {
-                    return item;
-                }
+                return item;
             }
-            return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when searching for EventItem");
-            return null;
-        }
+        return null;
     }
 
     // Searches for the matching PosItem and returns true, if it finds it
     private bool SearchForPosItem(PosItem posItem, EventItem eventItem)
     {
-        try
+        foreach (PosItem item in eventItem.positions)
         {
-            foreach (PosItem item in eventItem.positions)
+            if (long.Parse(item.x) == long.Parse(posItem.x) && long.Parse(item.y) == long.Parse(posItem.y) && long.Parse(item.a) == long.Parse(posItem.a))
             {
-                if (long.Parse(item.x) == long.Parse(posItem.x) && long.Parse(item.y) == long.Parse(posItem.y) && long.Parse(item.a) == long.Parse(posItem.a))
-                {
-                    return true;
-                }
+                return true;
             }
-            return false;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when searching for PosItem");
-            return false;
-        }
+        return false;
     }
 
     // Searches for the matching TypesItem and returns it
     private TypesItem? SearchForTypesItem(string name, TypesFile typesFile)
     {
-        try
+        foreach (TypesItem item in typesFile.typesItems)
         {
-            foreach (TypesItem item in typesFile.typesItems)
+            if (item.name.ToLower().Trim() == name.ToLower().Trim())
             {
-                if (item.name.ToLower().Trim() == name.ToLower().Trim())
-                {
-                    return item;
-                }
+                return item;
             }
-            return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when searching for TypesItem");
-            return null;
-        }
+        return null;
     }
     #endregion Searches
     
@@ -353,312 +324,255 @@ public class MissionService : IMissionService
 
     private void UpdateGlobals(GlobalsFile globals)
     {
-        try
+        _logger.LogInformation("Updating globals");
+        foreach (VarItem item in globals.varItems)
         {
-            _logger.LogInformation("Updating globals");
-            foreach (VarItem item in globals.varItems)
+            if (item != null && item.name == "TimeLogin")
             {
-                if (item != null && item.name == "TimeLogin")
-                {
-                    item.value = "5";
-                }
-                else if (item != null && item.name == "ZombieMaxCount")
-                {
-                    item.value = "500";
-                }
+                item.value = "5";
             }
-            _logger.LogInformation("Finished updating globals");
+            else if (item != null && item.name == "ZombieMaxCount")
+            {
+                item.value = "500";
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating globals");
-        }
+        _logger.LogInformation("Finished updating globals");
     }
 
     // Updates the Rarity in the given RarityFile with the rarities of another RarityFile
-    public void UpdateHardlineRarity(HardlineFile hardlineFile, RarityFile newRarities)
+    private void UpdateHardlineRarity(HardlineFile hardlineFile, RarityFile newRarities)
     {
-        try
+        if (hardlineFile.ItemRarity != null)
         {
-            if (newRarities.ItemRarity != null && hardlineFile.ItemRarity != null)
+            _logger.LogInformation("Added rarities to hardline file");
+            foreach (RarityItem item in newRarities.ItemRarity)
             {
-                _logger.LogInformation("Added rarities to hardline file");
-                foreach (RarityItem item in newRarities.ItemRarity)
+                if (hardlineFile.ItemRarity.ContainsKey(item.name.ToLower()))
                 {
-                    if (hardlineFile.ItemRarity.ContainsKey(item.name.ToLower()))
-                    {
-                        hardlineFile.ItemRarity[item.name.ToLower()] = item.rarity;
-                    }
-                    else if (hardlineFile.ItemRarity.ContainsKey(item.name))
-                    {
-                        hardlineFile.ItemRarity[item.name] = item.rarity;
-                    }
-                    else
-                    {
-                        hardlineFile.ItemRarity.Add(item.name, item.rarity);
-                    }
+                    hardlineFile.ItemRarity[item.name.ToLower()] = item.rarity;
                 }
-                _logger.LogInformation("Finished adding rarities to hardline file");
+                else if (hardlineFile.ItemRarity.ContainsKey(item.name))
+                {
+                    hardlineFile.ItemRarity[item.name] = item.rarity;
+                }
+                else
+                {
+                    hardlineFile.ItemRarity.Add(item.name, item.rarity);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when updating hardline rarity");
+            _logger.LogInformation("Finished adding rarities to hardline file");
         }
     }
 
     // Updates the spawning of items in the given TypesFile with the rarities of the rarityFile
     public void UpdateTypesWithRarity(TypesFile typesFile, RarityFile rarityFile)
     {
-        try
+        _logger.LogInformation("Updating types with rarity");
+        foreach (RarityItem rarityItem in rarityFile.ItemRarity)
         {
-            if (rarityFile.ItemRarity != null)
+            TypesItem? item = SearchForTypesItem(rarityItem.name, typesFile);
+            if (item != null)
             {
-                _logger.LogInformation("Updating types with rarity");
-                foreach (RarityItem rarityitem in rarityFile.ItemRarity)
+                switch (rarityItem.rarity)
                 {
-                    TypesItem? item = SearchForTypesItem(rarityitem.name, typesFile);
-                    if (item != null)
-                    {
-                        switch (rarityitem.rarity)
-                        {
-                            case 0:
-                                item.nominal = 0;
-                                item.min = 0;
-                                break;
-                            case 1:
-                                item.nominal = Rarities.PoorNominal;
-                                item.min = Rarities.PoorMinimal;
-                                break;
-                            case 2:
-                                item.nominal = Rarities.CommonNominal;
-                                item.min = Rarities.CommonMinimal;
-                                break;
-                            case 3:
-                                item.nominal = Rarities.UncommonNominal;
-                                item.min = Rarities.UncommonMinimal;
-                                break;
-                            case 4:
-                                item.nominal = Rarities.RareNominal;
-                                item.min = Rarities.RareMinimal;
-                                break;
-                            case 5:
-                                item.nominal = Rarities.EpicNominal;
-                                item.min = Rarities.EpicMinimal;
-                                break;
-                            case 6:
-                                item.nominal = Rarities.LegendaryNominal;
-                                item.min = Rarities.LegendaryMinimal;
-                                break;
-                            case 7:
-                                item.nominal = Rarities.MythicNominal;
-                                item.min = Rarities.MythicMinimal;
-                                break;
-                            case 8:
-                                item.nominal = Rarities.ExoticNominal;
-                                item.min = Rarities.ExoticMinimal;
-                                break;
-                        }
-                    }
+                    case 1:
+                        item.nominal = Rarities.PoorNominal;
+                        item.min = Rarities.PoorMinimal;
+                        break;
+                    case 2:
+                        item.nominal = Rarities.CommonNominal;
+                        item.min = Rarities.CommonMinimal;
+                        break;
+                    case 3:
+                        item.nominal = Rarities.UncommonNominal;
+                        item.min = Rarities.UncommonMinimal;
+                        break;
+                    case 4:
+                        item.nominal = Rarities.RareNominal;
+                        item.min = Rarities.RareMinimal;
+                        break;
+                    case 5:
+                        item.nominal = Rarities.EpicNominal;
+                        item.min = Rarities.EpicMinimal;
+                        break;
+                    case 6:
+                        item.nominal = Rarities.LegendaryNominal;
+                        item.min = Rarities.LegendaryMinimal;
+                        break;
+                    case 7:
+                        item.nominal = Rarities.MythicNominal;
+                        item.min = Rarities.MythicMinimal;
+                        break;
+                    case 8:
+                        item.nominal = Rarities.ExoticNominal;
+                        item.min = Rarities.ExoticMinimal;
+                        break;
+                    default:
+                        item.nominal = 0;
+                        item.min = 0;
+                        break;
                 }
-                _logger.LogInformation("Finished updating types with rarity");
             }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when updating types with rarity");
-        }
+        _logger.LogInformation("Finished updating types with rarity");
     }
 
     // Updates the lifetime of items in the given TypesFile with the new spawns of another TypesFile
     public void UpdateTypesWithTypesChanges(TypesFile typesFiles, TypesChangesFile changesFile)
     {
-        try
+        _logger.LogInformation("Updating lifetimes");
+        foreach (TypesChangesItem change in changesFile.types)
         {
-            _logger.LogInformation("Updating lifetimes");
-            foreach (TypesChangesItem change in changesFile.types)
+            TypesItem? item = SearchForTypesItem(change.name, typesFiles);
+            if (item != null)
             {
-                TypesItem? item = SearchForTypesItem(change.name, typesFiles);
-                if (item != null)
+                if (change.nominal != null)
                 {
-                    if (change.nominal != null)
-                    {
-                        item.nominal = change.nominal.Value;
-                    }
+                    item.nominal = change.nominal.Value;
+                }
 
-                    if (change.lifetime != null)
-                    {
-                        item.lifetime = change.lifetime.Value;
-                    }
+                if (change.lifetime != null)
+                {
+                    item.lifetime = change.lifetime.Value;
+                }
 
-                    if (change.restock != null)
-                    {
-                        item.restock = change.restock.Value;
-                    }
+                if (change.restock != null)
+                {
+                    item.restock = change.restock.Value;
+                }
 
-                    if (change.min != null)
-                    {
-                        item.min = change.min.Value;
-                    }
+                if (change.min != null)
+                {
+                    item.min = change.min.Value;
+                }
 
-                    if (change.quantmin != null)
-                    {
-                        item.quantmin = change.quantmin.Value;
-                    }
+                if (change.quantmin != null)
+                {
+                    item.quantmin = change.quantmin.Value;
+                }
 
-                    if (change.quantmax != null)
-                    {
-                        item.quantmax = change.quantmax.Value;
-                    }
+                if (change.quantmax != null)
+                {
+                    item.quantmax = change.quantmax.Value;
+                }
 
-                    if (change.cost != null)
-                    {
-                        item.cost = change.cost.Value;
-                    }
+                if (change.cost != null)
+                {
+                    item.cost = change.cost.Value;
+                }
 
-                    if (change.flags != null)
-                    {
-                        item.flags.count_in_cargo = change.flags.count_in_cargo;
-                        item.flags.count_in_hoarder = change.flags.count_in_hoarder;
-                        item.flags.count_in_map = change.flags.count_in_map;
-                        item.flags.count_in_player = change.flags.count_in_player;
-                        item.flags.crafted = change.flags.crafted;
-                        item.flags.deloot = change.flags.deloot;
-                    }
+                if (change.flags != null)
+                {
+                    item.flags.count_in_cargo = change.flags.count_in_cargo;
+                    item.flags.count_in_hoarder = change.flags.count_in_hoarder;
+                    item.flags.count_in_map = change.flags.count_in_map;
+                    item.flags.count_in_player = change.flags.count_in_player;
+                    item.flags.crafted = change.flags.crafted;
+                    item.flags.deloot = change.flags.deloot;
+                }
 
-                    if (change.category != null)
-                    {
-                        item.category.name = change.category;
-                    }
+                if (change.category != null)
+                {
+                    item.category.name = change.category;
+                }
 
-                    if (change.usage != null)
+                if (change.usage != null)
+                {
+                    List<UsageItem> usages = new List<UsageItem>();
+                    foreach (string usageName in change.usage)
                     {
-                        List<UsageItem> usages = new List<UsageItem>();
-                        foreach (string usageName in change.usage)
-                        {
-                            usages.Add(new UsageItem { name = usageName });
-                        }
-                        item.usage = usages;
+                        usages.Add(new UsageItem { name = usageName });
                     }
+                    item.usage = usages;
+                }
 
-                    if (change.value != null)
+                if (change.value != null)
+                {
+                    List<ValueItem> values = new List<ValueItem>();
+                    foreach (string valueName in change.value)
                     {
-                        List<ValueItem> values = new List<ValueItem>();
-                        foreach (string valueName in change.value)
-                        {
-                            values.Add(new ValueItem { name = valueName });
-                        }
-                        item.value = values;
+                        values.Add(new ValueItem { name = valueName });
                     }
+                    item.value = values;
                 }
             }
-            _logger.LogInformation("Finished updating lifetimes");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when updating lifetimes");
-        }
+        _logger.LogInformation("Finished updating lifetimes");
     }
 
     private void UpdateEventSpawns(EventSpawnsFile missionEventSpawns, EventSpawnsFile templateEventSpawns)
     {
-        try
+        _logger.LogInformation("Updating event spawns");
+        foreach (EventItem eventItem in templateEventSpawns.eventItems)
         {
-            _logger.LogInformation("Updating event spawns");
-            foreach (EventItem eventItem in templateEventSpawns.eventItems)
+            EventItem? eventItemInMission = SearchForEventItem(eventItem, missionEventSpawns);
+            if (eventItemInMission != null)
             {
-                EventItem? eventItemInMission = SearchForEventItem(eventItem, missionEventSpawns);
-                if (eventItemInMission != null)
+                foreach (PosItem posItem in eventItem.positions)
                 {
-                    foreach (PosItem posItem in eventItem.positions)
+                    if (!SearchForPosItem(posItem, eventItemInMission))
                     {
-                        if (!SearchForPosItem(posItem, eventItemInMission))
-                        {
-                            eventItemInMission.positions.Add(posItem);
-                        }
+                        eventItemInMission.positions.Add(posItem);
                     }
                 }
-                else
-                {
-                    missionEventSpawns.eventItems.Add(eventItem);
-                }
             }
-            _logger.LogInformation("Finished updating event spawns");
+            else
+            {
+                missionEventSpawns.eventItems.Add(eventItem);
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when updating EventSpawns");
-        }
+        _logger.LogInformation("Finished updating event spawns");
     }
 
     private void UpdateEnvironmentFile(EnvironmentFile missionEnvironmentFile, EnvironmentFile tempalteEnvironmentFile)
     {
-        try
+        _logger.LogInformation("Updating environment file");
+        if (missionEnvironmentFile.Territories != null && tempalteEnvironmentFile.Territories != null)
         {
-            _logger.LogInformation("Updating environment file");
-            if (missionEnvironmentFile.Territories != null && tempalteEnvironmentFile.Territories != null)
+            if (missionEnvironmentFile.Territories.Files != null && tempalteEnvironmentFile.Territories.Files != null)
             {
-                if (missionEnvironmentFile.Territories.Files != null && tempalteEnvironmentFile.Territories.Files != null)
+                foreach (EnvironmentFileItem file in tempalteEnvironmentFile.Territories.Files)
                 {
-                    foreach (EnvironmentFileItem file in tempalteEnvironmentFile.Territories.Files)
-                    {
-                        missionEnvironmentFile.Territories.Files.Add(file);
-                    }
-                }
-                if (missionEnvironmentFile.Territories.Territories != null && tempalteEnvironmentFile.Territories.Territories != null)
-                {
-                    foreach (TerritoryItem territory in tempalteEnvironmentFile.Territories.Territories)
-                    {
-                        missionEnvironmentFile.Territories.Territories.Add(territory);
-                    }
+                    missionEnvironmentFile.Territories.Files.Add(file);
                 }
             }
-            _logger.LogInformation("Finished updating environment file");
+            if (missionEnvironmentFile.Territories.Territories != null && tempalteEnvironmentFile.Territories.Territories != null)
+            {
+                foreach (TerritoryItem territory in tempalteEnvironmentFile.Territories.Territories)
+                {
+                    missionEnvironmentFile.Territories.Territories.Add(territory);
+                }
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when updating EnvironmentFile");
-        }
+        _logger.LogInformation("Finished updating environment file");
     }
 
     private void UpdateEconomyCore(EconomyCoreFile economyCoreFile, EconomyCoreFile templateEconomyCoreFile)
     {
-        try
+        _logger.LogInformation("Updating economy core");
+        foreach (CeItem ceItem in templateEconomyCoreFile.ceItems)
         {
-            _logger.LogInformation("Updating economy core");
-            foreach (CeItem ceItem in templateEconomyCoreFile.ceItems)
+            CeItem? ceItemInMission = SearchForCeItem(ceItem, economyCoreFile);
+            if (ceItemInMission != null)
             {
-                CeItem? ceItemInMission = SearchForCeItem(ceItem, economyCoreFile);
-                if (ceItemInMission != null)
+                foreach (FileItem fileItem in ceItem.fileItems)
                 {
-                    foreach (FileItem fileItem in ceItem.fileItems)
+                    if (!SearchForFileItem(fileItem, ceItemInMission))
                     {
-                        if (!SearchForFileItem(fileItem, ceItemInMission))
-                        {
-                            ceItemInMission.fileItems.Add(fileItem);
-                        }
+                        ceItemInMission.fileItems.Add(fileItem);
                     }
                 }
-                else
-                {
-                    economyCoreFile.ceItems.Add(ceItem);
-                }
             }
-            _logger.LogInformation("Finsihed updating Economy Core");
+            else
+            {
+                economyCoreFile.ceItems.Add(ceItem);
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error when updating EconomyCore");
-        }
+        _logger.LogInformation("Finsihed updating Economy Core");
     }
 
-    private  void UpdateVanillaRarities(string missionFolder, RarityFile rarityFile)
+    private void UpdateVanillaRarities(TypesFile typesFile, RarityFile rarityFile)
     {
-        var typesFilePath = Path.Combine(missionFolder, Folders.MissionDbFolderName, Files.MissionTypesFileName);
-        var typesFile = _missionRepository.GetXmlFile<TypesFile>(typesFilePath);
-        
-        if (typesFile == null) return;
-        
         foreach (var type in typesFile.typesItems)
         {
             if (rarityFile.ItemRarity.Find(rarity => string.Equals(rarity.name, type.name, StringComparison.CurrentCultureIgnoreCase)) == null)
@@ -668,31 +582,20 @@ public class MissionService : IMissionService
         }
     }
 
-    private void UpdateExpansionRarities(string missionFolder, RarityFile rarityFile)
+    private void UpdateExpansionRarities(TypesFile typesFile, RarityFile rarityFile)
     {
-        var typesFilePaths = _missionRepository.GetAllCustomTypesFiles(missionFolder);
-
-        var expansionTypesPath = typesFilePaths.Find(type => type.ToLower().Contains(SteamCmd.ExpansionModSearch));
-
-        if (expansionTypesPath != null)
+        foreach (var type in typesFile.typesItems)
         {
-            var typesFile = _missionRepository.GetXmlFile<TypesFile>(expansionTypesPath);
-            
-            if (typesFile == null) return;
-            
-            foreach (var type in typesFile.typesItems)
+            if (rarityFile.ItemRarity.Find(rarity => rarity.name.ToLower() == type.name.ToLower()) == null)
             {
-                if (rarityFile.ItemRarity.Find(rarity => rarity.name.ToLower() == type.name.ToLower()) == null)
-                {
-                    rarityFile.ItemRarity.Add(GetNewRarityItem(type, GetNextId(rarityFile.ItemRarity)));
-                }
+                rarityFile.ItemRarity.Add(GetNewRarityItem(type, GetNextId(rarityFile.ItemRarity)));
             }
         }
     }
 
-    private void UpdateCustomFilesRarities(string missionFolder, RarityFile rarityFile)
+    private void UpdateCustomFilesRarities(EconomyCoreFile economyCoreFile, RarityFile rarityFile, string folderPath)
     {
-        var typesFilePaths = _missionRepository.GetAllCustomTypesFiles(missionFolder);
+        var typesFilePaths = _missionRepository.GetAllCustomTypesFiles(economyCoreFile, folderPath);
 
         var filteredTypePaths = typesFilePaths.FindAll(type => !type.ToLower().Contains(SteamCmd.ExpansionModSearch));
 
@@ -714,47 +617,46 @@ public class MissionService : IMissionService
     #endregion UpdateFunctions
 
     #region GetFunctions
+    public EconomyCoreFile? GetEconomyCoreFile(string missionPath)
+    {
+        return _missionRepository.GetXmlFile<EconomyCoreFile>(Path.Combine(missionPath, Files.MissionEconomyCoreFileName));
+    }
+    
     private RarityItem GetNewRarityItem(TypesItem type, int id)
     {
         RarityItem newRarityItem = new RarityItem();
         newRarityItem.id = id;
         newRarityItem.name = type.name;
-
-        if (type.nominal > 120)
+        
+        switch (type.nominal)
         {
-            newRarityItem.rarity = 1;
-        }
-        else if (60 < type.nominal && type.nominal <= 120)
-        {
-            newRarityItem.rarity = 2;
-        }
-        else if (30 < type.nominal && type.nominal <= 60)
-        {
-            newRarityItem.rarity = 3;
-        }
-        else if (15 < type.nominal && type.nominal <= 30)
-        {
-            newRarityItem.rarity = 4;
-        }
-        else if (7 < type.nominal && type.nominal <= 15)
-        {
-            newRarityItem.rarity = 5;
-        }
-        else if (3 < type.nominal && type.nominal <= 7)
-        {
-            newRarityItem.rarity = 6;
-        }
-        else if (2 == type.nominal || 3 == type.nominal)
-        {
-            newRarityItem.rarity = 7;
-        }
-        else if (1 == type.nominal)
-        {
-            newRarityItem.rarity = 8;
-        }
-        else
-        {
-            newRarityItem.rarity = 0;
+            case > 0 and <= Rarities.ExoticNominal:
+                newRarityItem.rarity = Rarities.Exotic;
+                break;
+            case > Rarities.ExoticNominal and <= Rarities.MythicNominal:
+                newRarityItem.rarity = Rarities.Mythic;
+                break;
+            case > Rarities.MythicNominal and <= Rarities.LegendaryNominal:
+                newRarityItem.rarity = Rarities.Legendary;
+                break;
+            case > Rarities.LegendaryNominal and <= Rarities.EpicNominal:
+                newRarityItem.rarity = Rarities.Epic;
+                break;
+            case > Rarities.EpicNominal and <= Rarities.RareNominal:
+                newRarityItem.rarity = Rarities.Rare;
+                break;
+            case > Rarities.RareNominal and <= Rarities.UncommonNominal:
+                newRarityItem.rarity = Rarities.Uncommon;
+                break;
+            case > Rarities.UncommonNominal and <= Rarities.CommonNominal:
+                newRarityItem.rarity = Rarities.Common;
+                break;
+            case > Rarities.CommonNominal:
+                newRarityItem.rarity = Rarities.Poor;
+                break;
+            default:
+                newRarityItem.rarity = 0;
+                break;
         }
 
         return newRarityItem;

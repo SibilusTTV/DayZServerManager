@@ -64,7 +64,11 @@ public class RarityService : IRarityService
 
     private void UpdateCustomTypes(string folderPath, RarityFile rarityFile)
     {
-        var typesFilePaths = _missionRepository.GetAllCustomTypesFiles(folderPath);
+        var economyCoreFile = _missionService.GetEconomyCoreFile(folderPath);
+        
+        if (economyCoreFile == null) return;
+        
+        var typesFilePaths = _missionRepository.GetAllCustomTypesFiles(economyCoreFile, folderPath);
         foreach (var filePath in typesFilePaths)
         {
             var typesFile = _missionRepository.GetXmlFile<TypesFile>(filePath);

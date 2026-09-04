@@ -1,3 +1,4 @@
+using Domain.Mission.EconomyCore;
 using Domain.Mission.Types;
 
 namespace Application.IRepository;
@@ -11,7 +12,7 @@ public interface IMissionRepository
     public void SaveJsonFile<TJsonFile>(string filePath, TJsonFile jsonFile);
     public void SaveXmlFile<TXmlFile>(string filePath, TXmlFile xmlFile);
     public void SaveInitFile(string filePath, string initFile);
-    public List<string> GetAllCustomTypesFiles(string folderPath);
+    public List<string> GetAllCustomTypesFiles(EconomyCoreFile economyCoreFile, string folderPath);
     public void CopyVanillaMissionFolder(string missionPath, string vanillaMissionPath, string backupPath);
     public void CopyExpansionTemplateFiles(string expansionTemplatePath, string missionPath, string oldMissionPath);
     public void CopyMissionTemplateFiles(string missionTemplatePath, string missionPath);
