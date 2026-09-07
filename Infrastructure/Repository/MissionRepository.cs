@@ -252,6 +252,11 @@ public class MissionRepository : IMissionRepository
         }
     }
 
+    public bool CheckMission(string missionPath)
+    {
+        return Directory.Exists(missionPath) && File.Exists(Path.Combine(missionPath, Files.MissionInitFileName));
+    }
+
     #region Get
     public TJsonFile? GetJsonFile<TJsonFile>(string filePath)
     {

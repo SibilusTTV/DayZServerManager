@@ -6,6 +6,7 @@ namespace Application.IRepository;
 public interface IMissionRepository
 {
     public void CreateDirectoriesAndFolders(string missionPath, string missionTemplatePath, bool hasExpansion);
+    public bool CheckMission(string missionPath);
     public TJsonFile? GetJsonFile<TJsonFile>(string filePath);
     public TXmlFile? GetXmlFile<TXmlFile>(string filePath);
     public string GetInitFile(string filePath);

@@ -9,6 +9,7 @@ public interface IMissionService
 {
     public void UpdateMission(string serverFolderName, string missionName, string missionTemplateName,
         string vanillaMissionName, string backupPath, string mapName, bool hasExpansion);
+    public bool CheckMission(string missionPath);
 
     public void UpdateTypesWithTypesChanges(TypesFile typesFiles, TypesChangesFile changesFile);
     public void UpdateTypesWithRarity(TypesFile typesFile, RarityFile rarityFile);

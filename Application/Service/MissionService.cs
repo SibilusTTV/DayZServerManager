@@ -225,6 +225,11 @@ public class MissionService : IMissionService
             _logger.LogError(ex, "Error when updating the mission");
         }
     }
+
+    public bool CheckMission(string missionPath)
+    {
+        return _missionRepository.CheckMission(missionPath);
+    }
     
     #region Searches
     // Searches for the matching CeItem and returns it

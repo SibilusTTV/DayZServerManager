@@ -18,4 +18,5 @@ public interface ISteamCmdService
     public string GetSteamUsername();
     public string GetSteamPassword();
     public void SaveSteamCredentials(SteamCredentials credentials);
+    public void DownloadMods(List<Mod> mods);
 }

@@ -127,12 +127,16 @@ public class ServerRepository : IServerRepository
         var serverDeployDirectories = Directory.GetDirectories(Folders.DeployFolderName).ToList();
         var serverDeployFiles = Directory.GetFiles(Folders.DeployFolderName).ToList();
 
-        var filteredDirectories = serverDeployDirectories.FindAll(x => Path.GetFileName(x) != profileName && Path.GetFileName(x) != Folders.BattleyeFolderName);
-        var filteredFiles = serverDeployFiles.FindAll(x => !Path.GetFileName(x).Equals(Files.BansFileName, StringComparison.CurrentCultureIgnoreCase) && 
-                                                           !Path.GetFileName(x).Equals(Files.BanFileName, StringComparison.CurrentCultureIgnoreCase) && 
-                                                           Path.GetFileName(x) != serverConfigName && 
-                                                           !Path.GetFileName(x).Equals(Files.WhitelistFileName, StringComparison.CurrentCultureIgnoreCase) && 
-                                                           !Path.GetFileName(x).Equals(Files.DayZSettingsFileName, StringComparison.CurrentCultureIgnoreCase));
+        var filteredDirectories = serverDeployDirectories.FindAll(x =>
+            Path.GetFileName(x) != profileName && Path.GetFileName(x) != Folders.BattleyeFolderName &&
+            Path.GetFileName(x) != Folders.SteamappsFolderName);
+        
+        var filteredFiles = serverDeployFiles.FindAll(x =>
+            !Path.GetFileName(x).Equals(Files.BansFileName, StringComparison.CurrentCultureIgnoreCase) &&
+            !Path.GetFileName(x).Equals(Files.BanFileName, StringComparison.CurrentCultureIgnoreCase) &&
+            Path.GetFileName(x) != serverConfigName &&
+            !Path.GetFileName(x).Equals(Files.WhitelistFileName, StringComparison.CurrentCultureIgnoreCase) &&
+            !Path.GetFileName(x).Equals(Files.DayZSettingsFileName, StringComparison.CurrentCultureIgnoreCase));
 
         foreach (var dir in serverDeployDirectories)
         {
@@ -169,7 +173,7 @@ public class ServerRepository : IServerRepository
                 
                 if (mod == null) continue;
                 
-                var steamModPath = Path.Combine(Folders.ModsFolderName, Folders.WorkshopFolderPath, mod.workshopID.ToString());
+                var steamModPath = Path.Combine(Folders.DeployFolderName, Folders.WorkshopFolderPath, mod.workshopID.ToString());
                 var serverModPath = Path.Combine(serverFolderName, mod.name);
 
                 _logger.LogInformation($"Moving the mod from {steamModPath} to the DayZ Server Path under {serverModPath}");
@@ -221,11 +225,11 @@ public class ServerRepository : IServerRepository
         {
             _logger.LogInformation($"Backing up the server data and moving all the logs!");
             var newestBackupPath = Path.Combine(backupPath, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss"));
-            var dataPath = Path.Combine(serverFolderName, Folders.MpmissionsFolderName, missionName, "storage_1");
+            var dataPath = Path.Combine(serverFolderName, Folders.MpmissionsFolderName, missionName, Folders.PersistenceFolderName);
             var profilePath = Path.Combine(serverFolderName, profileName);
             if (FileSystem.DirectoryExists(dataPath))
             {
-                FileSystem.CopyDirectory(dataPath, Path.Combine(newestBackupPath, "data"));
+                FileSystem.CopyDirectory(dataPath, Path.Combine(newestBackupPath, Folders.BackupDataFolderName));
             }
             if (FileSystem.DirectoryExists(profilePath))
             {
@@ -234,7 +238,7 @@ public class ServerRepository : IServerRepository
                 {
                     if (Path.GetExtension(filePath) == ".ADM" || Path.GetExtension(filePath) == ".RPT" || Path.GetExtension(filePath) == ".log" || Path.GetExtension(filePath) == ".mdmp")
                     {
-                        FileSystem.MoveFile(filePath, Path.Combine(newestBackupPath, "logs", Path.GetFileName(filePath)));
+                        FileSystem.MoveFile(filePath, Path.Combine(newestBackupPath, Folders.BackupLogsFolderName, Path.GetFileName(filePath)));
                     }
                 }
             }
@@ -325,8 +329,9 @@ public class ServerRepository : IServerRepository
         
         foreach (var mod in mods)
         {
-            if (!Directory.Exists(Path.Combine(Folders.ModsFolderName, Folders.WorkshopFolderPath, mod.workshopID.ToString())) || !CompareForChanges(
-                    Path.Combine(Folders.ModsFolderName, Folders.WorkshopFolderPath, mod.workshopID.ToString()),
+            if (!Directory.Exists(Path.Combine(Folders.DeployFolderName, Folders.WorkshopFolderPath,
+                    mod.workshopID.ToString())) || !CompareForChanges(
+                    Path.Combine(Folders.DeployFolderName, Folders.WorkshopFolderPath, mod.workshopID.ToString()),
                     Path.Combine(serverFolderPath, mod.name))) continue;
             
             if (!updatedModsIDs.Contains(mod.workshopID))

@@ -70,8 +70,7 @@ public class SteamCmdService : ISteamCmdService
     private void UpdateLoop(object? state)
     {
         SteamInformation.SteamUpdateLoop = Statuses.Running;
-        UpdateServer();
-        UpdateMods();
+        UpdateServerAndMods();
         SteamInformation.SteamUpdateLoop = Statuses.NotRunning;
     }
 
@@ -153,30 +152,47 @@ public class SteamCmdService : ISteamCmdService
         var repository = _serverScope.ServiceProvider.GetService<ISteamCmdRepository>();
         repository?.SaveCredentials(credentials);
     }
-    
-    private void UpdateServer()
-    {
-        UpdateSteamCmd();
 
+    public void DownloadMods(List<Mod> mods)
+    {
         try
         {
+            if (CheckSteamCmd()) return;
+            
+            UpdateSteamCmd();
+            
+            if (mods.Count <= 0) return;
+            
             var steamUsername = GetSteamUsername();
-            var serverUpdateArguments = $"\"+force_install_dir {Path.Combine("..", Folders.DeployFolderName)}\" \"+login {steamUsername}\" \"+app_update {SteamCmd.DayZServerBranch}\" -validate +quit";
-            _logger.LogInformation("Updating the DayZ Server");
-            StartSteamCmd(serverUpdateArguments);
-            SteamInformation.steamCmdStatus = Statuses.ServerUpdated;
+            var modUpdateArguments = string.Empty;
+            foreach (var mod in mods)
+            {
+                modUpdateArguments += $" +workshop_download_item {SteamCmd.DayZGameBranch} {mod.workshopID.ToString()}";
+            }
+
+            var arguments =
+                $"\"+force_install_dir {Path.Combine("..", Folders.DeployFolderName)}\" \"+login {steamUsername}\" {modUpdateArguments} -validate +quit";
+
+            StartSteamCmd(arguments);
+
+            _logger.LogInformation($"All mods were downloaded");
+
+            _logger.LogInformation(Statuses.ModsUpdated);
+            SteamInformation.steamCmdStatus = Statuses.ModsUpdated;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error when updating server");
+            _logger.LogError(ex, "Error when updating mods");
             SteamInformation.steamCmdStatus = Statuses.Error;
         }
     }
     
-    private void UpdateMods()
+    private void UpdateServerAndMods()
     {
         try
         {
+            UpdateSteamCmd();
+            
             var mods = GetMods();
             
             if (mods.Count <= 0) return;
@@ -187,7 +203,9 @@ public class SteamCmdService : ISteamCmdService
             {
                 modUpdateArguments += $" +workshop_download_item {SteamCmd.DayZGameBranch} {mod.workshopID.ToString()}";
             }
-            var arguments = $"\"+force_install_dir {Path.Combine("..", Folders.ModsFolderName)}\" \"+login {steamUsername}\" {modUpdateArguments} +quit";
+
+            var arguments =
+                $"\"+force_install_dir {Path.Combine("..", Folders.DeployFolderName)}\" \"+login {steamUsername}\" \"+app_update {SteamCmd.DayZServerBranch}\" {modUpdateArguments} -validate +quit";
 
             StartSteamCmd(arguments);
 

@@ -7,9 +7,7 @@ public static class Folders
     public const string LogsFolderName = "logs";
     public const string DeployFolderName = "deploy";
     public const string SteamCmdFolderName = "steamcmd";
-    public const string ModsFolderName = "mods";
     public const string BackupsFolderName = "backups";
-    public const string SchedulerFolderName = "scheduler";
     public const string ManagerLogsFolderName = "logs";
     public const string PersistenceFolderName = "storage_1";
     public const string BackupDataFolderName = "data";

@@ -402,10 +402,12 @@ public class ServerInstance : IServerInstance
         {
             _serverInformation.managerStatus = Statuses.BackingUpServer;
             _logger.LogInformation(Statuses.BackingUpServer);
+            
             serverRepository?.BackupServerData(instance.deleteBackups,
                 Path.Combine(Folders.BackupsFolderName, instance.backupPath), instance.profileName,
                 instance.missionName, instance.maxKeepTime,
                 Path.Combine(Folders.ServersFolderName, instance.serverFolder));
+            
             _logger.LogInformation(Statuses.ServerBackedUp);
             _serverInformation.managerStatus = Statuses.ServerBackedUp;
         }
@@ -431,8 +433,12 @@ public class ServerInstance : IServerInstance
             _serverInformation.managerStatus = Statuses.ModsMoved;
             _logger.LogInformation(Statuses.ModsMoved);
         }
+        
+        var missionService = _serverScope.ServiceProvider.GetService<IMissionService>();
 
-        if (_updatedServer || MissionNeedsUpdating)
+        if (_updatedServer || MissionNeedsUpdating || (!missionService?.CheckMission(
+                Path.Combine(Folders.ServersFolderName, instance.serverFolder, Folders.MpmissionsFolderName,
+                    instance.missionName)) ?? false))
         {
             _updatedServer = false;
             MissionNeedsUpdating = false;
@@ -440,7 +446,6 @@ public class ServerInstance : IServerInstance
             _logger.LogInformation(Statuses.UpdatingMission);
             _serverInformation.managerStatus = Statuses.UpdatingMission;
 
-            var missionService = _serverScope.ServiceProvider.GetService<IMissionService>();
             missionService?.UpdateMission(Path.Combine(Folders.ServersFolderName, instance.serverFolder),
                 instance.missionName, instance.missionTemplateName, instance.vanillaMissionName,
                 Path.Combine(Folders.BackupsFolderName, instance.backupPath),
@@ -491,11 +496,26 @@ public class ServerInstance : IServerInstance
                 _scheduler?.Disconnect();
                 
                 Thread.Sleep(5000);
+
+                try
+                {
+                    _serverProcess?.CloseMainWindow();
                 
-                _serverProcess?.Kill();
-                _serverProcess = null;
-                
-                Thread.Sleep(5000);
+                    Thread.Sleep(5000);
+                    
+                    if (_serverProcess != null && !_serverProcess.HasExited)
+                    {
+                        _serverProcess.Kill();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error when killing steamCmd");
+                }
+                finally
+                {
+                    _serverProcess = null;
+                }
                 
                 _serverInformation.dayzServerStatus = Statuses.NotRunning;
 

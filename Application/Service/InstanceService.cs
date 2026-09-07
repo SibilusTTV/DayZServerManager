@@ -19,6 +19,7 @@ public class InstanceService : IInstanceService, IDisposable
     private readonly IServerFactory _serverFactory;
     private readonly ISteamCmdService _steamCmdService;
     private readonly Dictionary<int, Task> _startServerTasks;
+    private Task? _downloadModsTask;
     
     public InstanceService(ILogger<InstanceService> logger,
         IServiceScopeFactory scopeFactory,
@@ -80,8 +81,11 @@ public class InstanceService : IInstanceService, IDisposable
 
     public HttpStatusCode CreateInstance(Instance instanceConfig)
     {
+        DownloadNewMods(instanceConfig);
+        
         var schedulerRepository = _serviceScope.ServiceProvider.GetService<ISchedulerRepository>();
         schedulerRepository?.CreateEdit(new SchedulerConfig(instanceConfig.id));
+        
         var instanceRepository = _serviceScope.ServiceProvider.GetService<IInstanceRepository>();
         return instanceRepository?.CreateInstance(instanceConfig) ?? HttpStatusCode.InternalServerError;
     }
@@ -144,6 +148,8 @@ public class InstanceService : IInstanceService, IDisposable
 
     public HttpStatusCode UpdateInstanceConfig(Instance instanceConfig)
     {
+        DownloadNewMods(instanceConfig);
+        
         var instanceRepository = _serviceScope.ServiceProvider.GetService<IInstanceRepository>();
         return instanceRepository?.UpdateInstance(instanceConfig) ?? HttpStatusCode.NotFound;
     }
@@ -197,10 +203,9 @@ public class InstanceService : IInstanceService, IDisposable
 
     public void StopServer(int id)
     {
-        if (_startServerTasks.TryGetValue(id, out var task))
+        if (_startServerTasks.TryGetValue(id, out var task) && task is { IsCanceled: false, IsFaulted: false, IsCompleted: false })
         {
-            task.Dispose();
-            _startServerTasks.Remove(id);
+            return;
         }
         var server = GetServer(id);
         server?.Stop();
@@ -319,5 +324,38 @@ public class InstanceService : IInstanceService, IDisposable
         }
 
         return id;
+    }
+
+    private void DownloadNewMods(Instance instanceConfig)
+    {
+        var modsRepository = _serviceScope.ServiceProvider.GetService<IModRepository>();
+        var mods = modsRepository?.GetMods().Select(x => x.workshopID).ToHashSet();
+
+        if (mods != null)
+        {
+            List<Mod> newMods = [];
+
+            foreach (var mod in instanceConfig.clientMods)
+            {
+                if (!mods.Contains(mod.Mod.workshopID)) newMods.Add(mod.Mod);
+            }
+
+            foreach (var mod in instanceConfig.serverMods)
+            {
+                if (!mods.Contains(mod.Mod.workshopID)) newMods.Add(mod.Mod);
+            }
+            
+            if (newMods.Count <= 0) return;
+        
+            var steamCmdService = _serviceScope.ServiceProvider.GetService<ISteamCmdService>();
+            if (_downloadModsTask != null && !_downloadModsTask.IsCompleted && !_downloadModsTask.IsFaulted &&
+                !_downloadModsTask.IsCanceled) return;
+            
+            _downloadModsTask = new Task(() =>
+            {
+                steamCmdService?.DownloadMods(newMods);
+            });
+            _downloadModsTask.Start();
+        }
     }
 }

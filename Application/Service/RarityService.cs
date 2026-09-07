@@ -34,29 +34,33 @@ public class RarityService : IRarityService
     {
         return _rarityRepository.GetRarityFile(name, missionTemplateName, serverFolderName);    
     }
-
+    
+    
     public bool UpdateRaritiesAndTypes(int id, string name, RarityFile rarityFile)
     {
         var instanceConfig = _instanceService.GetInstance(id);
-        return instanceConfig != null && UpdateRaritiesAndTypes(name, rarityFile, instanceConfig.missionTemplateName, Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder));
-    }
-    
-    public bool UpdateRaritiesAndTypes(string name, RarityFile rarityFile, string missionTemplateName, string serverFolderPath)
-    {
+        if (instanceConfig == null) return false;
+        
         _logger.LogInformation("Updating Rarity and Types");
 
-        _rarityRepository.UpdateRarityFile(Path.Combine(serverFolderPath, Folders.MpmissionsFolderName, missionTemplateName), name, rarityFile);
-        UpdateTypesFiles(Path.Combine(serverFolderPath, Folders.MpmissionsFolderName), name, rarityFile, missionTemplateName);
+        _rarityRepository.UpdateRarityFile(Path.Combine(
+                Folders.ServersFolderName, instanceConfig.serverFolder,
+                Folders.MpmissionsFolderName, instanceConfig.missionTemplateName),
+            name, rarityFile);
+
+        if (name != Files.MissionCustomFilesRaritiesFileName) return true;
+
+        UpdateCustomTypesFiles(Path.Combine(
+                Folders.ServersFolderName, instanceConfig.serverFolder, Folders.MpmissionsFolderName),
+            name, rarityFile, instanceConfig.missionTemplateName);
 
         _logger.LogInformation("Rarity and Types updated");
 
         return true;
     }
 
-    private void UpdateTypesFiles(string mpmissionsFolder, string name, RarityFile rarityFile, string missionTemplateName)
+    private void UpdateCustomTypesFiles(string mpmissionsFolder, string name, RarityFile rarityFile, string missionTemplateName)
     {
-        if (name != Files.MissionCustomFilesRaritiesFileName) return;
-        
         _logger.LogInformation("Updating Types");
         UpdateCustomTypes(Path.Combine(mpmissionsFolder, missionTemplateName), rarityFile);
         _logger.LogInformation("Types updated");

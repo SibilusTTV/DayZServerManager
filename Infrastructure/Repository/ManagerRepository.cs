@@ -7,11 +7,6 @@ public class ManagerRepository : IManagerRepository
 {
     public void CreateFolders()
     {
-        if (!Directory.Exists(Folders.ModsFolderName))
-        {
-            Directory.CreateDirectory(Folders.ModsFolderName);
-        }
-
         if (!Directory.Exists(Folders.DeployFolderName))
         {
             Directory.CreateDirectory(Folders.DeployFolderName);
@@ -20,6 +15,11 @@ public class ManagerRepository : IManagerRepository
         if (!Directory.Exists(Folders.ServersFolderName))
         {
             Directory.CreateDirectory(Folders.ServersFolderName);
+        }
+
+        if (!Directory.Exists(Folders.BackupsFolderName))
+        {
+            Directory.CreateDirectory(Folders.BackupsFolderName);
         }
     }
 }
