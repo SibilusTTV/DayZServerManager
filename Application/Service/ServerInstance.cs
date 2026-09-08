@@ -32,6 +32,7 @@ public class ServerInstance : IServerInstance
     private Process? _serverProcess;
     
     private Task? connectTask;
+    private Task? startTask;
     
     // Eigene Scoped-Dependencies pro Server
     private readonly IServiceScope _serverScope;
@@ -77,8 +78,8 @@ public class ServerInstance : IServerInstance
         _restartingForUpdates = false;
         MissionNeedsUpdating = false;
     }
-    
-    public void StartTimer(string steamUsername, string steamPassword)
+
+    public HttpStatusCode StartServerLoop(string steamUsername, string steamPassword)
     {
         // Server-Logik initialisieren
         IsRunning = true;
@@ -88,11 +89,22 @@ public class ServerInstance : IServerInstance
         if (string.IsNullOrEmpty(steamUsername) || string.IsNullOrEmpty(steamPassword))
         {
             _serverInformation.managerStatus = Statuses.Credentials;
-            return;
+            return HttpStatusCode.BadRequest;
         }
         
         UpdateServerConfig(instanceConfig);
 
+        startTask = new Task(() =>
+        {
+            StartTimer(instanceConfig);
+        });
+        startTask.Start();
+
+        return HttpStatusCode.OK;
+    }
+    
+    public void StartTimer(Instance instanceConfig)
+    {
         _steamCmdService.WaitForSteamCmd();
         
         CheckForUpdates(instanceConfig);
@@ -116,10 +128,15 @@ public class ServerInstance : IServerInstance
         _serverUpdateTimer = new Timer(UpdateLoop, null , TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
     
-    public void Stop()
+    public HttpStatusCode Stop()
     {
+        if (startTask != null && !startTask.IsCompleted && !startTask.IsFaulted && !startTask.IsCanceled)
+        {
+            return HttpStatusCode.InternalServerError;
+        }
+        
         IsRunning = false;
-        KillServerProcesses();
+        return KillServerProcesses();
     }
     
     public void Dispose()
@@ -329,7 +346,7 @@ public class ServerInstance : IServerInstance
     {
         try
         {
-            if (_serverProcess is { HasExited: false })
+            if (_serverProcess is { HasExited: false } || startTask is { IsCompleted: false, IsFaulted: false, IsCanceled: false })
             {
                 _serverInformation.dayzServerStatus = Statuses.Running;
                 return true;
@@ -470,7 +487,7 @@ public class ServerInstance : IServerInstance
         }
     }
 
-    public void KillServerProcesses()
+    private HttpStatusCode KillServerProcesses()
     {
         var instanceConfig = GetInstanceConfig();
 
@@ -523,15 +540,19 @@ public class ServerInstance : IServerInstance
                 _battlEyeFolderPath = OperatingSystem.IsWindows() ? Path.Combine(_profilePath, Folders.BattleyeFolderName) : Path.Combine(Folders.ServersFolderName, instanceConfig.serverFolder, Folders.BattleyeFolderName);
                 
                 UpdateServerConfig(instanceConfig);
+
+                return HttpStatusCode.OK;
             }
             else
             {
                 _scheduler?.Disconnect();
+                return HttpStatusCode.OK;
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error when killing server and ajdusting and saving the server config");
+            return HttpStatusCode.InternalServerError;
         }
     }
 

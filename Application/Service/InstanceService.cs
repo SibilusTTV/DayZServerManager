@@ -18,7 +18,6 @@ public class InstanceService : IInstanceService, IDisposable
     private readonly IServiceScope _serviceScope;
     private readonly IServerFactory _serverFactory;
     private readonly ISteamCmdService _steamCmdService;
-    private readonly Dictionary<int, Task> _startServerTasks;
     private Task? _downloadModsTask;
     
     public InstanceService(ILogger<InstanceService> logger,
@@ -30,7 +29,6 @@ public class InstanceService : IInstanceService, IDisposable
         _serviceScope = scopeFactory.CreateScope();
         _serverFactory = serverFactory;
         _steamCmdService = steamCmdService;
-        _startServerTasks = new Dictionary<int, Task>();
     }
 
     public void Initialize()
@@ -186,33 +184,29 @@ public class InstanceService : IInstanceService, IDisposable
         server?.MissionNeedsUpdating = true;
     }
 
-    public void StartServer(int id)
+    public HttpStatusCode StartServer(int id)
     {
         var server = GetServer(id);
         var credentials = GetSteamCredentials();
         
-        if (server == null) return;
-
-        var task = new Task(() =>
-        {
-            server.StartTimer(credentials.SteamUsername, credentials.SteamPassword);
-        });
-        task.Start();
-        _startServerTasks.Add(id, task);
+        if (server == null) return HttpStatusCode.NotFound;
+        
+        return server.StartServerLoop(credentials.SteamUsername, credentials.SteamPassword);
     }
 
-    public void StopServer(int id)
+    public HttpStatusCode StopServer(int id)
     {
-        if (_startServerTasks.TryGetValue(id, out var task) && task is { IsCanceled: false, IsFaulted: false, IsCompleted: false })
-        {
-            return;
-        }
         var server = GetServer(id);
-        server?.Stop();
+        return server?.Stop() ?? HttpStatusCode.NotFound;
     }
     
-    public void RemoveServer(int id)
+    public HttpStatusCode RemoveServer(int id)
     {
+        if (_servers.TryGetValue(id, out var serverGet) && serverGet.CheckServer())
+        {
+            return HttpStatusCode.BadRequest;
+        }
+        
         if (_servers.TryRemove(id, out var server))
         {
             server.Stop();
@@ -223,14 +217,17 @@ public class InstanceService : IInstanceService, IDisposable
             
             var instanceRepository = _serviceScope.ServiceProvider.GetService<IInstanceRepository>();
             instanceRepository?.DeleteInstance(id);
-
+        
             if (instanceRepository?.GetInstances().Count <= 0)
             {
                 StopSteamCmdService();
             }
             
             _logger.LogInformation("Server {id} entfernt", id);
+            return HttpStatusCode.OK;
         }
+        
+        return HttpStatusCode.NotFound;
     }
     
     public IEnumerable<IServerInstance> GetAllServers()

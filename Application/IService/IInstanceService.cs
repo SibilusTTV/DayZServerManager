@@ -9,9 +9,9 @@ public interface IInstanceService
 {
     public IServerInstance CreateServer(int id);
     public IServerInstance? GetServer(int id);
-    public void StartServer(int id);
-    public void StopServer(int id);
-    public void RemoveServer(int id);
+    public HttpStatusCode StartServer(int id);
+    public HttpStatusCode StopServer(int id);
+    public HttpStatusCode RemoveServer(int id);
     public IEnumerable<IServerInstance> GetAllServers();
     public ServerInformation? GetServerInformation(int id);
     public List<ServerInformation> GetServerInformations();

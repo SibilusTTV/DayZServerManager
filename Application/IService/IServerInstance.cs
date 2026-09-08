@@ -10,11 +10,11 @@ public interface IServerInstance
     bool IsRunning { get; }
     bool MissionNeedsUpdating { get; set; }
     public ServerConfig ServerConfig { get; set; }
-    public void StartTimer(string steamUsername, string steamPassword);
-    public void Stop();
+    public HttpStatusCode StartServerLoop(string steamUsername, string steamPassword);
+    public bool CheckServer();
+    public HttpStatusCode Stop();
     void Dispose();
     public ServerInformation GetServerInformation();
-    public void KillServerProcesses();
     public HttpStatusCode BanPlayer(string playerGuid, int instanceId, string reason, int duration);
     public HttpStatusCode UnbanPlayer(string playerGuid, int instanceId);
     public void KickPlayer(string playerGuid, int instanceId, string reason);

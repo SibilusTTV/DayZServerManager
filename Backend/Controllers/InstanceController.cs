@@ -30,15 +30,15 @@ public class InstanceController : ControllerBase
     }
 
     [HttpGet]
-    public void StopServer(int id)
+    public IActionResult StopServer(int id)
     {
-        _instanceService.StopServer(id);
+        return StatusCode((int)_instanceService.StopServer(id));
     }
 
     [HttpDelete]
-    public void RemoveServer(int id)
+    public IActionResult RemoveServer(int id)
     {
-        _instanceService.RemoveServer(id);
+        return StatusCode((int)_instanceService.RemoveServer(id));
     }
     
     [HttpGet]
